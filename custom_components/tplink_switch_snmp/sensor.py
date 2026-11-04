@@ -19,9 +19,10 @@ from homeassistant.const import (
     UnitOfInformation,
     UnitOfTime,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import CONF_PORT_NAMES
 from .coordinator import SwitchConfigEntry, SwitchCoordinator
 from .entity import PortEntity, SwitchEntity
 from .model import PortData
@@ -167,6 +168,26 @@ async def async_setup_entry(
     )
     async_add_entities(entities)
 
+    # A port sensor for every device that Home Assistant knows by its MAC address,
+    # including devices that show up at the switch or in the registry later on.
+    known: set[str] = set()
+
+    @callback
+    def add_devices() -> None:
+        new = []
+        for mac in coordinator.data.mac_ports:
+            if mac in known:
+                continue
+            device = coordinator.known_device(mac)
+            if device is not None:
+                known.add(mac)
+                new.append(DevicePort(coordinator, mac, device.name_by_user or device.name or mac))
+        if new:
+            async_add_entities(new)
+
+    add_devices()
+    entry.async_on_unload(coordinator.async_add_listener(add_devices))
+
 
 class SwitchUptime(SwitchEntity, SensorEntity):
     """How long the switch has been running."""
@@ -211,3 +232,33 @@ class PortSensor(PortEntity, SensorEntity):
         if self.entity_description.key == "macs" and self.port:
             return {"mac_addresses": self.port.macs}
         return None
+
+
+class DevicePort(SwitchEntity, SensorEntity):
+    """The switch port a device that Home Assistant knows is plugged into.
+
+    The sensor belongs to the switch: a device can only belong to one integration, so it
+    cannot sit on the other integration's device. It is named after that device instead.
+    """
+
+    _attr_translation_key = "device_port"
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+
+    def __init__(self, coordinator: SwitchCoordinator, mac: str, name: str) -> None:
+        super().__init__(coordinator)
+        self._device_mac = mac
+        self._attr_unique_id = f"{self._mac}_device_{mac}_port"
+        self._attr_translation_placeholders = {"device": name}
+
+    @property
+    def native_value(self) -> int | None:
+        return self.coordinator.data.mac_ports.get(self._device_mac)
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        number = self.native_value
+        names = self.coordinator.config_entry.options.get(CONF_PORT_NAMES, {})
+        return {
+            "mac": self._device_mac,
+            "port_name": names.get(str(number), "") if number is not None else "",
+        }

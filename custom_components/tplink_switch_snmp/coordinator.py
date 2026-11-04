@@ -8,7 +8,7 @@ import time
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
@@ -19,6 +19,7 @@ from .const import (
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_VERSION,
     DOMAIN,
+    EVENT_DEVICE_MOVED,
     EVENT_LINK_CHANGED,
     OID_BASE_PORT_IF_INDEX,
     OID_FDB,
@@ -120,12 +121,15 @@ class SwitchCoordinator(DataUpdateCoordinator[SwitchData]):
             self._fire_link_events(ports, previous)
         self._last_ticks = ticks
 
-        return SwitchData(
+        data = SwitchData(
             uptime=self._uptime.seconds(ticks),
             description=text(system.get(OID_SYS_DESCR, b"")),
             object_id=text(system.get(OID_SYS_OBJECT_ID, "")),
             ports=ports,
         )
+        if self.data:
+            self._fire_move_events(data, self.data)
+        return data
 
     def _stamp_link_changes(self, ports: dict[int, PortData], ticks: int) -> None:
         """Turn ifLastChange into a time. It is fixed when first seen, so it does not drift."""
@@ -160,5 +164,41 @@ class SwitchCoordinator(DataUpdateCoordinator[SwitchData]):
                     "entity_id": registry.async_get_entity_id(
                         "binary_sensor", DOMAIN, f"{self.config_entry.unique_id}_port{number}_link"
                     ),
+                },
+            )
+
+    def known_device(self, mac: str) -> dr.DeviceEntry | None:
+        """A device of another integration that has this MAC address, if Home Assistant has one."""
+        entry_id = self.config_entry.entry_id
+        for device in dr.async_get(self.hass).async_get_devices(
+            connections={(dr.CONNECTION_NETWORK_MAC, mac)}
+        ):
+            if device.config_entry_id != entry_id:
+                return device
+        return None
+
+    def _fire_move_events(self, data: SwitchData, previous: SwitchData) -> None:
+        """Fire an event when a device that Home Assistant knows shows up on another port."""
+        names = self.config_entry.options.get(CONF_PORT_NAMES, {})
+        old = previous.mac_ports
+        for mac, number in data.mac_ports.items():
+            before = old.get(mac)
+            if before is None or before == number:
+                continue
+            device = self.known_device(mac)
+            if device is None:
+                continue
+            self.hass.bus.async_fire(
+                EVENT_DEVICE_MOVED,
+                {
+                    "entry_id": self.config_entry.entry_id,
+                    "switch": self.config_entry.title,
+                    "mac": mac,
+                    "name": device.name_by_user or device.name,
+                    "device_id": device.id,
+                    "from_port": before,
+                    "from_port_name": names.get(str(before), ""),
+                    "to_port": number,
+                    "to_port_name": names.get(str(number), ""),
                 },
             )

@@ -61,3 +61,4 @@ PORT_NAME_MAX = 40
 PANEL_PATH = "tplink-switch"
 
 EVENT_LINK_CHANGED = f"{DOMAIN}_link_changed"
+EVENT_DEVICE_MOVED = f"{DOMAIN}_device_moved"

@@ -183,3 +183,10 @@ def test_utilization_needs_a_link_and_a_rate():
     assert model.utilization(None, 1000) is None
     assert model.utilization(5.0, 0) is None
     assert model.utilization(2000.0, 1000) == 100.0  # never above 100
+
+
+def test_mac_ports_lists_every_mac_with_its_port():
+    fdb = {"1.0.4.32.249.54.2": 1, "1.0.8.220.84.149.70": 2}
+    ports = model.build_ports(_tables(), fdb, {"1": 1, "2": 2})
+    data = model.SwitchData(uptime=0, description="", object_id="", ports=ports)
+    assert data.mac_ports == {"00:04:20:f9:36:02": 1, "00:08:dc:54:95:46": 2}

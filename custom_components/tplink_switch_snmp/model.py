@@ -44,6 +44,11 @@ class SwitchData:
     object_id: str  # sysObjectID
     ports: dict[int, PortData]  # keyed by port number
 
+    @property
+    def mac_ports(self) -> dict[str, int]:
+        """The port each learned MAC address was seen on."""
+        return {mac: number for number, port in sorted(self.ports.items()) for mac in port.macs}
+
 
 # Enterprise numbers (the number after 1.3.6.1.4.1 in sysObjectID) of known makers.
 ENTERPRISES = {11863: "TP-Link"}

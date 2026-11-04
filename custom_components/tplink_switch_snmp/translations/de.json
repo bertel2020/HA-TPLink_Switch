@@ -97,6 +97,9 @@
       },
       "link_changed": {
         "name": "Port {port} Link geändert"
+      },
+      "device_port": {
+        "name": "Port von {device}"
       }
     }
   },

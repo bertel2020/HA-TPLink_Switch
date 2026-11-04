@@ -12,7 +12,7 @@ from homeassistant.components.logbook import (
 )
 from homeassistant.core import Event, HomeAssistant, callback
 
-from .const import DOMAIN, EVENT_LINK_CHANGED
+from .const import DOMAIN, EVENT_DEVICE_MOVED, EVENT_LINK_CHANGED
 
 
 def _port(data: dict[str, Any]) -> str:
@@ -46,4 +46,16 @@ def async_describe_events(
             LOGBOOK_ENTRY_ENTITY_ID: data.get("entity_id"),
         }
 
+    @callback
+    def describe_device_moved(event: Event) -> dict[str, Any]:
+        data = event.data
+        before = _port({"port": data["from_port"], "port_name": data.get("from_port_name")})
+        after = _port({"port": data["to_port"], "port_name": data.get("to_port_name")})
+        switch = data.get("switch", "the switch")
+        return {
+            LOGBOOK_ENTRY_NAME: data.get("name") or data["mac"],
+            LOGBOOK_ENTRY_MESSAGE: f"moved from {before} to {after} at {switch}",
+        }
+
     async_describe_event(DOMAIN, EVENT_LINK_CHANGED, describe_link_changed)
+    async_describe_event(DOMAIN, EVENT_DEVICE_MOVED, describe_device_moved)

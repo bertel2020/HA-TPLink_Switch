@@ -52,7 +52,9 @@ async def async_get_config_entry_diagnostics(
             "hw_version": data.hw_version,
             "sw_version": data.sw_version,
             "uptime": data.uptime,
-            "polling_interval": coordinator.update_interval.total_seconds(),
+            "polling_interval": coordinator.update_interval.total_seconds()
+            if coordinator.update_interval
+            else None,
             "last_update_success": coordinator.last_update_success,
             "last_exception": str(coordinator.last_exception)
             if coordinator.last_exception

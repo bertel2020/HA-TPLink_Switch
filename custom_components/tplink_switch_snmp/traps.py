@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Callable
+from collections.abc import Callable, Coroutine
 import logging
 import socket
 from typing import Any
@@ -110,7 +110,7 @@ DATA_LOCK = "trap_lock"
 
 async def async_subscribe(
     hass: HomeAssistant, port: int, address: str, community: str, handler: TrapHandler
-) -> Callable[[], Awaitable[None]]:
+) -> Callable[[], Coroutine[Any, Any, None]]:
     """Call the handler for traps from this address; switches on one port share a receiver.
 
     Raises OSError if the port cannot be opened. Returns the function that ends the

@@ -21,10 +21,11 @@ class SwitchEntity(CoordinatorEntity[SwitchCoordinator]):
     def __init__(self, coordinator: SwitchCoordinator) -> None:
         super().__init__(coordinator)
         entry = coordinator.config_entry
-        self._mac = entry.unique_id
+        # the unique ID is the switch's MAC address, the config flow always sets it
+        self._mac = entry.unique_id or ""
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, entry.unique_id)},
-            connections={(CONNECTION_NETWORK_MAC, entry.unique_id)},
+            identifiers={(DOMAIN, self._mac)},
+            connections={(CONNECTION_NETWORK_MAC, self._mac)},
             manufacturer=manufacturer(coordinator.data.object_id),
             model=coordinator.data.model or coordinator.data.description or None,
             hw_version=coordinator.data.hw_version,

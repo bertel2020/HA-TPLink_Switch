@@ -25,8 +25,8 @@ from homeassistant.helpers.selector import (
     TextSelectorConfig,
     TextSelectorType,
 )
+import probatio
 from pysnmp.hlapi.v3arch.asyncio import SnmpEngine
-import voluptuous as vol
 
 from .const import (
     AUTH_PROTOCOLS,
@@ -88,25 +88,27 @@ def _password() -> TextSelector:
     return TextSelector(TextSelectorConfig(type=TextSelectorType.PASSWORD))
 
 
-SCHEMA_CONNECTION = vol.Schema(
+SCHEMA_CONNECTION = probatio.Schema(
     {
-        vol.Required(CONF_HOST): str,
-        vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
-        vol.Required(CONF_VERSION, default=DEFAULT_VERSION): _select(VERSIONS, "version"),
+        probatio.Required(CONF_HOST): str,
+        probatio.Required(CONF_PORT, default=DEFAULT_PORT): int,
+        probatio.Required(CONF_VERSION, default=DEFAULT_VERSION): _select(VERSIONS, "version"),
     }
 )
-SCHEMA_COMMUNITY = vol.Schema({vol.Required(CONF_COMMUNITY, default=DEFAULT_COMMUNITY): str})
-SCHEMA_USER = vol.Schema(
+SCHEMA_COMMUNITY = probatio.Schema(
+    {probatio.Required(CONF_COMMUNITY, default=DEFAULT_COMMUNITY): str}
+)
+SCHEMA_USER = probatio.Schema(
     {
-        vol.Required(CONF_USERNAME): str,
-        vol.Required(CONF_AUTH_PROTOCOL, default="sha"): _select(
+        probatio.Required(CONF_USERNAME): str,
+        probatio.Required(CONF_AUTH_PROTOCOL, default="sha"): _select(
             [NO_PROTOCOL, *AUTH_PROTOCOLS], "auth_protocol"
         ),
-        vol.Optional(CONF_AUTH_KEY): _password(),
-        vol.Required(CONF_PRIV_PROTOCOL, default="aes128"): _select(
+        probatio.Optional(CONF_AUTH_KEY): _password(),
+        probatio.Required(CONF_PRIV_PROTOCOL, default="aes128"): _select(
             [NO_PROTOCOL, *PRIV_PROTOCOLS], "priv_protocol"
         ),
-        vol.Optional(CONF_PRIV_KEY): _password(),
+        probatio.Optional(CONF_PRIV_KEY): _password(),
     }
 )
 
@@ -244,7 +246,7 @@ class SwitchOptionsFlow(OptionsFlow):
             return self.async_create_entry(data=options)
 
         fields: dict[Any, Any] = {
-            vol.Required(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): NumberSelector(
+            probatio.Required(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): NumberSelector(
                 NumberSelectorConfig(
                     min=MIN_SCAN_INTERVAL,
                     max=MAX_SCAN_INTERVAL,
@@ -257,18 +259,18 @@ class SwitchOptionsFlow(OptionsFlow):
         v3 = self.config_entry.data.get(CONF_VERSION, DEFAULT_VERSION) == VERSION_3
         # Traps need a community, which SNMPv3 does not have.
         if not v3:
-            fields[vol.Required(CONF_TRAP_PORT, default=0)] = NumberSelector(
+            fields[probatio.Required(CONF_TRAP_PORT, default=0)] = NumberSelector(
                 NumberSelectorConfig(min=0, max=65535, step=1, mode=NumberSelectorMode.BOX)
             )
         # Writing: off unless asked for. v1 and v2c write with a community of their own.
-        fields[vol.Required(CONF_ALLOW_WRITE, default=False)] = bool
+        fields[probatio.Required(CONF_ALLOW_WRITE, default=False)] = bool
         if not v3:
-            fields[vol.Optional(CONF_WRITE_COMMUNITY)] = TextSelector(
+            fields[probatio.Optional(CONF_WRITE_COMMUNITY)] = TextSelector(
                 TextSelectorConfig(type=TextSelectorType.PASSWORD)
             )
         coordinator = getattr(self.config_entry, "runtime_data", None)
         if coordinator is not None and coordinator.data:
-            fields[vol.Optional(CONF_PROTECTED_PORTS, default=[])] = SelectSelector(
+            fields[probatio.Optional(CONF_PROTECTED_PORTS, default=[])] = SelectSelector(
                 SelectSelectorConfig(
                     options=[str(n) for n in sorted(coordinator.data.ports)],
                     multiple=True,
@@ -277,7 +279,9 @@ class SwitchOptionsFlow(OptionsFlow):
             )
         return self.async_show_form(
             step_id="init",
-            data_schema=self.add_suggested_values_to_schema(vol.Schema(fields), self._suggested()),
+            data_schema=self.add_suggested_values_to_schema(
+                probatio.Schema(fields), self._suggested()
+            ),
         )
 
     def _suggested(self) -> dict[str, Any]:

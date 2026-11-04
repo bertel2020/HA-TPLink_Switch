@@ -27,6 +27,8 @@ jobs:
         run: ruff check custom_components tests
       - name: Check formatting
         run: ruff format --check custom_components tests
+      - name: Check types
+        run: mypy
       - name: Test
         run: pytest
       - name: Test the panel's look

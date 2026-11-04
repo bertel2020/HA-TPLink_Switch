@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from typing import Any
 
 from homeassistant.components.logbook import (
@@ -15,7 +15,7 @@ from homeassistant.core import Event, HomeAssistant, callback
 from .const import DOMAIN, EVENT_DEVICE_MOVED, EVENT_LINK_CHANGED
 
 
-def _port(data: dict[str, Any]) -> str:
+def _port(data: Mapping[str, Any]) -> str:
     name = data.get("port_name")
     return f"Port {data['port']}" + (f" ({name})" if name else "")
 

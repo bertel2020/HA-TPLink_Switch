@@ -75,4 +75,4 @@ rules:
   inject-websession:
     status: exempt
     comment: The integration speaks SNMP over UDP, not HTTP.
-  strict-typing: todo
+  strict-typing: done

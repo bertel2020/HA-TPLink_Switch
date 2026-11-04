@@ -10,7 +10,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
-import voluptuous as vol
+import probatio
 
 from .const import CONF_PORT_NAMES, DOMAIN, PORT_NAME_MAX
 from .coordinator import SwitchConfigEntry
@@ -94,7 +94,9 @@ def _switch(hass: HomeAssistant, entry: SwitchConfigEntry) -> dict[str, Any]:
         "location": data.location,
         "contact": data.contact,
         "uptime": data.uptime,
-        "interval": int(coordinator.update_interval.total_seconds()),
+        "interval": int(coordinator.update_interval.total_seconds())
+        if coordinator.update_interval
+        else 0,
         "last_update_success": coordinator.last_update_success,
         "can_write": coordinator.can_write,
         "ports": ports,
@@ -102,7 +104,7 @@ def _switch(hass: HomeAssistant, entry: SwitchConfigEntry) -> dict[str, Any]:
 
 
 @websocket_api.require_admin
-@websocket_api.websocket_command({vol.Required("type"): f"{DOMAIN}/snapshot"})
+@websocket_api.websocket_command({probatio.Required("type"): f"{DOMAIN}/snapshot"})
 @callback
 def ws_snapshot(hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict) -> None:
     """All switches with their ports."""
@@ -118,7 +120,7 @@ def _snapshot(hass: HomeAssistant) -> dict[str, Any]:
 
 
 @websocket_api.require_admin
-@websocket_api.websocket_command({vol.Required("type"): f"{DOMAIN}/subscribe"})
+@websocket_api.websocket_command({probatio.Required("type"): f"{DOMAIN}/subscribe"})
 @callback
 def ws_subscribe(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
@@ -144,10 +146,10 @@ def ws_subscribe(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): f"{DOMAIN}/history",
-        vol.Required("entry_id"): str,
-        vol.Required("port"): int,
-        vol.Optional("range", default="24h"): vol.In(list(RANGES)),
+        probatio.Required("type"): f"{DOMAIN}/history",
+        probatio.Required("entry_id"): str,
+        probatio.Required("port"): int,
+        probatio.Optional("range", default="24h"): probatio.In(list(RANGES)),
     }
 )
 @callback
@@ -174,11 +176,11 @@ def ws_history(hass: HomeAssistant, connection: websocket_api.ActiveConnection, 
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): f"{DOMAIN}/set_port_name",
-        vol.Required("entry_id"): str,
-        vol.Required("port"): vol.All(int, vol.Range(min=1, max=999)),
-        vol.Required("name"): vol.All(str, vol.Length(max=PORT_NAME_MAX)),
-        vol.Optional("to_switch", default=False): bool,
+        probatio.Required("type"): f"{DOMAIN}/set_port_name",
+        probatio.Required("entry_id"): str,
+        probatio.Required("port"): probatio.All(int, probatio.Range(min=1, max=999)),
+        probatio.Required("name"): probatio.All(str, probatio.Length(max=PORT_NAME_MAX)),
+        probatio.Optional("to_switch", default=False): bool,
     }
 )
 @websocket_api.async_response

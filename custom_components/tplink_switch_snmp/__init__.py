@@ -73,7 +73,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SwitchConfigEntry) -> bo
 async def _resolve(hass: HomeAssistant, host: str) -> str:
     """The IPv4 address of the switch; traps are matched by the address they come from."""
     infos = await hass.loop.getaddrinfo(host, None, family=socket.AF_INET)
-    return infos[0][4][0]
+    return str(infos[0][4][0])
 
 
 async def _async_setup_traps(

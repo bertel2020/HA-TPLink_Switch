@@ -257,7 +257,7 @@ class SwitchCoordinator(DataUpdateCoordinator[SwitchData]):
 
     def port_label(self, number: int) -> str:
         """The name of a port: the one given in Home Assistant, else the one at the switch."""
-        custom = self.config_entry.options.get(CONF_PORT_NAMES, {}).get(str(number), "")
+        custom: str = self.config_entry.options.get(CONF_PORT_NAMES, {}).get(str(number), "")
         if custom:
             return custom
         port = self.data.ports.get(number) if self.data else None

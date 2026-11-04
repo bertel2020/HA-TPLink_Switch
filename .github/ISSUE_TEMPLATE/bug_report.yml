@@ -1,0 +1,38 @@
+name: Bug report / Fehlermeldung
+description: Something does not work as expected. / Etwas funktioniert nicht wie erwartet.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting! English or German is fine. / Danke für die Meldung! Deutsch oder Englisch ist beides recht.
+  - type: textarea
+    id: details
+    attributes:
+      label: Versions / Versionen
+      description: |
+        Integration version, Home Assistant version, switch model and firmware version.
+        Version der Integration, Home-Assistant-Version, Switch-Modell und Firmware-Version.
+      placeholder: "HA-TPLink_Switch 0.2.0, Home Assistant 2026.10.4, TL-SG3424, firmware 2.0.5"
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened? / Was ist passiert?
+      description: What did you do, what did you expect, what happened instead? / Was hast du getan, was erwartet, was ist stattdessen passiert?
+    validations:
+      required: true
+  - type: textarea
+    id: snmp
+    attributes:
+      label: SNMP check (optional) / SNMP-Prüfung (optional)
+      description: |
+        Output of `snmpget -v2c -c <community> <switch> 1.3.6.1.2.1.1.1.0` from the machine that runs Home Assistant. / Ausgabe von `snmpget -v2c -c <Community> <Switch> 1.3.6.1.2.1.1.1.0` auf dem Rechner, auf dem Home Assistant läuft.
+      render: text
+  - type: textarea
+    id: log
+    attributes:
+      label: Log (optional)
+      description: Errors from Settings → System → Logs that mention tplink_switch_snmp. / Fehler aus Einstellungen → System → Protokolle, die tplink_switch_snmp nennen.
+      render: text

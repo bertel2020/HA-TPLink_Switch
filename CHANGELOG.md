@@ -2,6 +2,27 @@
 
 Alle nennenswerten Änderungen an dieser Integration werden hier festgehalten.
 
+## 0.6.0 – 2026-11-04
+
+### Neu
+
+- **Dashboard-Karte** `custom:tplink-switch-card`: die Frontplatte des Switches nach Link-Geschwindigkeit eingefärbt und pro aktivem Port die Geräte, die Home Assistant kennt, mit Datenrate. Klicks öffnen die Entität. Die Karte liest die Entitäten der Integration, sie funktioniert also auch für Benutzer ohne Administratorrechte. Die Port-Entitäten haben dafür das Attribut `port`.
+- **Schreiben am Switch** (Option, standardmäßig aus): ein Schalter **Port N aktiv** pro Port (`ifAdminStatus`) und die Möglichkeit, Port-Namen am Switch zu speichern (`ifAlias`). v1 und v2c brauchen eine Community mit Schreibrecht. Uplinks (mindestens 10 gelernte MAC-Adressen) und gewählte **geschützte Ports** werden nie ausgeschaltet. Nicht an echter Hardware getestet: Die Community des Test-Switches darf nur lesen.
+- **Namen vom Switch:** Die Port-Namen, die am Switch stehen (`ifAlias`), sind die Vorgabe im Panel, in Ereignissen und Logbuch; ein Name aus dem Panel hat Vorrang. Das Panel zeigt „abgeschaltet“ für Ports, die am Switch ausgeschaltet sind.
+- **Geräteinformationen vom Switch:** Modell, Hardware- und Firmware-Version sowie Standort und Ansprechpartner werden aus dem Switch gelesen (bei TP-Link aus der eigenen MIB) und am Gerät und in den Details des Panels gezeigt.
+- **Mehr Zähler** (standardmäßig aus): Pakete pro Sekunde (Empfang, Senden) sowie Broadcast und Multicast im Empfang. Das Panel zeigt sie in der Diagnose und meldet viel Broadcast (ab 500 Pakete pro Sekunde) als Hinweis auf eine Schleife.
+- **Hersteller aus der MAC-Adresse** in der Geräteliste, wenn kein bekanntes Gerät ihn nennt (Herstellerliste von Home Assistant, ohne Internet; zufällige Adressen haben keinen).
+- **Panel:** sortierbare Spalten in der Port- und der Geräteliste, **CSV-Export** der angezeigten Auswahl (Semikolon, mit Markierung für Excel, Dezimalkomma auf Deutsch) und ein **Verlauf über 7 Tage** in Stundenwerten neben den 24 Stunden.
+- Icons für alle Entitäten, eine `quality_scale.yaml` zur Einordnung, Erklärungen zu jedem Feld der Einrichtung und im README Abschnitte zu Fehlersuche, Anwendungsfällen und Entfernen.
+
+### Behoben
+
+- Die statischen Dateien des Panels und die Karte werden nur einmal registriert. Wurde der letzte Switch entfernt und wieder eingerichtet, hätte die zweite Registrierung scheitern können.
+
+### Bekannte Grenzen
+
+- Das Schreiben am Switch ist nur gegen einen gefälschten Switch geprüft. CPU, Speicher und Temperatur gibt es beim Test-Switch (Firmware 1.11.10) nicht, weder über Standard-MIBs noch in der TP-Link-MIB; die Integration zeigt sie deshalb nicht.
+
 ## 0.5.0 – 2026-11-04
 
 ### Neu

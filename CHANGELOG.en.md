@@ -2,6 +2,27 @@
 
 All notable changes to this integration are recorded here.
 
+## 0.6.0 – 2026-11-04
+
+### New
+
+- **Dashboard card** `custom:tplink-switch-card`: the front panel of the switch coloured by link speed and, for every active port, the devices that Home Assistant knows, with the data rate. Clicks open the entity. The card reads the integration's entities, so it also works for users without administrator rights. The port entities have the attribute `port` for that.
+- **Writing to the switch** (option, off by default): a switch **Port N enabled** per port (`ifAdminStatus`) and the option to save port names at the switch (`ifAlias`). v1 and v2c need a community with write access. Uplinks (at least 10 learned MAC addresses) and the chosen **protected ports** are never switched off. Not tested on real hardware: the test switch's community may only read.
+- **Names from the switch:** the port names that stand at the switch (`ifAlias`) are the default in the panel, in events and in the logbook; a name from the panel takes precedence. The panel shows "switched off" for ports that are off at the switch.
+- **Device information from the switch:** model, hardware and firmware version, location and contact are read from the switch (from TP-Link's own MIB for TP-Link) and shown on the device and in the panel's details.
+- **More counters** (off by default): packets per second (receive, transmit) and broadcast and multicast received. The panel shows them in the diagnostics and reports a lot of broadcast (from 500 packets per second) as a hint of a loop.
+- **Manufacturer from the MAC address** in the device list when no known device names it (Home Assistant's manufacturer list, no internet; random addresses have none).
+- **Panel:** sortable columns in the port and device lists, **CSV export** of what is shown (semicolon, with the mark for Excel, a decimal comma in German) and a **7-day history** in hourly values next to the 24 hours.
+- Icons for all entities, a `quality_scale.yaml` for orientation, explanations for every field of the set-up and, in the README, sections on troubleshooting, use cases and removal.
+
+### Fixed
+
+- The panel's static files and the card are registered only once. If the last switch was removed and set up again, the second registration could have failed.
+
+### Known limits
+
+- Writing to the switch is only tested against a fake switch. CPU, memory and temperature do not exist at the test switch (firmware 1.11.10), neither in standard MIBs nor in TP-Link's MIB; the integration therefore does not show them.
+
 ## 0.5.0 – 2026-11-04
 
 ### New

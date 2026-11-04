@@ -29,6 +29,8 @@ jobs:
         run: ruff format --check custom_components tests
       - name: Test
         run: pytest
+      - name: Test the panel's look
+        run: node --test tests/js/*.test.mjs
       - name: Check the panel scripts
         run: |
           for f in custom_components/tplink_switch_snmp/frontend/*.js; do

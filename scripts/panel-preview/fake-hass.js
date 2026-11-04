@@ -8,6 +8,7 @@ const SAMPLE = {
 };
 const NAMES = { 1: "Gateway FRITZ!Box", 2: "Drucker HP", 5: "NAS Synology", 12: "Access Point Flur", 16: "Smart-TV", 17: "Server Keller", 22: "PC Büro", 24: "Smart-Steckdose" };
 const names = {};
+const userData = {}; // what Home Assistant keeps per user
 
 const mac = (n, i) => `02:00:00:00:${n.toString(16).padStart(2, "0")}:${i.toString(16).padStart(2, "0")}`;
 function snapshot() {
@@ -60,6 +61,8 @@ export function makeHass({ dark = false, language = "de", pushEvery = 5000 } = {
       await new Promise((r) => setTimeout(r, 30));
       if (msg.type === "tplink_switch_snmp/snapshot") return snapshot();
       if (msg.type === "tplink_switch_snmp/set_port_name") { names[msg.port] = msg.name.trim(); return { name: msg.name }; }
+      if (msg.type === "frontend/get_user_data") return { value: userData[msg.key] ?? null };
+      if (msg.type === "frontend/set_user_data") { userData[msg.key] = msg.value; return null; }
       if (msg.type === "history/history_during_period") return history(msg.entity_ids, msg.start_time, msg.end_time);
       throw new Error(`unknown command ${msg.type}`);
     },

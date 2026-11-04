@@ -2,9 +2,15 @@
 // commands of the integration (websocket_api.py) and the history of the port rate sensors.
 // Its parts are loaded with the query string of this file, so an update loads every part new.
 const V = new URL(import.meta.url).search;
-const [{ STYLES }, { translator }] = await Promise.all([import(`./styles.js${V}`), import(`./texts.js${V}`)]);
+const [{ STYLES }, { translator }, theme] = await Promise.all([
+  import(`./styles.js${V}`),
+  import(`./texts.js${V}`),
+  import(`./theme.js${V}`),
+]);
+const { applyAppearance, cleanPrefs, DEFAULTS, MODES, SCHEMES, SIZES, tokens } = theme;
 
 const DOMAIN = "tplink_switch_snmp";
+const LOOK_KEY = "tplink_switch_snmp_look";
 // The server pushes every poll. This slow check only matters if the subscription is lost.
 const FALLBACK_MS = 60000;
 const STALE_MS = 5 * 60000;
@@ -13,6 +19,7 @@ const MAX_MACS = 50;
 
 // Material Design Icons (Apache 2.0)
 const ICON = {
+  palette: "M12,3A9,9 0 0,0 3,12A9,9 0 0,0 12,21A1.5,1.5 0 0,0 13.5,19.5C13.5,19.11 13.35,18.76 13.11,18.5C12.88,18.23 12.75,17.88 12.75,17.5A1.5,1.5 0 0,1 14.25,16H16A5,5 0 0,0 21,11C21,6.58 16.97,3 12,3M6.5,12A1.5,1.5 0 0,1 5,10.5A1.5,1.5 0 0,1 6.5,9A1.5,1.5 0 0,1 8,10.5A1.5,1.5 0 0,1 6.5,12M9.5,8A1.5,1.5 0 0,1 8,6.5A1.5,1.5 0 0,1 9.5,5A1.5,1.5 0 0,1 11,6.5A1.5,1.5 0 0,1 9.5,8M14.5,8A1.5,1.5 0 0,1 13,6.5A1.5,1.5 0 0,1 14.5,5A1.5,1.5 0 0,1 16,6.5A1.5,1.5 0 0,1 14.5,8M17.5,12A1.5,1.5 0 0,1 16,10.5A1.5,1.5 0 0,1 17.5,9A1.5,1.5 0 0,1 19,10.5A1.5,1.5 0 0,1 17.5,12Z",
   lan: "M10,2C8.89,2 8,2.89 8,4V7C8,8.11 8.89,9 10,9H11V11H2V13H6V15H5C3.89,15 3,15.89 3,17V20C3,21.11 3.89,22 5,22H9C10.11,22 11,21.11 11,20V17C11,15.89 10.11,15 9,15H8V13H16V15H15C13.89,15 13,15.89 13,17V20C13,21.11 13.89,22 15,22H19C20.11,22 21,21.11 21,20V17C21,15.89 20.11,15 19,15H18V13H22V11H13V9H14C15.11,9 16,8.11 16,7V4C16,2.89 15.11,2 14,2H10Z",
   search: "M9.5,3A6.5,6.5 0 0,1 16,9.5C16,11.11 15.41,12.59 14.44,13.73L14.71,14H15.5L20.5,19L19,20.5L14,15.5V14.71L13.73,14.44C12.59,15.41 11.11,16 9.5,16A6.5,6.5 0 0,1 3,9.5A6.5,6.5 0 0,1 9.5,3M9.5,5C7,5 5,7 5,9.5C5,12 7,14 9.5,14C12,14 14,12 14,9.5C14,7 12,5 9.5,5Z",
   open: "M14,3V5H17.59L7.76,14.83L9.17,16.24L19,6.41V10H21V3M19,19H5V5H12V3H5C3.89,3 3,3.9 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V12H19V19Z",
@@ -51,6 +58,9 @@ class TplinkSwitchPanel extends HTMLElement {
     this._loading = false;
     this._unsub = null;
     this._subscribing = false;
+    this._look = { ...DEFAULTS };
+    this._lookKey = null;
+    this._menuOpen = false;
     this._lastData = 0;
   }
 
@@ -58,8 +68,15 @@ class TplinkSwitchPanel extends HTMLElement {
     const first = !this._hass;
     this._hass = hass;
     const lang = hass.language || "en";
-    const dark = !!hass.themes?.darkMode;
-    if (this.hasAttribute("dark") !== dark) this.toggleAttribute("dark", dark);
+    if (first) {
+      try {
+        this._look = cleanPrefs(JSON.parse(localStorage.getItem(LOOK_KEY)));
+      } catch {
+        this._look = { ...DEFAULTS };
+      }
+    }
+    this._applyLook();
+    if (first) this._loadLook();
     if (lang !== this._lang) {
       this._lang = lang;
       this._t = translator(lang);
@@ -128,6 +145,60 @@ class TplinkSwitchPanel extends HTMLElement {
       this._loading = false;
     }
     this._render();
+  }
+
+  // ---- appearance ----------------------------------------------------------------------------
+
+  // the palette is set again only when the choice or Home Assistant's mode changed
+  _applyLook() {
+    const dark = this._hass?.themes?.darkMode;
+    const key = `${this._look.scheme}|${this._look.mode}|${this._look.size}|${dark}`;
+    if (key === this._lookKey) return;
+    this._lookKey = key;
+    applyAppearance(this, this._look, dark);
+  }
+
+  // the choice of this Home Assistant user wins over the browser's cache
+  async _loadLook() {
+    try {
+      const { value } = await this._hass.callWS({ type: "frontend/get_user_data", key: LOOK_KEY });
+      if (!value) return;
+      this._look = cleanPrefs(value);
+      localStorage.setItem(LOOK_KEY, JSON.stringify(this._look));
+      this._applyLook();
+      this._render();
+    } catch {
+      // no user data (older Home Assistant): the browser's cache stays
+    }
+  }
+
+  _setLook(patch) {
+    this._look = cleanPrefs({ ...this._look, ...patch });
+    try {
+      localStorage.setItem(LOOK_KEY, JSON.stringify(this._look));
+    } catch {
+      // storage blocked: the choice holds until the page is closed
+    }
+    this._hass.callWS({ type: "frontend/set_user_data", key: LOOK_KEY, value: this._look }).catch(() => {});
+    this._applyLook();
+  }
+
+  _lookMenu() {
+    const t = this._t;
+    const dark = this.hasAttribute("dark");
+    const group = (kind, label, options) =>
+      `<div class="lookgroup" role="radiogroup" aria-label="${esc(label)}"><span class="lookhead">${esc(label)}</span>${options
+        .map(
+          ([value, text, dot]) =>
+            `<button role="radio" aria-checked="${this._look[kind] === value}" data-a="look" data-kind="${kind}" data-v="${esc(value)}">${dot ? `<i class="dot" style="background:${dot}"></i>` : ""}${esc(text)}</button>`,
+        )
+        .join("")}</div>`;
+    const accent = (name) => tokens({ ...this._look, scheme: name }, dark)["--accent"];
+    return `<div class="look-menu" id="lookMenu" aria-label="${esc(t("lookTitle"))}">${
+      group("scheme", t("lookScheme"), Object.keys(SCHEMES).map((n) => [n, t(n), accent(n)])) +
+      group("mode", t("lookMode"), MODES.map((n) => [n, t(n)])) +
+      group("size", t("lookSize"), Object.keys(SIZES).map((n) => [n, t(n)]))
+    }</div>`;
   }
 
   // ---- helpers -------------------------------------------------------------------------------
@@ -295,6 +366,10 @@ class TplinkSwitchPanel extends HTMLElement {
       <button class="menu" data-a="menu" aria-label="${esc(t("menu"))}">${icon("menu")}</button>
       <div class="brand"><div class="logo">${icon("lan")}</div>${esc(t("title"))}</div>
       <nav role="tablist">${tab("overview", t("overview"))}${tab("ports", t("ports"))}${tab("devices", t("devices"))}${tab("diag", t("diag"))}</nav>
+      <span class="lookwrap">
+        <button class="icon-btn" id="lookBtn" data-a="look-toggle" title="${esc(t("lookTitle"))}" aria-label="${esc(t("lookTitle"))}" aria-haspopup="true" aria-expanded="${this._menuOpen}">${icon("palette")}</button>
+        ${this._menuOpen ? this._lookMenu() : ""}
+      </span>
       <button class="chip outline" data-a="integration">${icon("open")}${esc(t("integration"))}</button>
     </div></header>`;
   }
@@ -473,12 +548,23 @@ class TplinkSwitchPanel extends HTMLElement {
   _listen() {
     const root = this.shadowRoot;
     root.addEventListener("click", (event) => {
+      // a click outside the open appearance menu closes it
+      const outside = this._menuOpen && !event.composedPath().some((n) => n.classList?.contains("lookwrap"));
+      if (outside) this._menuOpen = false;
       const el = event.target.closest("[data-a]");
-      if (!el) return;
+      if (!el) {
+        if (outside) this._render();
+        return;
+      }
       const v = el.dataset.v;
       switch (el.dataset.a) {
+        case "look-toggle": this._menuOpen = !this._menuOpen; break;
+        case "look": this._setLook({ [el.dataset.kind]: v }); break;
         case "tab": this._tab = v; this._editing = false; break;
-        case "menu": this.dispatchEvent(new CustomEvent("hass-toggle-menu", { bubbles: true, composed: true })); return;
+        case "menu":
+          this.dispatchEvent(new CustomEvent("hass-toggle-menu", { bubbles: true, composed: true }));
+          if (outside) this._render();
+          return;
         case "integration":
           history.pushState(null, "", `/config/integrations/integration/${DOMAIN}`);
           window.dispatchEvent(new CustomEvent("location-changed"));
@@ -491,7 +577,9 @@ class TplinkSwitchPanel extends HTMLElement {
         case "rename": this._editing = true; break;
         case "cancel": this._editing = false; break;
         case "save": this._saveName(); return;
-        default: return;
+        default:
+          if (outside) this._render();
+          return;
       }
       this._render();
     });
@@ -514,6 +602,12 @@ class TplinkSwitchPanel extends HTMLElement {
       }
     });
     root.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && this._menuOpen) {
+        this._menuOpen = false;
+        this._render();
+        this.shadowRoot.getElementById("lookBtn")?.focus();
+        return;
+      }
       if (event.target.id !== "portname") return;
       if (event.key === "Enter") this._saveName();
       if (event.key === "Escape") {

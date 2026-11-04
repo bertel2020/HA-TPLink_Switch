@@ -1,3 +1,5 @@
+<p align="center"><img src="custom_components/tplink_switch_snmp/brand/logo@2x.png" alt="TP-Link Switch (SNMP)" width="160"></p>
+
 # TP-Link Switch (SNMP)
 
 <p align="center"><em><a href="README.en.md">English version</a></em></p>

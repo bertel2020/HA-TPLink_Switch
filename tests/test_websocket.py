@@ -52,6 +52,7 @@ async def test_snapshot_port_values(hass: HomeAssistant, hass_ws_client, snmp, e
     assert ports[2]["up"] is False and ports[2]["speed"] == 0
     assert ports[1]["tx_errors"] == 3
     assert ports[1]["rx_discards"] == 7
+    assert ports[1]["rx_pps"] is None  # the first poll has no rate yet
     assert ports[1]["link_changed_at"]  # an ISO time
     assert ports[1]["rx_util"] is None  # the first poll has no rate yet
     assert ports[2]["tx_util"] is None

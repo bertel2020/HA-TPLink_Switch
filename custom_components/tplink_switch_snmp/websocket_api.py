@@ -64,6 +64,10 @@ def _switch(hass: HomeAssistant, entry: SwitchConfigEntry) -> dict[str, Any]:
                 "link_changed_at": port.link_changed_at.isoformat()
                 if port.link_changed_at
                 else None,
+                "rx_pps": port.rx_pps,
+                "tx_pps": port.tx_pps,
+                "rx_mcast_pps": port.rx_mcast_pps,
+                "rx_bcast_pps": port.rx_bcast_pps,
                 "rx_util": port.rx_util,
                 "tx_util": port.tx_util,
                 "macs": [{"mac": mac, **_device_names(hass, mac)} for mac in port.macs],

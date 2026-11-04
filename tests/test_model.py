@@ -198,3 +198,47 @@ def test_hardware_string_is_split_into_model_and_version():
     assert model.split_hardware("JetStream Switch") == ("JetStream Switch", None)
     assert model.split_hardware("TL-SG3424") == ("TL-SG3424", None)
     assert model.split_hardware("") == (None, None)
+
+
+def _packets(**extra):
+    tables = _tables()
+    for key, value in {
+        "rx_uc": 1000,
+        "rx_mc": 100,
+        "rx_bc": 50,
+        "tx_uc": 2000,
+        "tx_mc": 10,
+        "tx_bc": 5,
+        **extra,
+    }.items():
+        tables[key] = {"1": value}
+    return tables
+
+
+def test_packet_counters_are_summed():
+    port = model.build_ports(_packets(), {}, {})[1]
+    assert (port.rx_pkts, port.tx_pkts) == (1150, 2015)
+    assert (port.rx_mcast, port.rx_bcast) == (100, 50)
+
+
+def test_a_switch_without_packet_counters_gives_zero():
+    port = model.build_ports(_tables(), {}, {})[1]
+    assert (port.rx_pkts, port.tx_pkts, port.rx_bcast) == (0, 0, 0)
+
+
+def test_packet_rates_per_second():
+    old = model.build_ports(_packets(), {}, {})
+    new = model.build_ports(_packets(rx_uc=1900, rx_bc=150, rx_mc=130), {}, {})
+    model.add_rates(new, old, 10.0)
+    assert new[1].rx_pps == 103.0  # (900 + 100 + 30) packets in ten seconds
+    assert new[1].rx_bcast_pps == 10.0
+    assert new[1].rx_mcast_pps == 3.0
+    assert new[1].tx_pps == 0.0
+
+
+def test_packet_counters_that_wrap_at_32_bit():
+    old = model.build_ports(_packets(rx_uc=2**32 - 100), {}, {})
+    new = model.build_ports(_packets(rx_uc=900), {}, {})
+    model.add_rates(new, old, 1.0, counter_bits=32)
+    # old total: 2**32 - 100 + 150, new total: 900 + 150: the counter gained 1000 packets
+    assert new[1].rx_pps == 1000.0

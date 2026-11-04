@@ -25,10 +25,18 @@ class PortData:
     rx_errors: int
     tx_errors: int
     macs: list[str] = field(default_factory=list)
+    rx_pkts: int = 0  # all packets in and out: unicast, multicast and broadcast
+    tx_pkts: int = 0
+    rx_mcast: int = 0
+    rx_bcast: int = 0
     rx_discards: int = 0
     tx_discards: int = 0
     rx_rate: float | None = None  # Mbit/s
     tx_rate: float | None = None
+    rx_pps: float | None = None  # packets per second
+    tx_pps: float | None = None
+    rx_mcast_pps: float | None = None
+    rx_bcast_pps: float | None = None
     rx_util: float | None = None  # percent of the link speed
     tx_util: float | None = None
     last_change: int = 0  # ifLastChange: sysUpTime ticks of the last link change
@@ -129,6 +137,11 @@ def mac_from_suffix(suffix: str) -> str | None:
         return None
 
 
+def _count(tables: dict[str, dict[str, Any]], suffix: str, key: str) -> int:
+    """A counter of one interface; 0 if the switch does not have that column."""
+    return int(tables.get(key, {}).get(suffix, 0))
+
+
 def _physical_ports(names: dict[str, Any], base_port_to_if: dict[str, Any]) -> dict[int, int]:
     """Map ifIndex to port number for the physical ports.
 
@@ -171,6 +184,7 @@ def build_ports(
         if suffix not in tables["oper"]:
             continue  # listed as a port but not present in the interface table
         up = tables["oper"][suffix] == OPER_UP
+
         ports[number] = PortData(
             if_index=if_index,
             number=number,
@@ -182,6 +196,14 @@ def build_ports(
             rx_errors=int(tables["rx_err"].get(suffix, 0)),
             tx_errors=int(tables["tx_err"].get(suffix, 0)),
             last_change=int(tables.get("last_change", {}).get(suffix, 0)),
+            rx_pkts=_count(tables, suffix, "rx_uc")
+            + _count(tables, suffix, "rx_mc")
+            + _count(tables, suffix, "rx_bc"),
+            tx_pkts=_count(tables, suffix, "tx_uc")
+            + _count(tables, suffix, "tx_mc")
+            + _count(tables, suffix, "tx_bc"),
+            rx_mcast=_count(tables, suffix, "rx_mc"),
+            rx_bcast=_count(tables, suffix, "rx_bc"),
             rx_discards=int(tables.get("rx_disc", {}).get(suffix, 0)),
             tx_discards=int(tables.get("tx_disc", {}).get(suffix, 0)),
             macs=sorted(macs_by_if.get(if_index, ())),
@@ -205,6 +227,11 @@ def utilization(rate: float | None, speed: int) -> float | None:
     return round(min(rate / speed * 100, 100.0), 1)
 
 
+def _per_second(new: int, old: int, seconds: float, bits: int) -> float | None:
+    delta = _delta(new, old, bits)
+    return None if delta is None else round(delta / seconds, 1)
+
+
 def add_rates(
     ports: dict[int, PortData],
     previous: dict[int, PortData] | None,
@@ -224,5 +251,9 @@ def add_rates(
             port.rx_rate = round(rx * 8 / seconds / 1e6, 3)
         if tx is not None:
             port.tx_rate = round(tx * 8 / seconds / 1e6, 3)
+        port.rx_pps = _per_second(port.rx_pkts, old.rx_pkts, seconds, counter_bits)
+        port.tx_pps = _per_second(port.tx_pkts, old.tx_pkts, seconds, counter_bits)
+        port.rx_mcast_pps = _per_second(port.rx_mcast, old.rx_mcast, seconds, counter_bits)
+        port.rx_bcast_pps = _per_second(port.rx_bcast, old.rx_bcast, seconds, counter_bits)
         port.rx_util = utilization(port.rx_rate, port.speed)
         port.tx_util = utilization(port.tx_rate, port.speed)

@@ -206,3 +206,29 @@ async def test_the_info_is_read_only_once(hass: HomeAssistant, snmp, entry) -> N
     await entry.runtime_data.async_refresh()
 
     assert len([c for c in snmp.get.await_args_list if len(c.args) == 1]) == asked
+
+
+async def test_packet_sensors_are_off_by_default_and_follow_the_counters(
+    hass: HomeAssistant, snmp, entry, tables
+) -> None:
+    await _setup(hass, entry)
+    registry = er.async_get(hass)
+    for key in ("port1_rx_packets", "port1_tx_packets", "port1_rx_broadcast", "port1_rx_multicast"):
+        entity_id = registry.async_get_entity_id("sensor", DOMAIN, f"{BRIDGE_MAC}_{key}")
+        assert registry.async_get(entity_id).disabled_by is er.RegistryEntryDisabler.INTEGRATION
+
+    tables["rx_bc"]["1"] += 5000
+    await entry.runtime_data.async_refresh()
+    assert entry.runtime_data.data.ports[1].rx_bcast_pps > 0
+    assert entry.runtime_data.data.ports[1].rx_pps >= entry.runtime_data.data.ports[1].rx_bcast_pps
+
+
+async def test_v1_reads_the_32_bit_packet_counters(hass: HomeAssistant, snmp, entry) -> None:
+    entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(entry, data={**entry.data, "version": "1"})
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    asked = snmp.walk_many.await_args.args[0]
+    assert asked["rx_uc"].endswith("2.2.1.11")  # ifInUcastPkts
+    assert asked["rx_bc"].endswith("31.1.1.1.3")  # ifInBroadcastPkts, 32 bit

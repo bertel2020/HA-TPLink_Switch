@@ -27,6 +27,7 @@ from .const import (
     OID_FDB_Q,
     OID_IF_HC_IN_OCTETS,
     OID_IF_HC_OUT_OCTETS,
+    OID_IF_HC_PACKETS,
     OID_IF_HIGH_SPEED,
     OID_IF_IN_DISCARDS,
     OID_IF_IN_ERRORS,
@@ -37,6 +38,7 @@ from .const import (
     OID_IF_OUT_DISCARDS,
     OID_IF_OUT_ERRORS,
     OID_IF_OUT_OCTETS,
+    OID_IF_PACKETS,
     OID_SYS_CONTACT,
     OID_SYS_DESCR,
     OID_SYS_LOCATION,
@@ -72,6 +74,7 @@ TABLES = {
     "rx_err": OID_IF_IN_ERRORS,
     "tx_err": OID_IF_OUT_ERRORS,
     "last_change": OID_IF_LAST_CHANGE,
+    **OID_IF_HC_PACKETS,
     "rx_disc": OID_IF_IN_DISCARDS,
     "tx_disc": OID_IF_OUT_DISCARDS,
     "fdb_q": OID_FDB_Q,
@@ -80,7 +83,7 @@ TABLES = {
 }
 
 # SNMPv1 has no 64 bit counters: it reads the 32 bit ones, which wrap quickly.
-TABLES_V1 = {**TABLES, "rx": OID_IF_IN_OCTETS, "tx": OID_IF_OUT_OCTETS}
+TABLES_V1 = {**TABLES, "rx": OID_IF_IN_OCTETS, "tx": OID_IF_OUT_OCTETS, **OID_IF_PACKETS}
 
 type SwitchConfigEntry = ConfigEntry[SwitchCoordinator]
 

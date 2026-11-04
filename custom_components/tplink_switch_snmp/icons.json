@@ -53,6 +53,18 @@
       },
       "uptime": {
         "default": "mdi:timer-outline"
+      },
+      "rx_packets": {
+        "default": "mdi:package-down"
+      },
+      "tx_packets": {
+        "default": "mdi:package-up"
+      },
+      "rx_broadcast": {
+        "default": "mdi:broadcast"
+      },
+      "rx_multicast": {
+        "default": "mdi:access-point-network"
       }
     }
   }

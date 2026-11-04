@@ -120,6 +120,18 @@
       },
       "device_port": {
         "name": "Port von {device}"
+      },
+      "rx_packets": {
+        "name": "Port {port} Pakete Empfang"
+      },
+      "tx_packets": {
+        "name": "Port {port} Pakete Senden"
+      },
+      "rx_broadcast": {
+        "name": "Port {port} Broadcast Empfang"
+      },
+      "rx_multicast": {
+        "name": "Port {port} Multicast Empfang"
       }
     }
   },

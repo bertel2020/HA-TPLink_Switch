@@ -15,6 +15,7 @@ const LOOK_KEY = "tplink_switch_snmp_look";
 const FALLBACK_MS = 60000;
 const STALE_MS = 5 * 60000;
 const MAX_MACS = 50;
+const BROADCAST_STORM = 500; // broadcast packets per second that look like a loop
 
 // Material Design Icons (Apache 2.0)
 const ICON = {
@@ -411,14 +412,16 @@ class TplinkSwitchPanel extends HTMLElement {
     const max = top.length ? this._total(top[0]) : 1;
     const slow = sw.ports.filter((p) => p.up && p.speed > 0 && p.speed < 1000);
     const errs = sw.ports.filter((p) => this._errors(p));
+    const loud = sw.ports.filter((p) => (p.rx_bcast_pps ?? 0) >= BROADCAST_STORM);
     const day = Date.now() - 86400000;
     const flips = sw.ports.filter((p) => (this._changedAt(sw, p) ?? 0) > day);
     const note = (cls, ic, title, text) => `<div class="issue ${cls}">${icon(ic)}<div><b>${esc(title)}</b><br>${esc(text)}</div></div>`;
     const issues = [
       errs.length ? note("warn", "warn", t("errorPorts", { n: errs.length }), t("errorPortsText", { ports: errs.map((p) => `${t("port")} ${p.n}`).join(", ") })) : "",
       slow.length ? note("warn", "warn", t("slowPorts", { n: slow.length }), t("slowPortsText", { ports: slow.map((p) => `${t("port")} ${p.n}`).join(", ") })) : "",
+      loud.length ? note("warn", "warn", t("manyBroadcast", { n: loud.length }), t("manyBroadcastText", { ports: loud.map((p) => `${t("port")} ${p.n}`).join(", ") })) : "",
       flips.length ? note("warn", "warn", t("linkChanges", { n: flips.length }), t("linkChangesText", { ports: flips.map((p) => `${t("port")} ${p.n}`).join(", ") })) : "",
-      !errs.length && !slow.length && !flips.length ? note("ok", "ok", t("allFine"), t("allFineText")) : "",
+      !errs.length && !slow.length && !flips.length && !loud.length ? note("ok", "ok", t("allFine"), t("allFineText")) : "",
     ].join("");
     return `<section class="card"><div class="card-h"><h2>${esc(t("faceplate"))}</h2>${live}<span class="grow"></span><span class="sub">${esc(t("clickPort"))}</span></div>
       <div class="face">${this._plate(sw)}<div class="legend">
@@ -521,8 +524,8 @@ class TplinkSwitchPanel extends HTMLElement {
     const t = this._t;
     const rows = sw.ports.filter((p) => p.up || this._errors(p));
     return `<section class="card"><div class="card-h"><h2>${esc(t("errorCounters"))}</h2><span class="grow"></span><span class="sub">${esc(t("sinceStart"))}</span></div>
-      <div class="tablewrap"><table><thead><tr><th>${esc(t("port"))}</th><th class="num">${esc(t("rxErrors"))}</th><th class="num">${esc(t("txErrors"))}</th><th class="num">${esc(t("rxDiscards"))}</th><th class="num">${esc(t("txDiscards"))}</th><th class="num">${esc(t("rxTotal"))}</th><th class="num">${esc(t("txTotal"))}</th><th>${esc(t("assessment"))}</th></tr></thead><tbody>
-      ${rows.map((p) => `<tr class="row"><td><span class="pn">${esc(t("port"))} ${p.n}<small>${esc(p.name)}</small></span></td><td class="num mono">${p.rx_errors}</td><td class="num mono">${p.tx_errors}</td><td class="num mono">${p.rx_discards}</td><td class="num mono">${p.tx_discards}</td><td class="num mono">${esc(this._bytes(p.rx_bytes))}</td><td class="num mono">${esc(this._bytes(p.tx_bytes))}</td>
+      <div class="tablewrap"><table><thead><tr><th>${esc(t("port"))}</th><th class="num">${esc(t("rxErrors"))}</th><th class="num">${esc(t("txErrors"))}</th><th class="num">${esc(t("pps"))}</th><th class="num">${esc(t("bcast"))}</th><th class="num">${esc(t("mcast"))}</th><th class="num">${esc(t("rxDiscards"))}</th><th class="num">${esc(t("txDiscards"))}</th><th class="num">${esc(t("rxTotal"))}</th><th class="num">${esc(t("txTotal"))}</th><th>${esc(t("assessment"))}</th></tr></thead><tbody>
+      ${rows.map((p) => `<tr class="row"><td><span class="pn">${esc(t("port"))} ${p.n}<small>${esc(p.name)}</small></span></td><td class="num mono">${p.rx_errors}</td><td class="num mono">${p.tx_errors}</td><td class="num mono">${this._num(p.rx_pps, 1)}</td><td class="num mono">${this._num(p.rx_bcast_pps, 1)}</td><td class="num mono">${this._num(p.rx_mcast_pps, 1)}</td><td class="num mono">${p.rx_discards}</td><td class="num mono">${p.tx_discards}</td><td class="num mono">${esc(this._bytes(p.rx_bytes))}</td><td class="num mono">${esc(this._bytes(p.tx_bytes))}</td>
         <td>${this._errors(p) > 5 ? `<span class="tag warn">${esc(t("check"))}</span>` : `<span class="tag">${esc(t("fine"))}</span>`}</td></tr>`).join("")}
       </tbody></table></div></section>`;
   }

@@ -8,21 +8,21 @@ export const TEXTS = {
     vendor: "Hersteller", model: "Modell", hardware: "Hardware-Version", firmware: "Firmware", location: "Standort", contact: "Ansprechpartner", poll: "Abfrage", pollValue: "SNMP · alle {s} s", address: "Adresse", macAddress: "MAC-Adresse", description: "Beschreibung",
     faceplate: "Frontplatte", live: "Live", stale: "Keine Antwort", clickPort: "Port anklicken für Details",
     l1000: "1 Gbit/s", l100: "100 Mbit/s", l10: "10 Mbit/s", noLink: "kein Link", errorsSinceStart: "Fehler seit Start",
-    link: "Link", only100: "nur 100 Mbit/s", errorsN: "{n} Fehler", history: "Verlauf der letzten 24 Stunden", history7d: "Verlauf der letzten 7 Tage", historyRange: "Zeitraum", range24h: "24 Std.", range7d: "7 Tage",
+    link: "Link", only100: "nur 100 Mbit/s", errorsN: "{n} Fehler", errorsNOne: "1 Fehler", history: "Verlauf der letzten 24 Stunden", history7d: "Verlauf der letzten 7 Tage", historyRange: "Zeitraum", range24h: "24 Std.", range7d: "7 Tage",
     noHistory: "Noch keine Verlaufsdaten. Sie sammeln sich ab dem Start der Integration; die 7 Tage füllen sich Stunde für Stunde.",
     receive: "Empfang", send: "Senden", devicesAtPort: "Geräte am Port", noDevices: "Keine Geräte gelernt", moreN: "… und {n} weitere",
     unknown: "unbekannt", free: "frei", rename: "Umbenennen", save: "Speichern", cancel: "Abbrechen", portName: "Name des Ports",
     mostLoad: "Meiste Last", mostLoadSub: "Empfang + Senden, Mbit/s", notes: "Hinweise",
-    errorPorts: "{n} Ports mit Fehlern", errorPortsText: "Betroffen: {ports}. Übertragungsfehler deuten oft auf ein schlechtes Kabel oder eine Duplex-Abweichung hin.",
-    slowPorts: "{n} Ports laufen nur mit 100 Mbit/s", slowPortsText: "Betroffen: {ports}. Bei Geräten, die Gigabit können, ist das Kabel oder die Gegenstelle verdächtig.",
+    errorPorts: "{n} Ports mit Fehlern", errorPortsOne: "1 Port mit Fehlern", errorPortsText: "Betroffen: {ports}. Übertragungsfehler deuten oft auf ein schlechtes Kabel oder eine Duplex-Abweichung hin.",
+    slowPorts: "{n} Ports laufen nur mit 100 Mbit/s", slowPortsOne: "1 Port läuft nur mit 100 Mbit/s", slowPortsText: "Betroffen: {ports}. Bei Geräten, die Gigabit können, ist das Kabel oder die Gegenstelle verdächtig.",
     allFine: "Keine Auffälligkeiten", allFineText: "Keine Fehler, alle aktiven Ports laufen mit voller Geschwindigkeit.",
     allPorts: "Alle Ports", activeF: "Aktiv", noLinkF: "Ohne Link", slowF: "Nur 100 Mbit/s", errF: "Mit Fehlern",
-    searchPorts: "Port, Name, Gerät oder MAC suchen", portsOf: "{n} von {total} Ports", slowNote: "{n} Ports nur mit 100 Mbit/s",
+    searchPorts: "Port, Name, Gerät oder MAC suchen", portsOf: "{n} von {total} Ports", slowNote: "{n} Ports nur mit 100 Mbit/s", slowNoteOne: "1 Port nur mit 100 Mbit/s",
     port: "Port", status: "Status", speed: "Speed", rx: "Empfang", tx: "Senden", errors: "Fehler", devs: "Geräte", showOnOverview: "Auf der Übersicht zeigen",
     linked: "verbunden", oneDevice: "1 Gerät", nDevices: "{n} Geräte", noPortMatches: "Kein Port passt zum Filter.",
     devicesAtSwitch: "Geräte am Switch", devicesHint: "gelernte MAC-Adressen; Namen von Geräten, die Home Assistant über die MAC kennt",
     all: "Alle", named: "Mit Namen", unknownF: "Unbekannt", searchDevices: "Gerät, MAC oder Port suchen", device: "Gerät", mac: "MAC", noDeviceMatches: "Kein Gerät passt zum Filter.",
-    bcast: "Broadcast/s", mcast: "Multicast/s", pps: "Pakete/s", manyBroadcast: "{n} Ports mit viel Broadcast", manyBroadcastText: "Betroffen: {ports}. Dauerhaft viele Broadcasts deuten auf eine Schleife oder ein defektes Gerät hin.", csvHint: "Die angezeigte Auswahl als CSV-Datei speichern", switchedOff: "abgeschaltet", alsoAtSwitch: "Auch am Switch speichern", rxDiscards: "Empfang verworfen", txDiscards: "Senden verworfen", utilization: "Auslastung", linkChangedAgo: "Link geändert {when}", linkChanges: "{n} Ports mit Link-Wechsel in den letzten 24 Stunden", linkChangesText: "Betroffen: {ports}. Das kann ein ausgeschaltetes Gerät sein oder ein wackelndes Kabel.", lookTitle: "Darstellung", lookScheme: "Farbschema", lookMode: "Hell oder dunkel", lookSize: "Schriftgröße", ocean: "Ozean", forest: "Wald", graphite: "Graphit", auto: "Wie Home Assistant", light: "Hell", dark: "Dunkel", small: "Klein", normal: "Normal", large: "Groß", errorCounters: "Fehler und Volumen", sinceStart: "seit dem Start des Switches", rxErrors: "Empfangsfehler", txErrors: "Sendefehler", rxTotal: "Empfangen gesamt", txTotal: "Gesendet gesamt",
+    bcast: "Broadcast/s", mcast: "Multicast/s", pps: "Pakete/s", manyBroadcast: "{n} Ports mit viel Broadcast", manyBroadcastOne: "1 Port mit viel Broadcast", manyBroadcastText: "Betroffen: {ports}. Dauerhaft viele Broadcasts deuten auf eine Schleife oder ein defektes Gerät hin.", csvHint: "Die angezeigte Auswahl als CSV-Datei speichern", switchedOff: "abgeschaltet", alsoAtSwitch: "Auch am Switch speichern", rxDiscards: "Empfang verworfen", txDiscards: "Senden verworfen", utilization: "Auslastung", linkChangedAgo: "Link geändert {when}", linkChanges: "{n} Ports mit Link-Wechsel in den letzten 24 Stunden", linkChangesOne: "1 Port mit Link-Wechsel in den letzten 24 Stunden", linkChangesText: "Betroffen: {ports}. Das kann ein ausgeschaltetes Gerät sein oder ein wackelndes Kabel.", lookTitle: "Darstellung", lookScheme: "Farbschema", lookMode: "Hell oder dunkel", lookSize: "Schriftgröße", ocean: "Ozean", forest: "Wald", graphite: "Graphit", auto: "Wie Home Assistant", light: "Hell", dark: "Dunkel", small: "Klein", normal: "Normal", large: "Groß", errorCounters: "Fehler und Volumen", sinceStart: "seit dem Start des Switches", rxErrors: "Empfangsfehler", txErrors: "Sendefehler", rxTotal: "Empfangen gesamt", txTotal: "Gesendet gesamt",
     assessment: "Einschätzung", check: "prüfen: Kabel und Duplex", fine: "unauffällig", noSwitch: "Noch kein Switch eingerichtet. Füge die Integration unter Einstellungen → Geräte & Dienste hinzu.",
     loadError: "Die Daten konnten nicht geladen werden: {e}", noData: "–", search: "Suchen", menu: "Menü", switchLabel: "Switch",
   },
@@ -34,21 +34,21 @@ export const TEXTS = {
     vendor: "Manufacturer", model: "Model", hardware: "Hardware version", firmware: "Firmware", location: "Location", contact: "Contact", poll: "Polling", pollValue: "SNMP · every {s} s", address: "Address", macAddress: "MAC address", description: "Description",
     faceplate: "Front panel", live: "Live", stale: "No answer", clickPort: "Click a port for details",
     l1000: "1 Gbit/s", l100: "100 Mbit/s", l10: "10 Mbit/s", noLink: "no link", errorsSinceStart: "errors since start",
-    link: "Link", only100: "only 100 Mbit/s", errorsN: "{n} errors", history: "Last 24 hours", history7d: "Last 7 days", historyRange: "Period", range24h: "24 h", range7d: "7 days",
+    link: "Link", only100: "only 100 Mbit/s", errorsN: "{n} errors", errorsNOne: "1 error", history: "Last 24 hours", history7d: "Last 7 days", historyRange: "Period", range24h: "24 h", range7d: "7 days",
     noHistory: "No history yet. It builds up from when the integration started; the 7 days fill up hour by hour.",
     receive: "Receive", send: "Transmit", devicesAtPort: "Devices at the port", noDevices: "No devices learned", moreN: "… and {n} more",
     unknown: "unknown", free: "free", rename: "Rename", save: "Save", cancel: "Cancel", portName: "Port name",
     mostLoad: "Most traffic", mostLoadSub: "receive + transmit, Mbit/s", notes: "Notes",
-    errorPorts: "{n} ports with errors", errorPortsText: "Affected: {ports}. Transmission errors often point to a bad cable or a duplex mismatch.",
-    slowPorts: "{n} ports run at 100 Mbit/s only", slowPortsText: "Affected: {ports}. For devices that can do gigabit, the cable or the other end is suspect.",
+    errorPorts: "{n} ports with errors", errorPortsOne: "1 port with errors", errorPortsText: "Affected: {ports}. Transmission errors often point to a bad cable or a duplex mismatch.",
+    slowPorts: "{n} ports run at 100 Mbit/s only", slowPortsOne: "1 port runs at 100 Mbit/s only", slowPortsText: "Affected: {ports}. For devices that can do gigabit, the cable or the other end is suspect.",
     allFine: "Nothing unusual", allFineText: "No errors, all active ports run at full speed.",
     allPorts: "All ports", activeF: "Active", noLinkF: "No link", slowF: "100 Mbit/s only", errF: "With errors",
-    searchPorts: "Search port, name, device or MAC", portsOf: "{n} of {total} ports", slowNote: "{n} ports at 100 Mbit/s only",
+    searchPorts: "Search port, name, device or MAC", portsOf: "{n} of {total} ports", slowNote: "{n} ports at 100 Mbit/s only", slowNoteOne: "1 port at 100 Mbit/s only",
     port: "Port", status: "Status", speed: "Speed", rx: "Receive", tx: "Transmit", errors: "Errors", devs: "Devices", showOnOverview: "Show on the overview",
     linked: "connected", oneDevice: "1 device", nDevices: "{n} devices", noPortMatches: "No port matches the filter.",
     devicesAtSwitch: "Devices at the switch", devicesHint: "learned MAC addresses; names of devices Home Assistant knows by their MAC",
     all: "All", named: "Named", unknownF: "Unknown", searchDevices: "Search device, MAC or port", device: "Device", mac: "MAC", noDeviceMatches: "No device matches the filter.",
-    bcast: "Broadcast/s", mcast: "Multicast/s", pps: "Packets/s", manyBroadcast: "{n} ports with a lot of broadcast", manyBroadcastText: "Affected: {ports}. Constantly many broadcasts point to a loop or a faulty device.", csvHint: "Save what is shown as a CSV file", switchedOff: "switched off", alsoAtSwitch: "Also save at the switch", rxDiscards: "Receive discarded", txDiscards: "Transmit discarded", utilization: "Utilization", linkChangedAgo: "Link changed {when}", linkChanges: "{n} ports changed their link in the last 24 hours", linkChangesText: "Affected: {ports}. This can be a device that was switched off or a loose cable.", lookTitle: "Appearance", lookScheme: "Colour scheme", lookMode: "Light or dark", lookSize: "Font size", ocean: "Ocean", forest: "Forest", graphite: "Graphite", auto: "Like Home Assistant", light: "Light", dark: "Dark", small: "Small", normal: "Normal", large: "Large", errorCounters: "Errors and volume", sinceStart: "since the switch started", rxErrors: "Receive errors", txErrors: "Transmit errors", rxTotal: "Received total", txTotal: "Sent total",
+    bcast: "Broadcast/s", mcast: "Multicast/s", pps: "Packets/s", manyBroadcast: "{n} ports with a lot of broadcast", manyBroadcastOne: "1 port with a lot of broadcast", manyBroadcastText: "Affected: {ports}. Constantly many broadcasts point to a loop or a faulty device.", csvHint: "Save what is shown as a CSV file", switchedOff: "switched off", alsoAtSwitch: "Also save at the switch", rxDiscards: "Receive discarded", txDiscards: "Transmit discarded", utilization: "Utilization", linkChangedAgo: "Link changed {when}", linkChanges: "{n} ports changed their link in the last 24 hours", linkChangesOne: "1 port changed its link in the last 24 hours", linkChangesText: "Affected: {ports}. This can be a device that was switched off or a loose cable.", lookTitle: "Appearance", lookScheme: "Colour scheme", lookMode: "Light or dark", lookSize: "Font size", ocean: "Ocean", forest: "Forest", graphite: "Graphite", auto: "Like Home Assistant", light: "Light", dark: "Dark", small: "Small", normal: "Normal", large: "Large", errorCounters: "Errors and volume", sinceStart: "since the switch started", rxErrors: "Receive errors", txErrors: "Transmit errors", rxTotal: "Received total", txTotal: "Sent total",
     assessment: "Assessment", check: "check: cable and duplex", fine: "fine", noSwitch: "No switch set up yet. Add the integration under Settings → Devices & services.",
     loadError: "The data could not be loaded: {e}", noData: "–", search: "Search", menu: "Menu", switchLabel: "Switch",
   },
@@ -56,6 +56,9 @@ export const TEXTS = {
 
 export function translator(language) {
   const table = TEXTS[String(language || "en").slice(0, 2)] || TEXTS.en;
-  return (key, vars = {}) =>
+  const t = (key, vars = {}) =>
     String(table[key] ?? TEXTS.en[key] ?? key).replace(/\{(\w+)\}/g, (_, k) => (k in vars ? vars[k] : `{${k}}`));
+  // a text with a number in it: "<key>One" is used for exactly one ("1 Port"), the text itself otherwise
+  t.count = (key, n, vars = {}) => t(n === 1 && `${key}One` in table ? `${key}One` : key, { n, ...vars });
+  return t;
 }

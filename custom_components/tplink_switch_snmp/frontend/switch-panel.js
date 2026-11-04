@@ -421,10 +421,10 @@ class TplinkSwitchPanel extends HTMLElement {
     const flips = sw.ports.filter((p) => (this._changedAt(sw, p) ?? 0) > day);
     const note = (cls, ic, title, text) => `<div class="issue ${cls}">${icon(ic)}<div><b>${esc(title)}</b><br>${esc(text)}</div></div>`;
     const issues = [
-      errs.length ? note("warn", "warn", t("errorPorts", { n: errs.length }), t("errorPortsText", { ports: errs.map((p) => `${t("port")} ${p.n}`).join(", ") })) : "",
-      slow.length ? note("warn", "warn", t("slowPorts", { n: slow.length }), t("slowPortsText", { ports: slow.map((p) => `${t("port")} ${p.n}`).join(", ") })) : "",
-      loud.length ? note("warn", "warn", t("manyBroadcast", { n: loud.length }), t("manyBroadcastText", { ports: loud.map((p) => `${t("port")} ${p.n}`).join(", ") })) : "",
-      flips.length ? note("warn", "warn", t("linkChanges", { n: flips.length }), t("linkChangesText", { ports: flips.map((p) => `${t("port")} ${p.n}`).join(", ") })) : "",
+      errs.length ? note("warn", "warn", t.count("errorPorts", errs.length), t("errorPortsText", { ports: errs.map((p) => `${t("port")} ${p.n}`).join(", ") })) : "",
+      slow.length ? note("warn", "warn", t.count("slowPorts", slow.length), t("slowPortsText", { ports: slow.map((p) => `${t("port")} ${p.n}`).join(", ") })) : "",
+      loud.length ? note("warn", "warn", t.count("manyBroadcast", loud.length), t("manyBroadcastText", { ports: loud.map((p) => `${t("port")} ${p.n}`).join(", ") })) : "",
+      flips.length ? note("warn", "warn", t.count("linkChanges", flips.length), t("linkChangesText", { ports: flips.map((p) => `${t("port")} ${p.n}`).join(", ") })) : "",
       !errs.length && !slow.length && !flips.length && !loud.length ? note("ok", "ok", t("allFine"), t("allFineText")) : "",
     ].join("");
     return `<section class="card"><div class="card-h"><h2>${esc(t("faceplate"))}</h2>${live}<span class="grow"></span><span class="sub">${esc(t("clickPort"))}</span></div>
@@ -448,7 +448,7 @@ class TplinkSwitchPanel extends HTMLElement {
     const title = this._editing
       ? `<div class="nameedit"><b>${esc(t("port"))} ${p.n}</b><input id="portname" maxlength="40" value="${esc(p.name)}" placeholder="${esc(t("portName"))}" aria-label="${esc(t("portName"))}">${sw.can_write ? `<label class="check"><input type="checkbox" id="toswitch"> ${esc(t("alsoAtSwitch"))}</label>` : ""}<button class="chip" data-a="save">${esc(t("save"))}</button><button class="chip" data-a="cancel">${esc(t("cancel"))}</button></div>`
       : `<h3>${esc(t("port"))} ${p.n}${p.name ? " · " + esc(p.name) : ""} <button class="rowbtn" data-a="rename" title="${esc(t("rename"))}" aria-label="${esc(t("rename"))}">${icon("edit")}</button>
-          ${p.admin_up === false ? `<span class="tag bad">${esc(t("switchedOff"))}</span>` : ""}<span class="tag ${p.up ? "ok" : ""}">${p.up ? esc(t("link")) + " " + esc(this._speedText(p)) : esc(t("noLink"))}</span>${p.up && p.speed > 0 && p.speed < 1000 ? `<span class="tag warn">${esc(t("only100"))}</span>` : ""}${this._errors(p) ? `<span class="tag bad">${esc(t("errorsN", { n: this._errors(p) }))}</span>` : ""}</h3>`;
+          ${p.admin_up === false ? `<span class="tag bad">${esc(t("switchedOff"))}</span>` : ""}<span class="tag ${p.up ? "ok" : ""}">${p.up ? esc(t("link")) + " " + esc(this._speedText(p)) : esc(t("noLink"))}</span>${p.up && p.speed > 0 && p.speed < 1000 ? `<span class="tag warn">${esc(t("only100"))}</span>` : ""}${this._errors(p) ? `<span class="tag bad">${esc(t.count("errorsN", this._errors(p)))}</span>` : ""}</h3>`;
     const macs = p.macs.slice(0, MAX_MACS);
     const macList = macs.length
       ? `<div class="maclist">${macs.map((m) => `<div><span>${m.name ? esc(m.name) : `<span class="muted">${esc(t("unknown"))}</span>`}</span><span class="mono muted">${esc(m.mac)}</span></div>`).join("")}${p.macs.length > MAX_MACS ? `<div><span class="muted">${esc(t("moreN", { n: p.macs.length - MAX_MACS }))}</span></div>` : ""}</div>`
@@ -519,7 +519,7 @@ class TplinkSwitchPanel extends HTMLElement {
       <div class="tools">${chip("all", t("allPorts"))}${chip("up", t("activeF"))}${chip("down", t("noLinkF"))}${chip("slow", t("slowF"))}${chip("err", t("errF"))}
         <label class="search">${icon("search")}<input id="q" value="${esc(this._q)}" placeholder="${esc(t("searchPorts"))}" aria-label="${esc(t("search"))}"></label>
         <button class="chip" data-a="csv" data-v="ports" title="${esc(t("csvHint"))}">${icon("download")}CSV</button></div>
-      <div class="infobar"><span id="count"></span><span class="warnnote">${slow ? esc(t("slowNote", { n: slow })) : ""}</span></div>
+      <div class="infobar"><span id="count"></span><span class="warnnote">${slow ? esc(t.count("slowNote", slow)) : ""}</span></div>
       <div class="tablewrap"><table><thead><tr>${this._head("ports", "n", t("port"))}${this._head("ports", "status", t("status"))}${this._head("ports", "speed", t("speed"), "num")}${this._head("ports", "rx", t("rx"), "num")}${this._head("ports", "tx", t("tx"), "num")}${this._head("ports", "errors", t("errors"), "num")}${this._head("ports", "devs", t("devs"))}<th></th></tr></thead><tbody id="ptb"></tbody></table></div>
       <div class="empty" id="pempty" hidden>${esc(t("noPortMatches"))}</div></section>`;
   }

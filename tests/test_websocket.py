@@ -290,3 +290,35 @@ async def test_history_of_an_unknown_switch(
     msg = await client.receive_json()
 
     assert msg["success"] is False and msg["error"]["code"] == "not_found"
+
+
+async def test_history_over_a_week_is_in_hours(
+    hass: HomeAssistant, hass_ws_client, snmp, entry, tables
+) -> None:
+    await _setup(hass, entry)
+    tables["rx"]["1"] += 125_000_000
+    await entry.runtime_data.async_refresh()
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {"type": "tplink_switch_snmp/history", "entry_id": entry.entry_id, "port": 1, "range": "7d"}
+    )
+    result = (await client.receive_json())["result"]
+
+    assert result["bucket"] == 3600
+    assert result["end"] - result["start"] == 7 * 86400
+    assert len(result["points"]) == 1
+
+
+async def test_history_with_an_unknown_range_is_refused(
+    hass: HomeAssistant, hass_ws_client, snmp, entry
+) -> None:
+    await _setup(hass, entry)
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {"type": "tplink_switch_snmp/history", "entry_id": entry.entry_id, "port": 1, "range": "1y"}
+    )
+    msg = await client.receive_json()
+
+    assert msg["success"] is False and msg["error"]["code"] == "invalid_format"

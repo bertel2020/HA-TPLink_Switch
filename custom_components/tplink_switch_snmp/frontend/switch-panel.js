@@ -55,7 +55,8 @@ class TplinkSwitchPanel extends HTMLElement {
     this._dq = "";
     this._details = false;
     this._editing = false;
-    this._history = new Map(); // port key -> {at, rx, tx}
+    this._history = new Map(); // port and range -> {at, rx, tx}
+    this._range = "24h";
     this._timer = null;
     this._loading = false;
     this._unsub = null;
@@ -287,12 +288,12 @@ class TplinkSwitchPanel extends HTMLElement {
   // ---- history -------------------------------------------------------------------------------
 
   async _loadHistory(sw, port) {
-    const key = `${sw.entry_id}:${port.n}`;
+    const key = `${sw.entry_id}:${port.n}:${this._range}`;
     const cached = this._history.get(key);
     if (cached && Date.now() - cached.at < 60000) return;
     this._history.set(key, { ...cached, at: Date.now() });
     try {
-      const res = await this._hass.callWS({ type: `${DOMAIN}/history`, entry_id: sw.entry_id, port: port.n });
+      const res = await this._hass.callWS({ type: `${DOMAIN}/history`, entry_id: sw.entry_id, port: port.n, range: this._range });
       this._history.set(key, {
         at: Date.now(),
         t0: res.start * 1000,
@@ -307,7 +308,7 @@ class TplinkSwitchPanel extends HTMLElement {
   }
 
   _chart(sw, port) {
-    const h = this._history.get(`${sw.entry_id}:${port.n}`);
+    const h = this._history.get(`${sw.entry_id}:${port.n}:${this._range}`);
     const t = this._t;
     if (!h || !h.rx || (!h.rx.length && !h.tx.length)) return `<div class="nodata">${esc(t("noHistory"))}</div>`;
     const max = Math.max(0.01, ...h.rx.map((p) => p.v), ...h.tx.map((p) => p.v)) * 1.15;
@@ -317,7 +318,7 @@ class TplinkSwitchPanel extends HTMLElement {
       const last = xy[xy.length - 1].split(",")[0];
       return `<path class="f" fill="${color}" d="M${xy[0].split(",")[0]},60 L${xy.join(" L")} L${last},60 Z"/><path class="l" stroke="${color}" d="M${xy.join(" L")}"/>`;
     };
-    return `<svg class="spark" viewBox="0 0 300 60" preserveAspectRatio="none" role="img" aria-label="${esc(t("history"))}">${path(h.rx, "var(--rx)")}${path(h.tx, "var(--tx)")}</svg>`;
+    return `<svg class="spark" viewBox="0 0 300 60" preserveAspectRatio="none" role="img" aria-label="${esc(t(this._range === "7d" ? "history7d" : "history"))}">${path(h.rx, "var(--rx)")}${path(h.tx, "var(--tx)")}</svg>`;
   }
 
   // ---- rendering -----------------------------------------------------------------------------
@@ -453,7 +454,7 @@ class TplinkSwitchPanel extends HTMLElement {
       ? `<div class="maclist">${macs.map((m) => `<div><span>${m.name ? esc(m.name) : `<span class="muted">${esc(t("unknown"))}</span>`}</span><span class="mono muted">${esc(m.mac)}</span></div>`).join("")}${p.macs.length > MAX_MACS ? `<div><span class="muted">${esc(t("moreN", { n: p.macs.length - MAX_MACS }))}</span></div>` : ""}</div>`
       : "";
     return `<section class="card"><div class="pd">
-      <div>${title}<div class="sub" style="margin:4px 0 10px">${esc(t("history"))}</div>
+      <div>${title}<div class="histhead"><span class="sub">${esc(t(this._range === "7d" ? "history7d" : "history"))}</span><span class="rangepick" role="group" aria-label="${esc(t("historyRange"))}"><button class="chip small" data-a="range" data-v="24h" aria-pressed="${this._range === "24h"}">${esc(t("range24h"))}</button><button class="chip small" data-a="range" data-v="7d" aria-pressed="${this._range === "7d"}">${esc(t("range7d"))}</button></span></div>
         ${p.up ? this._chart(sw, p) : `<div class="nodata">${esc(t("noLink"))}</div>`}
         ${this._changedAt(sw, p) ? `<div class="sub" style="margin-top:6px">${esc(t("linkChangedAgo", { when: this._ago(this._changedAt(sw, p)) }))}</div>` : ""}
         <div class="lg"><span><i style="background:var(--rx)"></i>${esc(t("receive"))} ${this._num(p.rx_rate)} Mbit/s${p.rx_util != null ? ` (${esc(this._util(p.rx_util))})` : ""}</span><span><i style="background:var(--tx)"></i>${esc(t("send"))} ${this._num(p.tx_rate)} Mbit/s${p.tx_util != null ? ` (${esc(this._util(p.tx_util))})` : ""}</span></div></div>
@@ -636,6 +637,7 @@ class TplinkSwitchPanel extends HTMLElement {
           if (outside) this._render();
           return;
         }
+        case "range": this._range = v; break;
         case "look-toggle": this._menuOpen = !this._menuOpen; break;
         case "look": this._setLook({ [el.dataset.kind]: v }); break;
         case "tab": this._tab = v; this._editing = false; break;

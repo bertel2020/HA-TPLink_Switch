@@ -7,7 +7,7 @@ from homeassistant.core import HomeAssistant
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.tplink_switch_snmp.const import DOMAIN
-from custom_components.tplink_switch_snmp.history import BUCKET, KEEP, RateHistory
+from custom_components.tplink_switch_snmp.history import BUCKET, KEEP, RANGES, RateHistory
 
 NOW = 1_800_000_000.0  # any time; the buckets are computed from it
 START = NOW // BUCKET * BUCKET
@@ -50,7 +50,7 @@ def test_a_poll_without_both_rates_adds_nothing() -> None:
     history = RateHistory()
     history.add(NOW, {1: (None, None), 2: (5.0, None), 3: (None, 5.0)})
 
-    assert history.as_dict() == {"ports": {}}
+    assert history.as_dict() == {"ports": {}, "hourly": {}}
 
 
 def test_the_clock_going_back_keeps_what_is_there() -> None:
@@ -93,7 +93,55 @@ def test_restoring_drops_what_is_too_old_or_broken() -> None:
 
 def test_restoring_garbage_gives_an_empty_history() -> None:
     for garbage in (None, [], "text", {"ports": 5}):
-        assert RateHistory.from_dict(garbage, NOW).as_dict() == {"ports": {}}
+        assert RateHistory.from_dict(garbage, NOW).as_dict() == {"ports": {}, "hourly": {}}
+
+
+# ---- the hourly values for a week
+
+
+def test_hours_average_everything_in_them() -> None:
+    history = RateHistory()
+    hour = NOW // 3600 * 3600
+    history.add(hour + 10, {1: (10.0, 1.0)})
+    history.add(hour + 400, {1: (30.0, 3.0)})  # another five-minute bucket, the same hour
+    history.add(hour + 3000, {1: (20.0, 2.0)})
+
+    assert history.series(1, "7d") == [(hour, 20.0, 2.0)]
+    assert len(history.series(1, "24h")) == 3  # the five-minute values stay
+
+
+def test_hours_are_kept_for_a_week_and_five_minutes_for_a_day() -> None:
+    history = RateHistory()
+    history.add(NOW, {1: (10.0, 1.0)})
+    history.add(NOW + 2 * KEEP, {1: (20.0, 2.0)})  # two days later
+
+    assert len(history.series(1, "24h")) == 1  # the first value is a day old
+    assert len(history.series(1, "7d")) == 2  # but it is still within the week
+
+
+def test_the_week_forgets_after_seven_days() -> None:
+    history = RateHistory()
+    history.add(NOW, {1: (10.0, 1.0)})
+    history.add(NOW + RANGES["7d"][1] + 3600, {1: (20.0, 2.0)})
+
+    assert len(history.series(1, "7d")) == 1
+
+
+def test_a_file_from_before_the_week_still_loads() -> None:
+    old = {"ports": {"1": [[START, 5, 5, 1]]}}  # no "hourly" in it
+    restored = RateHistory.from_dict(old, NOW)
+
+    assert restored.series(1) == [(START, 5.0, 5.0)]
+    assert restored.series(1, "7d") == []
+
+
+def test_both_tiers_survive_a_round_trip() -> None:
+    history = RateHistory()
+    history.add(NOW, {1: (10.0, 2.0)})
+    restored = RateHistory.from_dict(history.as_dict(), NOW + 30)
+
+    assert restored.series(1) == history.series(1)
+    assert restored.series(1, "7d") == history.series(1, "7d")
 
 
 # ---- in the integration ------------------------------------------------------------------

@@ -1,24 +1,26 @@
-"""The data rates of the last 24 hours, kept by the integration itself (no recorder needed)."""
+"""The data rates of the last days, kept by the integration itself (no recorder needed)."""
 
 from __future__ import annotations
 
 from collections import deque
 from typing import Any
 
-BUCKET = 300  # seconds per value: 288 values cover 24 hours
-KEEP = 86400  # seconds to keep
+# name -> (seconds per value, seconds to keep): 24 hours in five-minute values, 7 days in hours
+RANGES = {"24h": (300, 86400), "7d": (3600, 604800)}
+BUCKET, KEEP = RANGES["24h"]
 
 
-class RateHistory:
-    """Receive and transmit rate per port, averaged into five-minute values."""
+class _Tier:
+    """The rates of every port, averaged into values of one length."""
 
-    def __init__(self) -> None:
+    def __init__(self, bucket: int, keep: int) -> None:
+        self.bucket = bucket
+        self.keep = keep
         # per port: [bucket start, mean receive, mean transmit, number of samples]
         self._ports: dict[int, deque[list[float]]] = {}
 
     def add(self, now: float, rates: dict[int, tuple[float | None, float | None]]) -> None:
-        """Add the rates of one poll. A poll without both rates (a counter reset) adds nothing."""
-        bucket = int(now // BUCKET * BUCKET)
+        bucket = int(now // self.bucket * self.bucket)
         for port, (rx, tx) in rates.items():
             if rx is None or tx is None:
                 continue
@@ -33,36 +35,29 @@ class RateHistory:
                 last[3] = count
             else:
                 values.append([bucket, rx, tx, 1])
-        self._prune(bucket)
+        self.prune(bucket)
 
-    def _prune(self, bucket: int) -> None:
+    def prune(self, bucket: int) -> None:
         for port, values in list(self._ports.items()):
-            while values and values[0][0] <= bucket - KEEP:
+            while values and values[0][0] <= bucket - self.keep:
                 values.popleft()
             if not values:
                 del self._ports[port]
 
     def series(self, port: int) -> list[tuple[float, float, float]]:
-        """(bucket start, receive, transmit) for a port, oldest first."""
         return [(t, rx, tx) for t, rx, tx, _ in self._ports.get(port, ())]
 
-    def as_dict(self) -> dict[str, Any]:
-        """What gets stored."""
+    def as_dict(self) -> dict[str, list[list[float]]]:
         return {
-            "ports": {
-                str(port): [[t, round(rx, 3), round(tx, 3), n] for t, rx, tx, n in values]
-                for port, values in self._ports.items()
-            }
+            str(port): [[t, round(rx, 3), round(tx, 3), n] for t, rx, tx, n in values]
+            for port, values in self._ports.items()
         }
 
-    @classmethod
-    def from_dict(cls, data: Any, now: float) -> RateHistory:
-        """Restore what was stored; anything that does not look right is left out."""
-        history = cls()
-        ports = data.get("ports") if isinstance(data, dict) else None
-        if not isinstance(ports, dict):
-            return history
-        for key, rows in ports.items():
+    def load(self, data: Any, now: float) -> None:
+        """Take what was stored; anything that does not look right is left out."""
+        if not isinstance(data, dict):
+            return
+        for key, rows in data.items():
             if not str(key).isdigit() or not isinstance(rows, list):
                 continue
             values: deque[list[float]] = deque()
@@ -74,6 +69,34 @@ class RateHistory:
                 if n >= 1 and (not values or t > values[-1][0]):
                     values.append([t, rx, tx, n])
             if values:
-                history._ports[int(key)] = values
-        history._prune(int(now // BUCKET * BUCKET))
+                self._ports[int(key)] = values
+        self.prune(int(now // self.bucket * self.bucket))
+
+
+class RateHistory:
+    """Receive and transmit rate per port: five-minute values for a day, hours for a week."""
+
+    def __init__(self) -> None:
+        self._tiers = {name: _Tier(*size) for name, size in RANGES.items()}
+
+    def add(self, now: float, rates: dict[int, tuple[float | None, float | None]]) -> None:
+        """Add the rates of one poll. A poll without both rates (a counter reset) adds nothing."""
+        for tier in self._tiers.values():
+            tier.add(now, rates)
+
+    def series(self, port: int, range_: str = "24h") -> list[tuple[float, float, float]]:
+        """(bucket start, receive, transmit) for a port, oldest first."""
+        return self._tiers[range_].series(port)
+
+    def as_dict(self) -> dict[str, Any]:
+        """What gets stored. "ports" holds the five-minute values, as in the first version."""
+        return {"ports": self._tiers["24h"].as_dict(), "hourly": self._tiers["7d"].as_dict()}
+
+    @classmethod
+    def from_dict(cls, data: Any, now: float) -> RateHistory:
+        """Restore what was stored; an older file without the hours still loads."""
+        history = cls()
+        if isinstance(data, dict):
+            history._tiers["24h"].load(data.get("ports"), now)
+            history._tiers["7d"].load(data.get("hourly"), now)
         return history

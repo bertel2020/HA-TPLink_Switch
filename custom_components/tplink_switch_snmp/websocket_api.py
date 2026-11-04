@@ -13,7 +13,7 @@ import voluptuous as vol
 
 from .const import CONF_PORT_NAMES, DOMAIN, PORT_NAME_MAX
 from .coordinator import SwitchConfigEntry
-from .history import BUCKET, KEEP
+from .history import RANGES
 from .model import manufacturer
 from .vendor import vendor_of
 
@@ -142,26 +142,26 @@ def ws_subscribe(
         vol.Required("type"): f"{DOMAIN}/history",
         vol.Required("entry_id"): str,
         vol.Required("port"): int,
+        vol.Optional("range", default="24h"): vol.In(list(RANGES)),
     }
 )
 @callback
 def ws_history(hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict) -> None:
-    """The receive and transmit rates of one port over the last 24 hours."""
+    """The receive and transmit rates of one port over the last 24 hours or 7 days."""
     entry = hass.config_entries.async_get_entry(msg["entry_id"])
     if entry is None or entry.domain != DOMAIN or entry.state is not ConfigEntryState.LOADED:
         connection.send_error(msg["id"], "not_found", "switch not found")
         return
     now = time.time()
+    bucket, keep = RANGES[msg["range"]]
+    series = entry.runtime_data.history.series(msg["port"], msg["range"])
     connection.send_result(
         msg["id"],
         {
-            "start": now - KEEP,
+            "start": now - keep,
             "end": now,
-            "bucket": BUCKET,
-            "points": [
-                [t, round(rx, 3), round(tx, 3)]
-                for t, rx, tx in entry.runtime_data.history.series(msg["port"])
-            ],
+            "bucket": bucket,
+            "points": [[t, round(rx, 3), round(tx, 3)] for t, rx, tx in series],
         },
     )
 

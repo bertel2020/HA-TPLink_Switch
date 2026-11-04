@@ -33,16 +33,17 @@ function snapshot() {
 }
 
 // the integration's own 24 hour history: five-minute values, for ports that have a link
-function history(port) {
+function history(port, range = "24h") {
   const sample = SAMPLE[port];
-  const end = Date.now() / 1000, start = end - 86400;
+  const bucket = range === "7d" ? 3600 : 300, count = range === "7d" ? 168 : 288;
+  const end = Date.now() / 1000, start = end - bucket * count;
   let seed = port * 7919;
-  const points = !sample ? [] : Array.from({ length: 288 }, (_, i) => {
+  const points = !sample ? [] : Array.from({ length: count }, (_, i) => {
     seed = (seed * 9301 + 49297) % 233280;
     const r = () => { seed = (seed * 9301 + 49297) % 233280; return 0.3 + (seed / 233280) * 1.5; };
-    return [Math.floor(start / 300) * 300 + i * 300, +(sample[2] * r()).toFixed(3), +(sample[3] * r()).toFixed(3)];
+    return [Math.floor(start / bucket) * bucket + i * bucket, +(sample[2] * r()).toFixed(3), +(sample[3] * r()).toFixed(3)];
   });
-  return { start, end, bucket: 300, points };
+  return { start, end, bucket, points };
 }
 
 export function makeHass({ dark = false, language = "de", pushEvery = 5000 } = {}) {
@@ -63,7 +64,7 @@ export function makeHass({ dark = false, language = "de", pushEvery = 5000 } = {
       if (msg.type === "tplink_switch_snmp/set_port_name") { names[msg.port] = msg.name.trim(); return { name: msg.name }; }
       if (msg.type === "frontend/get_user_data") return { value: userData[msg.key] ?? null };
       if (msg.type === "frontend/set_user_data") { userData[msg.key] = msg.value; return null; }
-      if (msg.type === "tplink_switch_snmp/history") return history(msg.port);
+      if (msg.type === "tplink_switch_snmp/history") return history(msg.port, msg.range);
       throw new Error(`unknown command ${msg.type}`);
     },
   };

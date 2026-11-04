@@ -2,6 +2,27 @@
 
 Alle nennenswerten Änderungen an dieser Integration werden hier festgehalten.
 
+## 0.4.0 – 2026-11-04
+
+### Neu
+
+- **SNMP v1, v2c und v3:** Die Version ist im Einrichtungsdialog wählbar. Bei v3 gibt es Benutzer, Authentifizierung (MD5, SHA, SHA-224/256/384/512) und Verschlüsselung (DES, AES-128/192/256). Beim Neu konfigurieren lässt sich die Version wechseln. Bestehende Einträge bleiben bei v2c. Bei v1 liest die Integration die 32-Bit-Zähler (v1 kennt keine 64-Bit-Zähler) und fragt mit GETNEXT ab.
+- **Abfrageintervall** in den Optionen (10 bis 3600 Sekunden, Standard 30), ohne Neuladen übernommen.
+- **Verworfene Pakete** (Empfang/Senden) und **Auslastung in Prozent** (Empfang/Senden) als Sensoren, beide standardmäßig ausgeschaltet. Das Panel zeigt die Auslastung in der Portliste und im Port-Detail, die Diagnose die verworfenen Pakete.
+- **Link-Wechsel:** Ereignis `tplink_switch_snmp_link_changed` mit Logbuch-Eintrag („Port 12 (AP): link up at 1 Gbit/s“, „link down“, „link was lost and came back“), Sensor **Link geändert** (Zeitstempel, standardmäßig aus) und im Panel die Zeit des letzten Wechsels sowie ein Hinweis auf Ports mit Wechseln in den letzten 24 Stunden. Nach einem Neustart des Switches entstehen keine Ereignisse.
+- **Geräte-Zuordnung:** Für jedes Gerät, das Home Assistant über seine MAC-Adresse kennt und das am Switch gelernt wurde, gibt es den Sensor **Port von …** (Port-Nummer, Port-Name im Attribut). Wechselt ein solches Gerät den Port, löst das Ereignis `tplink_switch_snmp_device_moved` aus, mit Logbuch-Eintrag.
+- **SNMP-Traps** (v1 und v2c) auf einem Port der Optionen: Ein Trap des Switches löst sofort eine Abfrage aus. Ein Trap zählt nur mit der richtigen Community und von der Adresse des Switches.
+- **Diagnosedaten** zum Herunterladen, ohne Adresse, Zugangsdaten, MAC-Adressen und Port-Namen.
+- **Englisches README**; das deutsche README erklärt Einrichtung, Optionen, Ereignisse und Traps.
+
+### Geändert
+
+- Der Installationsabschnitt der READMEs mit den Buttons für HACS und die Einrichtung.
+
+### Bekannte Grenzen
+
+- Config-Flow, Optionen, Ereignisse, Traps und Diagnose sind mit einem gefälschten Switch und dem Test-Plugin von Home Assistant geprüft, nicht in einer laufenden Instanz. Gegen den echten Switch geprüft sind Abfragen mit v1 und v2c, die Port-Erkennung und der Trap-Empfang mit `snmptrap`; bei v3 antwortet der Switch, ein eingerichteter Benutzer wurde nicht getestet.
+
 ## 0.3.0 – 2026-11-04
 
 ### Neu

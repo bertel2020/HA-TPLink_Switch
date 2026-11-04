@@ -2,6 +2,27 @@
 
 All notable changes to this integration are recorded here.
 
+## 0.4.0 – 2026-11-04
+
+### New
+
+- **SNMP v1, v2c and v3:** the version can be chosen in the set-up dialog. With v3 there are a user, authentication (MD5, SHA, SHA-224/256/384/512) and encryption (DES, AES-128/192/256). Reconfigure can change the version. Existing entries stay on v2c. With v1 the integration reads the 32-bit counters (v1 has no 64-bit counters) and walks with GETNEXT.
+- **Polling interval** in the options (10 to 3600 seconds, default 30), applied without a reload.
+- **Discarded packets** (receive/transmit) and **utilization in percent** (receive/transmit) as sensors, both off by default. The panel shows the utilization in the port list and the port detail, and the diagnostics the discarded packets.
+- **Link changes:** event `tplink_switch_snmp_link_changed` with a logbook entry ("Port 12 (AP): link up at 1 Gbit/s", "link down", "link was lost and came back"), a **Link changed** sensor (timestamp, off by default) and, in the panel, the time of the last change and a note on ports with changes in the last 24 hours. After a reboot of the switch there are no events.
+- **Device assignment:** every device that Home Assistant knows by its MAC address and that was learned at the switch gets a sensor **Port of …** (port number, port name as an attribute). If such a device changes port, the event `tplink_switch_snmp_device_moved` fires, with a logbook entry.
+- **SNMP traps** (v1 and v2c) on a port from the options: a trap from the switch triggers a poll at once. A trap counts only with the right community and from the switch's address.
+- **Diagnostics** to download, without address, credentials, MAC addresses and port names.
+- **English README**; the German README explains set-up, options, events and traps.
+
+### Changed
+
+- The installation section of the READMEs with the buttons for HACS and the set-up.
+
+### Known limits
+
+- Config flow, options, events, traps and diagnostics are checked with a fake switch and Home Assistant's test plugin, not in a running instance. Checked against the real switch are queries with v1 and v2c, the port detection and receiving traps with `snmptrap`; with v3 the switch answers, a user that is set up was not tested.
+
 ## 0.3.0 – 2026-11-04
 
 ### New

@@ -1,27 +1,56 @@
 # TP-Link Switch (SNMP)
 
-Liest einen TP-Link JetStream-Switch (getestet mit **TL-SG3424**) lokal per SNMP aus: Link-Status, Geschwindigkeit, Datenrate, Fehler und die gelernten MAC-Adressen pro Port.
+<p align="center"><em><a href="README.en.md">English version</a></em></p>
+
+Liest einen TP-Link JetStream-Switch (getestet mit **TL-SG3424**) lokal per SNMP aus: Link-Status, Geschwindigkeit, Datenrate, Auslastung, Fehler, verworfene Pakete und die gelernten MAC-Adressen pro Port. Dazu kommen ein Seitenleisten-Panel, Ereignisse für Link- und Port-Wechsel und auf Wunsch SNMP-Traps für sofortige Meldungen.
 
 ## Voraussetzung am Switch
 
-SNMP einschalten (*SNMP → Global Config*), unter *SNMP → Community* eine Community mit Lesezugriff anlegen und die Konfiguration speichern (*System Tools → Save Config*).
+SNMP einschalten (*SNMP → Global Config*) und die Konfiguration speichern (*System Tools → Save Config*). Je nach SNMP-Version:
+
+- **v1 / v2c:** unter *SNMP → Community* eine Community mit Lesezugriff anlegen.
+- **v3:** einen Benutzer mit Gruppe, Authentifizierung und, wenn gewünscht, Verschlüsselung anlegen.
 
 ## Installation
 
-1. HACS → *Benutzerdefinierte Repositories* → `https://github.com/bertel2020/HA-TPLink_Switch` als *Integration* hinzufügen.
-2. Home Assistant neu starten.
-3. *Einstellungen → Geräte & Dienste → Integration hinzufügen → TP-Link Switch (SNMP)*, Host und Community eintragen.
+### Über HACS (empfohlen)
 
-Manuell: den Ordner `custom_components/tplink_switch_snmp` nach `config/custom_components/` kopieren.
+[![HACS-Repository in My Home Assistant öffnen](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=bertel2020&repository=HA-TPLink_Switch&category=integration)
+[![TP-Link Switch (SNMP) zu My Home Assistant hinzufügen](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=tplink_switch_snmp)
+
+1. Über den ersten Button das TP-Link-Switch-Repository in HACS öffnen.
+2. **TP-Link Switch (SNMP)** herunterladen und Home Assistant neu starten.
+3. Über den zweiten Button die Integration hinzufügen. Alternativ in Home
+   Assistant **Einstellungen → Geräte & Dienste → Integration hinzufügen →
+   TP-Link Switch (SNMP)** öffnen.
+
+Falls der erste Button nicht funktioniert, in HACS unter **Integrationen →
+Benutzerdefinierte Repositories** `https://github.com/bertel2020/HA-TPLink_Switch`
+als Kategorie **Integration** eintragen.
+
+### Manuell
+
+Das Verzeichnis `custom_components/tplink_switch_snmp` nach
+`/config/custom_components/tplink_switch_snmp` kopieren und Home Assistant neu
+starten.
+
+## Einrichtung
+
+Im Dialog zuerst **Host**, **Port** (Standard 161) und die **SNMP-Version** wählen, dann je nach Version die **Community** (v1, v2c) oder den **Benutzer** mit Authentifizierung und Verschlüsselung (v3, Schlüssel mit mindestens 8 Zeichen). Der Switch wird an seiner MAC-Adresse erkannt; derselbe Switch lässt sich nicht zweimal einrichten.
+
+Später ändern: **Geräte & Dienste → TP-Link Switch (SNMP) → ⋮ → Neu konfigurieren** für Adresse, Version und Zugangsdaten (es muss derselbe Switch antworten), **Konfigurieren** für die Optionen:
+
+- **Abfrageintervall** (10 bis 3600 Sekunden, Standard 30). Kürzere Abstände geben genauere Datenraten, belasten aber den Switch stärker.
+- **Trap-Port** (0 = aus), siehe unten.
 
 ## Seitenleisten-Panel
 
 Die Integration legt in der Seitenleiste (nur für Administratoren) den Eintrag **Switch** an:
 
-- **Übersicht:** Frontplatte mit allen Ports nach Link-Geschwindigkeit eingefärbt, dazu Port-Detail mit Verlauf der letzten 24 Stunden (aus der Historie von Home Assistant), die Ports mit der meisten Last und Hinweise zu Fehlern und Ports mit nur 100 Mbit/s.
-- **Ports:** Tabelle mit Filtern und Suche.
+- **Übersicht:** Frontplatte mit allen Ports nach Link-Geschwindigkeit eingefärbt, dazu Port-Detail mit Verlauf der letzten 24 Stunden (aus der Historie von Home Assistant), Zeit des letzten Link-Wechsels und Auslastung, die Ports mit der meisten Last und Hinweise zu Fehlern, Ports mit nur 100 Mbit/s und Link-Wechseln in den letzten 24 Stunden.
+- **Ports:** Tabelle mit Filtern, Suche und Auslastung in Prozent.
 - **Geräte:** die gelernten MAC-Adressen pro Port; Namen und Hersteller kommen von Geräten, die Home Assistant über ihre MAC-Adresse kennt (z. B. aus „FRITZ!Box Netzwerk“).
-- **Diagnose:** Fehlerzähler und Datenvolumen pro Port.
+- **Diagnose:** Fehler, verworfene Pakete und Datenvolumen pro Port.
 
 Ports lassen sich im Panel umbenennen (Stift neben dem Port-Namen); der Name wird an der Integration gespeichert. Der Verlauf braucht den Recorder und die Sensoren „Empfang“ und „Senden“ des Ports.
 
@@ -29,15 +58,58 @@ Ohne Home Assistant lässt sich das Panel mit Beispieldaten ansehen: `python3 -m
 
 ## Entitäten
 
-Pro Port: **Link** (binary_sensor), **Empfang**/**Senden** in Mbit/s, **Geschwindigkeit**, **MAC-Adressen** (Anzahl, die Liste steht im Attribut `mac_addresses`). Standardmäßig deaktiviert: Gesamtvolumen und Fehlerzähler. Am Gerät: **Laufzeit**.
+Pro Port:
 
-Die Datenraten werden aus den 64-Bit-Zählern des Switches berechnet (Abfrage alle 30 Sekunden); nach einem Neustart des Switches fehlt ein Messwert.
+| Entität | Standard | Hinweis |
+| --- | --- | --- |
+| **Link** (binary_sensor) | an | |
+| **Empfang**, **Senden** (Mbit/s) | an | aus den Zählern des Switches berechnet |
+| **Geschwindigkeit** | an | |
+| **MAC-Adressen** | an | Anzahl; die Liste steht im Attribut `mac_addresses` |
+| **Auslastung Empfang/Senden** (%) | aus | Datenrate im Verhältnis zur Link-Geschwindigkeit |
+| **Empfangen/Gesendet gesamt** | aus | Datenvolumen |
+| **Empfangsfehler/Sendefehler** | aus | |
+| **Empfang/Senden verworfen** | aus | verworfene Pakete |
+| **Link geändert** (Zeitstempel) | aus | Zeitpunkt des letzten Link-Wechsels |
+
+Am Gerät: **Laufzeit**. Für jedes Gerät, das Home Assistant über seine MAC-Adresse kennt und das am Switch gelernt wurde, kommt ein Sensor **Port von …** dazu: Er zeigt die Port-Nummer, im Attribut `port_name` den Namen des Ports. Der Sensor gehört zum Switch, nicht zum Gerät der anderen Integration, denn ein Gerät gehört in Home Assistant genau einer Integration.
+
+## Ereignisse und Logbuch
+
+Beide Ereignisse erscheinen im Logbuch und lassen sich in Automationen als Auslöser verwenden:
+
+- `tplink_switch_snmp_link_changed`: Ein Link hat gewechselt. Daten: `port`, `port_name`, `up`, `speed`, `flap` (der Link fiel zwischen zwei Abfragen aus und kam wieder), `switch`, `entry_id`, `entity_id`. Nach einem Neustart des Switches gibt es keine Ereignisse.
+- `tplink_switch_snmp_device_moved`: Ein Gerät, das Home Assistant kennt, taucht an einem anderen Port auf. Daten: `mac`, `name`, `device_id`, `from_port`, `from_port_name`, `to_port`, `to_port_name`, `switch`, `entry_id`.
+
+```yaml
+triggers:
+  - trigger: event
+    event_type: tplink_switch_snmp_link_changed
+    event_data:
+      port: 12
+      up: false
+```
+
+## SNMP-Traps für sofortige Meldungen
+
+Standardmäßig fragt Home Assistant den Switch im eingestellten Intervall ab, ein Link-Wechsel zeigt sich also erst bei der nächsten Abfrage. Mit **Trap-Port** in den Optionen empfängt Home Assistant zusätzlich SNMP-Traps (nur v1 und v2c): Sobald ein Trap des Switches eintrifft, folgt sofort eine Abfrage. Der Inhalt des Traps wird nicht ausgewertet.
+
+1. Einen freien UDP-Port wählen, z. B. `1162` (Ports unter 1024 brauchen Rechte), und ihn in den Optionen eintragen. In Docker muss der UDP-Port freigegeben sein.
+2. Am Switch unter *SNMP → Notification* die Adresse von Home Assistant mit diesem Port und **derselben Community** als Ziel eintragen.
+
+Ein Trap gilt nur, wenn er von der Adresse des Switches kommt, die beim Start der Integration aufgelöst wurde, und die Community stimmt. Lässt sich der Port nicht öffnen, steht eine Warnung im Log; die Abfrage läuft trotzdem weiter.
+
+## Diagnosedaten
+
+*Geräte & Dienste → TP-Link Switch (SNMP) → ⋮ → Diagnose herunterladen.* Die Datei enthält Version, Zähler, Intervall und den Zustand der Ports, aber keine Adresse, keine Zugangsdaten, keine MAC-Adressen und keine Port-Namen.
 
 ## Grenzen
 
-- Es wird nur gelesen, nichts am Switch geändert. Die Integration spricht **SNMP v2c**; v1 und v3 werden nicht unterstützt. Die Community geht im Klartext übers Netz.
+- Es wird nur gelesen, nichts am Switch geändert.
+- **SNMP v1** kennt keine 64-Bit-Zähler: Die Datenraten kommen dann aus 32-Bit-Zählern, die bei 1 Gbit/s alle 34 Sekunden überlaufen, und das Datenvolumen (standardmäßig ausgeschaltet) ist ungenau. Bei einem Intervall über 34 Sekunden geht bei voller Auslastung ein Überlauf verloren, und die Rate fällt zu niedrig aus. Für genaue Werte v2c oder v3 nehmen.
+- **SNMP v1 und v2c** schicken die Community im Klartext. v3 ist am echten Switch nur bis zur Anmeldung geprüft (er antwortet), nicht mit einem eingerichteten Benutzer.
 - Als Ports gelten die Ports der Bridge-Tabelle des Switches (die Nummer ist die Bridge-Port-Nummer), unabhängig von ihrer Benennung. VLAN-, Loopback- und Management-Schnittstellen sind keine Ports. Getestet ist das nur mit einem TL-SG3424; andere JetStream-Modelle sind nicht geprüft.
 - Hersteller und Modell stehen nicht eindeutig im Switch: Der Hersteller kommt aus der Enterprise-Nummer, als Modell dient die Gerätebeschreibung des Switches.
 - Die Laufzeit läuft über die 497 Tage hinaus, nach denen der Zähler des Switches überläuft. Startet Home Assistant danach neu, beginnt sie mit dem Wert des Zählers.
-- Adresse, Community oder Port ändern: *Geräte & Dienste → TP-Link Switch (SNMP) → ⋮ → Neu konfigurieren*. Es muss derselbe Switch antworten.
+- Ein Gerät am Uplink-Port erscheint an dem Port, an dem der Switch seine MAC-Adresse gelernt hat. Wechselt ein Gerät zwischen dem Uplink und einem anderen Port, gilt das als Port-Wechsel.
 - LLDP-Nachbarn stellt dieser Switch per SNMP nicht bereit.

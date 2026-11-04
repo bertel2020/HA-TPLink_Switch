@@ -2,6 +2,24 @@
 
 Alle nennenswerten Änderungen an dieser Integration werden hier festgehalten.
 
+## 0.7.0 – 2026-11-04
+
+### Neu
+
+- **Reparaturmeldung:** Antwortet der Switch zehn Minuten lang nicht, meldet Home Assistant das unter *Einstellungen → Reparaturen*; die Meldung verschwindet, sobald er wieder antwortet.
+- **Panel:** Ein Port lässt sich in der Port-Ansicht ein- und ausschalten (nur wenn das Schreiben in den Optionen erlaubt ist), mit Rückfrage vor dem Ausschalten. Geschützte Ports sind gesperrt und sagen warum. Neuer Websocket-Befehl `tplink_switch_snmp/set_port_enabled`, nur für Administratoren; der Snapshot enthält `protected` pro Port.
+
+### Behoben
+
+- Hinweise im Panel sagen „1 Port“ statt „1 Ports“, auf Deutsch und Englisch.
+- Auf dem Handy bricht die Statistik in der Kopfkarte nicht mehr mit übrig gebliebenen Trennlinien um, sondern steht in zwei Spalten. Alle vier Reiter laufen bei allen drei Schriftgrößen ohne seitliches Überlaufen.
+- Der Sensor **Port von …** eines Geräts, das in Home Assistant gelöscht wurde, wird entfernt, auch wenn das beim ausgeschalteten Switch geschah.
+
+### Geändert
+
+- Schemas nutzen `probatio` wie Home Assistant seit 2026.10 (vorher `voluptuous`; beide sind dort derselbe Code).
+- Typprüfung mit `mypy` (streng) in der CI, Testabdeckung 100 % (die CI verlangt mindestens 98 %), `quality_scale.yaml` entsprechend aktualisiert. Typfehler, die das fand, sind behoben.
+
 ## 0.6.0 – 2026-11-04
 
 ### Neu

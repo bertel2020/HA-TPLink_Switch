@@ -1,0 +1,61 @@
+// Texts of the panel in German and English; {name} is replaced by a value.
+export const TEXTS = {
+  de: {
+    title: "Switch", overview: "Übersicht", ports: "Ports", devices: "Geräte", diag: "Diagnose", integration: "Integration",
+    connected: "Verbunden", unreachable: "Nicht erreichbar", details: "Details", detailsOpen: "Details ▴", detailsClosed: "Details ▾",
+    activePorts: "von {total} Ports", active: "aktiv", throughput: "gesamt Durchsatz", devicesLearned: "MAC-Adressen gelernt", uptime: "Laufzeit",
+    days: "Tage", hours: "Std.", minutes: "Min.",
+    vendor: "Hersteller", model: "Modell", poll: "Abfrage", pollValue: "SNMP · alle {s} s", address: "Adresse", macAddress: "MAC-Adresse", description: "Beschreibung",
+    faceplate: "Frontplatte", live: "Live", stale: "Keine Antwort", clickPort: "Port anklicken für Details",
+    l1000: "1 Gbit/s", l100: "100 Mbit/s", l10: "10 Mbit/s", noLink: "kein Link", errorsSinceStart: "Fehler seit Start",
+    link: "Link", only100: "nur 100 Mbit/s", errorsN: "{n} Fehler", history: "Verlauf der letzten 24 Stunden",
+    noHistory: "Noch keine Verlaufsdaten. Der Verlauf kommt aus der Historie von Home Assistant.",
+    receive: "Empfang", send: "Senden", devicesAtPort: "Geräte am Port", noDevices: "Keine Geräte gelernt", moreN: "… und {n} weitere",
+    unknown: "unbekannt", free: "frei", rename: "Umbenennen", save: "Speichern", cancel: "Abbrechen", portName: "Name des Ports",
+    mostLoad: "Meiste Last", mostLoadSub: "Empfang + Senden, Mbit/s", notes: "Hinweise",
+    errorPorts: "{n} Ports mit Fehlern", errorPortsText: "Betroffen: {ports}. Übertragungsfehler deuten oft auf ein schlechtes Kabel oder eine Duplex-Abweichung hin.",
+    slowPorts: "{n} Ports laufen nur mit 100 Mbit/s", slowPortsText: "Betroffen: {ports}. Bei Geräten, die Gigabit können, ist das Kabel oder die Gegenstelle verdächtig.",
+    allFine: "Keine Auffälligkeiten", allFineText: "Keine Fehler, alle aktiven Ports laufen mit voller Geschwindigkeit.",
+    allPorts: "Alle Ports", activeF: "Aktiv", noLinkF: "Ohne Link", slowF: "Nur 100 Mbit/s", errF: "Mit Fehlern",
+    searchPorts: "Port, Name, Gerät oder MAC suchen", portsOf: "{n} von {total} Ports", slowNote: "{n} Ports nur mit 100 Mbit/s",
+    port: "Port", status: "Status", speed: "Speed", rx: "Empfang", tx: "Senden", errors: "Fehler", devs: "Geräte", showOnOverview: "Auf der Übersicht zeigen",
+    linked: "verbunden", oneDevice: "1 Gerät", nDevices: "{n} Geräte", noPortMatches: "Kein Port passt zum Filter.",
+    devicesAtSwitch: "Geräte am Switch", devicesHint: "gelernte MAC-Adressen; Namen von Geräten, die Home Assistant über die MAC kennt",
+    all: "Alle", named: "Mit Namen", unknownF: "Unbekannt", searchDevices: "Gerät, MAC oder Port suchen", device: "Gerät", mac: "MAC", noDeviceMatches: "Kein Gerät passt zum Filter.",
+    errorCounters: "Fehler und Volumen", sinceStart: "seit dem Start des Switches", rxErrors: "Empfangsfehler", txErrors: "Sendefehler", rxTotal: "Empfangen gesamt", txTotal: "Gesendet gesamt",
+    assessment: "Einschätzung", check: "prüfen: Kabel und Duplex", fine: "unauffällig", noSwitch: "Noch kein Switch eingerichtet. Füge die Integration unter Einstellungen → Geräte & Dienste hinzu.",
+    loadError: "Die Daten konnten nicht geladen werden: {e}", noData: "–", search: "Suchen", menu: "Menü", switchLabel: "Switch",
+  },
+  en: {
+    title: "Switch", overview: "Overview", ports: "Ports", devices: "Devices", diag: "Diagnostics", integration: "Integration",
+    connected: "Connected", unreachable: "Not reachable", details: "Details", detailsOpen: "Details ▴", detailsClosed: "Details ▾",
+    activePorts: "of {total} ports", active: "active", throughput: "total throughput", devicesLearned: "MAC addresses learned", uptime: "Uptime",
+    days: "days", hours: "h", minutes: "min",
+    vendor: "Manufacturer", model: "Model", poll: "Polling", pollValue: "SNMP · every {s} s", address: "Address", macAddress: "MAC address", description: "Description",
+    faceplate: "Front panel", live: "Live", stale: "No answer", clickPort: "Click a port for details",
+    l1000: "1 Gbit/s", l100: "100 Mbit/s", l10: "10 Mbit/s", noLink: "no link", errorsSinceStart: "errors since start",
+    link: "Link", only100: "only 100 Mbit/s", errorsN: "{n} errors", history: "Last 24 hours",
+    noHistory: "No history yet. The history comes from Home Assistant's recorder.",
+    receive: "Receive", send: "Transmit", devicesAtPort: "Devices at the port", noDevices: "No devices learned", moreN: "… and {n} more",
+    unknown: "unknown", free: "free", rename: "Rename", save: "Save", cancel: "Cancel", portName: "Port name",
+    mostLoad: "Most traffic", mostLoadSub: "receive + transmit, Mbit/s", notes: "Notes",
+    errorPorts: "{n} ports with errors", errorPortsText: "Affected: {ports}. Transmission errors often point to a bad cable or a duplex mismatch.",
+    slowPorts: "{n} ports run at 100 Mbit/s only", slowPortsText: "Affected: {ports}. For devices that can do gigabit, the cable or the other end is suspect.",
+    allFine: "Nothing unusual", allFineText: "No errors, all active ports run at full speed.",
+    allPorts: "All ports", activeF: "Active", noLinkF: "No link", slowF: "100 Mbit/s only", errF: "With errors",
+    searchPorts: "Search port, name, device or MAC", portsOf: "{n} of {total} ports", slowNote: "{n} ports at 100 Mbit/s only",
+    port: "Port", status: "Status", speed: "Speed", rx: "Receive", tx: "Transmit", errors: "Errors", devs: "Devices", showOnOverview: "Show on the overview",
+    linked: "connected", oneDevice: "1 device", nDevices: "{n} devices", noPortMatches: "No port matches the filter.",
+    devicesAtSwitch: "Devices at the switch", devicesHint: "learned MAC addresses; names of devices Home Assistant knows by their MAC",
+    all: "All", named: "Named", unknownF: "Unknown", searchDevices: "Search device, MAC or port", device: "Device", mac: "MAC", noDeviceMatches: "No device matches the filter.",
+    errorCounters: "Errors and volume", sinceStart: "since the switch started", rxErrors: "Receive errors", txErrors: "Transmit errors", rxTotal: "Received total", txTotal: "Sent total",
+    assessment: "Assessment", check: "check: cable and duplex", fine: "fine", noSwitch: "No switch set up yet. Add the integration under Settings → Devices & services.",
+    loadError: "The data could not be loaded: {e}", noData: "–", search: "Search", menu: "Menu", switchLabel: "Switch",
+  },
+};
+
+export function translator(language) {
+  const table = TEXTS[String(language || "en").slice(0, 2)] || TEXTS.en;
+  return (key, vars = {}) =>
+    String(table[key] ?? TEXTS.en[key] ?? key).replace(/\{(\w+)\}/g, (_, k) => (k in vars ? vars[k] : `{${k}}`));
+}

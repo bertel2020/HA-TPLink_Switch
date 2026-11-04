@@ -23,9 +23,10 @@ from .const import (
     OID_IF_NAME,
     OID_IF_OPER_STATUS,
     OID_IF_OUT_ERRORS,
+    OID_SYS_DESCR,
     OID_SYS_UPTIME,
 )
-from .model import SwitchData, add_rates, build_ports
+from .model import SwitchData, add_rates, build_ports, text
 from .snmp import SnmpClient, SnmpError
 
 _LOGGER = logging.getLogger(__name__)
@@ -69,7 +70,7 @@ class SwitchCoordinator(DataUpdateCoordinator[SwitchData]):
 
     async def _async_update_data(self) -> SwitchData:
         try:
-            uptime = await self.client.get(OID_SYS_UPTIME)
+            system = await self.client.get(OID_SYS_UPTIME, OID_SYS_DESCR)
             tables = await self.client.walk_many(TABLES)
         except SnmpError as err:
             raise UpdateFailed(f"switch did not answer: {err}") from err
@@ -87,6 +88,7 @@ class SwitchCoordinator(DataUpdateCoordinator[SwitchData]):
         self._last_poll = now
 
         return SwitchData(
-            uptime=int(next(iter(uptime.values()), 0)) // 100,
+            uptime=int(system.get(OID_SYS_UPTIME, 0)) // 100,
+            description=text(system.get(OID_SYS_DESCR, b"")),
             ports=ports,
         )

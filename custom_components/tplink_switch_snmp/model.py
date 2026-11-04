@@ -33,6 +33,7 @@ class SwitchData:
     """One poll of the switch."""
 
     uptime: int  # seconds
+    description: str  # sysDescr
     ports: dict[int, PortData]  # keyed by port number
 
 

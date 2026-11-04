@@ -1,0 +1,20 @@
+<!doctype html>
+<!-- Preview of the panel without Home Assistant: serve the repository root, e.g.
+     python3 -m http.server 8765, then open /scripts/panel-preview/index.html
+     (add ?dark=1 for dark mode, ?lang=en for English). -->
+<html lang="de">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Panel preview</title>
+<style>html, body { margin: 0; height: 100%; }</style></head>
+<body>
+<script type="module">
+  import { makeHass } from "./fake-hass.js";
+  const params = new URLSearchParams(location.search);
+  await import(`/custom_components/tplink_switch_snmp/frontend/switch-panel.js?v=${Date.now()}`);
+  const panel = document.createElement("tplink-switch-panel");
+  document.body.append(panel);
+  panel.hass = makeHass({ dark: params.has("dark"), language: params.get("lang") || "de" });
+  panel.narrow = params.has("narrow");
+  window.panel = panel;
+</script>
+</body>
+</html>

@@ -28,3 +28,8 @@ OID_IF_HIGH_SPEED = "1.3.6.1.2.1.31.1.1.1.15"
 OID_FDB_Q = "1.3.6.1.2.1.17.7.1.2.2.1.2"
 OID_FDB = "1.3.6.1.2.1.17.4.3.1.2"
 OID_BASE_PORT_IF_INDEX = "1.3.6.1.2.1.17.1.4.1.2"
+
+CONF_PORT_NAMES = "port_names"
+PORT_NAME_MAX = 40
+
+PANEL_PATH = "tplink-switch"

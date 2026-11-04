@@ -55,6 +55,7 @@ class TplinkSwitchPanel extends HTMLElement {
     this._dq = "";
     this._details = false;
     this._editing = false;
+    this._notice = null;
     this._history = new Map(); // port and range -> {at, rx, tx}
     this._range = "24h";
     this._timer = null;
@@ -441,20 +442,43 @@ class TplinkSwitchPanel extends HTMLElement {
       </div>`;
   }
 
+  // Turning a port on or off, when the integration may write; a protected port cannot be turned off.
+  _toggleButton(sw, p) {
+    if (!sw.can_write) return "";
+    const t = this._t;
+    const off = p.admin_up !== false;
+    const blocked = off && p.protected;
+    return `<button class="chip small" data-a="toggle" data-v="${p.n}" ${blocked ? "disabled" : ""} title="${esc(blocked ? t("protectedHint") : "")}">${esc(t(off ? "portOff" : "portOn"))}</button>`;
+  }
+
+  async _togglePort(sw, number) {
+    const port = sw.ports.find((p) => p.n === number);
+    if (!port) return;
+    const enable = port.admin_up === false;
+    if (!enable && !confirm(this._t("confirmOff", { n: number }))) return;
+    this._notice = null;
+    try {
+      await this._hass.callWS({ type: `${DOMAIN}/set_port_enabled`, entry_id: sw.entry_id, port: number, enabled: enable });
+    } catch (err) {
+      this._notice = this._t("writeFailed", { e: err?.message || String(err) });
+    }
+    await this._load();
+  }
+
   _detail(sw) {
     const t = this._t;
     const p = sw.ports.find((x) => x.n === this._sel);
     if (!p) return "";
     const title = this._editing
       ? `<div class="nameedit"><b>${esc(t("port"))} ${p.n}</b><input id="portname" maxlength="40" value="${esc(p.name)}" placeholder="${esc(t("portName"))}" aria-label="${esc(t("portName"))}">${sw.can_write ? `<label class="check"><input type="checkbox" id="toswitch"> ${esc(t("alsoAtSwitch"))}</label>` : ""}<button class="chip" data-a="save">${esc(t("save"))}</button><button class="chip" data-a="cancel">${esc(t("cancel"))}</button></div>`
-      : `<h3>${esc(t("port"))} ${p.n}${p.name ? " · " + esc(p.name) : ""} <button class="rowbtn" data-a="rename" title="${esc(t("rename"))}" aria-label="${esc(t("rename"))}">${icon("edit")}</button>
+      : `<h3>${esc(t("port"))} ${p.n}${p.name ? " · " + esc(p.name) : ""} <button class="rowbtn" data-a="rename" title="${esc(t("rename"))}" aria-label="${esc(t("rename"))}">${icon("edit")}</button>${this._toggleButton(sw, p)}
           ${p.admin_up === false ? `<span class="tag bad">${esc(t("switchedOff"))}</span>` : ""}<span class="tag ${p.up ? "ok" : ""}">${p.up ? esc(t("link")) + " " + esc(this._speedText(p)) : esc(t("noLink"))}</span>${p.up && p.speed > 0 && p.speed < 1000 ? `<span class="tag warn">${esc(t("only100"))}</span>` : ""}${this._errors(p) ? `<span class="tag bad">${esc(t.count("errorsN", this._errors(p)))}</span>` : ""}</h3>`;
     const macs = p.macs.slice(0, MAX_MACS);
     const macList = macs.length
       ? `<div class="maclist">${macs.map((m) => `<div><span>${m.name ? esc(m.name) : `<span class="muted">${esc(t("unknown"))}</span>`}</span><span class="mono muted">${esc(m.mac)}</span></div>`).join("")}${p.macs.length > MAX_MACS ? `<div><span class="muted">${esc(t("moreN", { n: p.macs.length - MAX_MACS }))}</span></div>` : ""}</div>`
       : "";
     return `<section class="card"><div class="pd">
-      <div>${title}<div class="histhead"><span class="sub">${esc(t(this._range === "7d" ? "history7d" : "history"))}</span><span class="rangepick" role="group" aria-label="${esc(t("historyRange"))}"><button class="chip small" data-a="range" data-v="24h" aria-pressed="${this._range === "24h"}">${esc(t("range24h"))}</button><button class="chip small" data-a="range" data-v="7d" aria-pressed="${this._range === "7d"}">${esc(t("range7d"))}</button></span></div>
+      <div>${title}${this._notice ? `<div class="notice" role="alert">${esc(this._notice)}</div>` : ""}<div class="histhead"><span class="sub">${esc(t(this._range === "7d" ? "history7d" : "history"))}</span><span class="rangepick" role="group" aria-label="${esc(t("historyRange"))}"><button class="chip small" data-a="range" data-v="24h" aria-pressed="${this._range === "24h"}">${esc(t("range24h"))}</button><button class="chip small" data-a="range" data-v="7d" aria-pressed="${this._range === "7d"}">${esc(t("range7d"))}</button></span></div>
         ${p.up ? this._chart(sw, p) : `<div class="nodata">${esc(t("noLink"))}</div>`}
         ${this._changedAt(sw, p) ? `<div class="sub" style="margin-top:6px">${esc(t("linkChangedAgo", { when: this._ago(this._changedAt(sw, p)) }))}</div>` : ""}
         <div class="lg"><span><i style="background:var(--rx)"></i>${esc(t("receive"))} ${this._num(p.rx_rate)} Mbit/s${p.rx_util != null ? ` (${esc(this._util(p.rx_util))})` : ""}</span><span><i style="background:var(--tx)"></i>${esc(t("send"))} ${this._num(p.tx_rate)} Mbit/s${p.tx_util != null ? ` (${esc(this._util(p.tx_util))})` : ""}</span></div></div>
@@ -638,9 +662,14 @@ class TplinkSwitchPanel extends HTMLElement {
           return;
         }
         case "range": this._range = v; break;
+        case "toggle": {
+          const sw = this._switch;
+          if (sw) this._togglePort(sw, Number(v));
+          return;
+        }
         case "look-toggle": this._menuOpen = !this._menuOpen; break;
         case "look": this._setLook({ [el.dataset.kind]: v }); break;
-        case "tab": this._tab = v; this._editing = false; break;
+        case "tab": this._tab = v; this._editing = false; this._notice = null; break;
         case "menu":
           this.dispatchEvent(new CustomEvent("hass-toggle-menu", { bubbles: true, composed: true }));
           if (outside) this._render();
@@ -650,7 +679,7 @@ class TplinkSwitchPanel extends HTMLElement {
           window.dispatchEvent(new CustomEvent("location-changed"));
           return;
         case "details": this._details = !this._details; break;
-        case "port": this._sel = +v; this._editing = false; break;
+        case "port": this._sel = +v; this._editing = false; this._notice = null; break;
         case "goto": this._sel = +v; this._tab = "overview"; this._editing = false; break;
         case "filter": this._filter = v; break;
         case "dfilter": this._dfilter = v; break;

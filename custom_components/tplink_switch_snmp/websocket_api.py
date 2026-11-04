@@ -8,7 +8,7 @@ from typing import Any
 from homeassistant.components import websocket_api
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr
 import probatio
 
@@ -25,6 +25,7 @@ def async_register(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, ws_snapshot)
     websocket_api.async_register_command(hass, ws_subscribe)
     websocket_api.async_register_command(hass, ws_history)
+    websocket_api.async_register_command(hass, ws_set_port_enabled)
     websocket_api.async_register_command(hass, ws_set_port_name)
 
 
@@ -58,6 +59,7 @@ def _switch(hass: HomeAssistant, entry: SwitchConfigEntry) -> dict[str, Any]:
                 "custom_name": names.get(str(number), ""),
                 "alias": port.alias,
                 "admin_up": port.admin_up,
+                "protected": coordinator.is_protected(number),
                 "if_name": port.name,
                 "up": port.up,
                 "speed": port.speed,
@@ -171,6 +173,34 @@ def ws_history(hass: HomeAssistant, connection: websocket_api.ActiveConnection, 
             "points": [[t, round(rx, 3), round(tx, 3)] for t, rx, tx in series],
         },
     )
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        probatio.Required("type"): f"{DOMAIN}/set_port_enabled",
+        probatio.Required("entry_id"): str,
+        probatio.Required("port"): int,
+        probatio.Required("enabled"): bool,
+    }
+)
+@websocket_api.async_response
+async def ws_set_port_enabled(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Switch a port on or off, if writing is allowed and the port is not protected."""
+    entry = hass.config_entries.async_get_entry(msg["entry_id"])
+    if entry is None or entry.domain != DOMAIN or entry.state is not ConfigEntryState.LOADED:
+        connection.send_error(msg["id"], "not_found", "switch not found")
+        return
+    try:
+        await entry.runtime_data.async_set_port_enabled(msg["port"], msg["enabled"])
+    except ServiceValidationError as err:
+        connection.send_error(msg["id"], "not_allowed", str(err))
+    except HomeAssistantError as err:
+        connection.send_error(msg["id"], "write_failed", str(err))
+    else:
+        connection.send_result(msg["id"], {"enabled": msg["enabled"]})
 
 
 @websocket_api.require_admin

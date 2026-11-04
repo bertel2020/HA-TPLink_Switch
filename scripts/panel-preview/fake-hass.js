@@ -8,6 +8,7 @@ const SAMPLE = {
 };
 const NAMES = { 1: "Gateway FRITZ!Box", 2: "Drucker HP", 5: "NAS Synology", 12: "Access Point Flur", 16: "Smart-TV", 17: "Server Keller", 22: "PC Büro", 24: "Smart-Steckdose" };
 const names = {};
+const disabled = {}; // ports switched off in the preview
 const userData = {}; // what Home Assistant keeps per user
 
 const mac = (n, i) => `02:00:00:00:${n.toString(16).padStart(2, "0")}:${i.toString(16).padStart(2, "0")}`;
@@ -21,7 +22,7 @@ function snapshot() {
       rx_rate: up ? s[2] : 0, tx_rate: up ? s[3] : 0, rx_bytes: up ? s[2] * 4e11 + 1e9 : 0, tx_bytes: up ? s[3] * 4e11 + 1e9 : 0,
       link_changed_at: n === 16 ? new Date(Date.now() - 3 * 3600000).toISOString() : new Date(Date.now() - 40 * 86400000).toISOString(),
       rx_pps: up ? Math.round(s[2] * 90) : null, tx_pps: up ? Math.round(s[3] * 90) : null, rx_mcast_pps: up ? 2.5 : null, rx_bcast_pps: up ? (n === 16 ? 820 : 3.1) : null,
-      custom_name: names[n] ?? "", alias: s ? s[0] : "", admin_up: n !== 20,
+      custom_name: names[n] ?? "", alias: s ? s[0] : "", admin_up: disabled[n] === undefined ? n !== 20 : !disabled[n], protected: n === 1 || n === 24,
       rx_errors: up ? s[4] : 0, tx_errors: n === 6 ? 3 : 0, rx_discards: up && n === 16 ? 40 : 0, tx_discards: 0,
       rx_util: up ? Math.round((s[2] / s[1]) * 1000) / 10 : null, tx_util: up ? Math.round((s[3] / s[1]) * 1000) / 10 : null,
       macs: up ? Array.from({ length: s[5] }, (_, i) => ({ mac: mac(n, i + 1), name: i === 0 ? NAMES[n] || null : null, manufacturer: i === 0 && NAMES[n] ? "Beispiel GmbH" : null })) : [],
@@ -65,6 +66,11 @@ export function makeHass({ dark = false, language = "de", pushEvery = 5000 } = {
       if (msg.type === "tplink_switch_snmp/set_port_name") { names[msg.port] = msg.name.trim(); return { name: msg.name }; }
       if (msg.type === "frontend/get_user_data") return { value: userData[msg.key] ?? null };
       if (msg.type === "frontend/set_user_data") { userData[msg.key] = msg.value; return null; }
+      if (msg.type === "tplink_switch_snmp/set_port_enabled") {
+        if (msg.port === 1) throw new Error("Port 1 is protected and is not turned off: it is chosen in the options or an uplink with many devices.");
+        disabled[msg.port] = !msg.enabled;
+        return { enabled: msg.enabled };
+      }
       if (msg.type === "tplink_switch_snmp/history") return history(msg.port, msg.range);
       throw new Error(`unknown command ${msg.type}`);
     },

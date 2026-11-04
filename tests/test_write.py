@@ -403,3 +403,109 @@ async def test_the_write_community_is_not_in_the_diagnostics(
 
     assert "private" not in str(diagnostics)
     assert diagnostics["entry"]["options"]["write_community"] == "**REDACTED**"
+
+
+# ---- the panel switches ports ------------------------------------------------------------
+
+
+async def _enable(hass, hass_ws_client, entry, port, enabled, entry_id=None):
+    return await _ws(
+        hass,
+        hass_ws_client,
+        {
+            "type": "tplink_switch_snmp/set_port_enabled",
+            "entry_id": entry_id or entry.entry_id,
+            "port": port,
+            "enabled": enabled,
+        },
+    )
+
+
+async def test_the_panel_switches_a_port_off_and_on(
+    hass: HomeAssistant, hass_ws_client, snmp, entry
+) -> None:
+    await _setup(hass, entry, **WRITE)
+
+    off = await _enable(hass, hass_ws_client, entry, 2, False)
+    assert off["success"] is True and off["result"] == {"enabled": False}
+    snmp.set.assert_awaited_with(f"{OID_IF_ADMIN_STATUS}.2", 2)
+
+    on = await _enable(hass, hass_ws_client, entry, 2, True)
+    assert on["success"] is True
+    snmp.set.assert_awaited_with(f"{OID_IF_ADMIN_STATUS}.2", 1)
+
+
+async def test_a_protected_port_is_refused_with_a_reason(
+    hass: HomeAssistant, hass_ws_client, snmp, entry
+) -> None:
+    await _setup(hass, entry, **WRITE, protected_ports=[2])
+
+    msg = await _enable(hass, hass_ws_client, entry, 2, False)
+
+    assert msg["success"] is False and msg["error"]["code"] == "not_allowed"
+    assert "protected" in msg["error"]["message"]
+    snmp.set.assert_not_awaited()
+
+
+async def test_without_writing_allowed_the_panel_cannot_switch(
+    hass: HomeAssistant, hass_ws_client, snmp, entry
+) -> None:
+    await _setup(hass, entry)
+
+    msg = await _enable(hass, hass_ws_client, entry, 2, False)
+
+    assert msg["success"] is False and msg["error"]["code"] == "not_allowed"
+    snmp.set.assert_not_awaited()
+
+
+async def test_a_write_that_fails_is_reported(
+    hass: HomeAssistant, hass_ws_client, snmp, entry
+) -> None:
+    snmp.set.side_effect = SnmpError("No SNMP response received")
+    await _setup(hass, entry, **WRITE)
+
+    msg = await _enable(hass, hass_ws_client, entry, 1, False)
+
+    assert msg["success"] is False and msg["error"]["code"] == "write_failed"
+
+
+async def test_switching_a_port_of_an_unknown_switch(
+    hass: HomeAssistant, hass_ws_client, snmp, entry
+) -> None:
+    await _setup(hass, entry, **WRITE)
+
+    msg = await _enable(hass, hass_ws_client, entry, 1, False, entry_id="nope")
+
+    assert msg["success"] is False and msg["error"]["code"] == "not_found"
+
+
+async def test_the_snapshot_marks_the_protected_ports(
+    hass: HomeAssistant, hass_ws_client, snmp, entry
+) -> None:
+    await _setup(hass, entry, **WRITE, protected_ports=[2])
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id({"type": "tplink_switch_snmp/snapshot"})
+    ports = (await client.receive_json())["result"]["switches"][0]["ports"]
+
+    assert [(p["n"], p["protected"]) for p in ports] == [(1, False), (2, True)]
+
+
+async def test_switching_ports_is_for_admins_only(
+    hass: HomeAssistant, hass_ws_client, hass_read_only_access_token, snmp, entry
+) -> None:
+    await _setup(hass, entry, **WRITE)
+    client = await hass_ws_client(hass, hass_read_only_access_token)
+
+    await client.send_json_auto_id(
+        {
+            "type": "tplink_switch_snmp/set_port_enabled",
+            "entry_id": entry.entry_id,
+            "port": 2,
+            "enabled": False,
+        }
+    )
+    msg = await client.receive_json()
+
+    assert msg["success"] is False and msg["error"]["code"] == "unauthorized"
+    snmp.set.assert_not_awaited()

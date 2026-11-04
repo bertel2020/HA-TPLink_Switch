@@ -88,6 +88,8 @@ nav { display: flex; gap: 2px; flex-wrap: wrap; }
 .spark { width: 100%; height: 96px; background: var(--soft); border: 1px solid var(--line); border-radius: 10px; display: block; }
 .spark path.f { fill-opacity: .14; stroke: none; } .spark path.l { fill: none; stroke-width: 1.6; vector-effect: non-scaling-stroke; }
 .nodata { height: 96px; display: grid; place-items: center; background: var(--soft); border: 1px dashed var(--line); border-radius: 10px; color: var(--muted); font-size: max(10.5px, calc(12px * var(--fs))); text-align: center; padding: 0 12px; }
+.notice { margin: 4px 0 8px; padding: 8px 12px; border-radius: 10px; background: var(--bad-soft); color: var(--bad); font-size: max(10.5px, calc(13px * var(--fs))); }
+.chip[disabled] { opacity: .5; cursor: not-allowed; }
 .histhead { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 4px 0 10px; flex-wrap: wrap; }
 .rangepick { display: inline-flex; gap: 6px; }
 .lg { display: flex; gap: 14px; font-size: max(10.5px, calc(12px * var(--fs))); color: var(--muted); margin-top: 6px; flex-wrap: wrap; }

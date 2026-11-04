@@ -78,5 +78,10 @@ def entry() -> MockConfigEntry:
         domain=DOMAIN,
         title="TL-SG3424",
         unique_id=BRIDGE_MAC,
-        data={"host": "192.168.79.15", "port": 161, CONF_COMMUNITY: "homeassistant"},
+        data={
+            "host": "192.168.79.15",
+            "port": 161,
+            "version": "2c",
+            CONF_COMMUNITY: "homeassistant",
+        },
     )

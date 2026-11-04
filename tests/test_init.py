@@ -137,3 +137,13 @@ async def test_uptime_keeps_counting_after_the_counter_wraps(
 
     assert entry.runtime_data.data.uptime == (2**32 + 2000) // 100
     assert entry.runtime_data.data.uptime > before
+
+
+async def test_v1_reads_the_32_bit_counters(hass: HomeAssistant, snmp, entry) -> None:
+    entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(entry, data={**entry.data, "version": "1"})
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    asked = snmp.walk_many.await_args.args[0]
+    assert asked["rx"].endswith("2.2.1.10")  # ifInOctets, not the 64 bit ifHCInOctets

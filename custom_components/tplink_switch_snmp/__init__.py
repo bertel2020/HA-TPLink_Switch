@@ -9,7 +9,7 @@ from homeassistant.helpers.typing import ConfigType
 from pysnmp.hlapi.v3arch.asyncio import SnmpEngine
 
 from . import websocket_api
-from .const import CONF_COMMUNITY, DOMAIN
+from .const import DOMAIN
 from .coordinator import SwitchConfigEntry, SwitchCoordinator
 from .panel import async_register_panel, async_remove_panel
 from .snmp import SnmpClient
@@ -28,12 +28,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SwitchConfigEntry) -> bo
     """Set up one switch."""
     # Creating the engine loads MIB data from disk, so keep it off the event loop.
     engine = await hass.async_add_executor_job(SnmpEngine)
-    client = SnmpClient(
-        engine,
-        entry.data[CONF_HOST],
-        entry.data[CONF_PORT],
-        entry.data[CONF_COMMUNITY],
-    )
+    client = SnmpClient(engine, entry.data[CONF_HOST], entry.data[CONF_PORT], entry.data)
     coordinator = SwitchCoordinator(hass, entry, client)
     try:
         await coordinator.async_config_entry_first_refresh()

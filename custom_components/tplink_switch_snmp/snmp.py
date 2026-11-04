@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Mapping
 from typing import Any
 
 from pysnmp.hlapi.v3arch.asyncio import (
@@ -12,15 +13,75 @@ from pysnmp.hlapi.v3arch.asyncio import (
     ObjectType,
     SnmpEngine,
     UdpTransportTarget,
+    UsmUserData,
     bulk_walk_cmd,
     get_cmd,
+    usmAesCfb128Protocol,
+    usmAesCfb192Protocol,
+    usmAesCfb256Protocol,
+    usmDESPrivProtocol,
+    usmHMAC128SHA224AuthProtocol,
+    usmHMAC192SHA256AuthProtocol,
+    usmHMAC256SHA384AuthProtocol,
+    usmHMAC384SHA512AuthProtocol,
+    usmHMACMD5AuthProtocol,
+    usmHMACSHAAuthProtocol,
+    walk_cmd,
 )
+
+from .const import (
+    CONF_AUTH_KEY,
+    CONF_AUTH_PROTOCOL,
+    CONF_COMMUNITY,
+    CONF_PRIV_KEY,
+    CONF_PRIV_PROTOCOL,
+    CONF_USERNAME,
+    CONF_VERSION,
+    DEFAULT_VERSION,
+    NO_PROTOCOL,
+    VERSION_1,
+    VERSION_3,
+)
+
+AUTH = {
+    "md5": usmHMACMD5AuthProtocol,
+    "sha": usmHMACSHAAuthProtocol,
+    "sha224": usmHMAC128SHA224AuthProtocol,
+    "sha256": usmHMAC192SHA256AuthProtocol,
+    "sha384": usmHMAC256SHA384AuthProtocol,
+    "sha512": usmHMAC384SHA512AuthProtocol,
+}
+PRIV = {
+    "des": usmDESPrivProtocol,
+    "aes128": usmAesCfb128Protocol,
+    "aes192": usmAesCfb192Protocol,
+    "aes256": usmAesCfb256Protocol,
+}
 
 _MISSING = {"NoSuchObject", "NoSuchInstance", "EndOfMibView"}
 
 
 class SnmpError(Exception):
     """The switch did not answer or refused the request."""
+
+
+def build_auth(config: Mapping[str, Any]) -> CommunityData | UsmUserData:
+    """The SNMP credentials of a config entry: a community or a v3 user."""
+    version = config.get(CONF_VERSION, DEFAULT_VERSION)
+    if version != VERSION_3:
+        # mpModel 0 is SNMP v1, 1 is v2c
+        return CommunityData(config[CONF_COMMUNITY], mpModel=0 if version == VERSION_1 else 1)
+
+    kwargs: dict[str, Any] = {}
+    auth = config.get(CONF_AUTH_PROTOCOL, NO_PROTOCOL)
+    if auth != NO_PROTOCOL:
+        kwargs["authKey"] = config[CONF_AUTH_KEY]
+        kwargs["authProtocol"] = AUTH[auth]
+        priv = config.get(CONF_PRIV_PROTOCOL, NO_PROTOCOL)
+        if priv != NO_PROTOCOL:
+            kwargs["privKey"] = config[CONF_PRIV_KEY]
+            kwargs["privProtocol"] = PRIV[priv]
+    return UsmUserData(config[CONF_USERNAME], **kwargs)
 
 
 def _py(value: Any) -> Any:
@@ -41,7 +102,7 @@ class SnmpClient:
         engine: SnmpEngine,
         host: str,
         port: int,
-        community: str,
+        config: Mapping[str, Any],
         timeout: int = 3,
         retries: int = 1,
     ) -> None:
@@ -50,8 +111,9 @@ class SnmpClient:
         self._port = port
         self._timeout = timeout
         self._retries = retries
-        # mpModel 1 is SNMP v2c.
-        self._auth = CommunityData(community, mpModel=1)
+        self._auth = build_auth(config)
+        # SNMPv1 has no GETBULK, so it walks with GETNEXT.
+        self._v1 = config.get(CONF_VERSION, DEFAULT_VERSION) == VERSION_1
         self._context = ContextData()
         self._target: UdpTransportTarget | None = None
 
@@ -94,16 +156,23 @@ class SnmpClient:
         target = await self._get_target()
         prefix = oid + "."
         result: dict[str, Any] = {}
-        async for error, status, index, binds in bulk_walk_cmd(
-            self._engine,
-            self._auth,
-            target,
-            self._context,
-            0,
-            25,
-            ObjectType(ObjectIdentity(oid)),
-            lexicographicMode=False,
-        ):
+        request = ObjectType(ObjectIdentity(oid))
+        if self._v1:
+            walk = walk_cmd(
+                self._engine, self._auth, target, self._context, request, lexicographicMode=False
+            )
+        else:
+            walk = bulk_walk_cmd(
+                self._engine,
+                self._auth,
+                target,
+                self._context,
+                0,
+                25,
+                request,
+                lexicographicMode=False,
+            )
+        async for error, status, index, binds in walk:
             if error:
                 raise SnmpError(str(error))
             if status:

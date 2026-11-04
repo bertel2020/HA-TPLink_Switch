@@ -140,3 +140,22 @@ def test_reboot_after_a_wrap_resets_the_count():
     tracker.seconds(100)  # wrapped once
     tracker.seconds(10_000_000)
     assert tracker.seconds(300) == 3  # rebooted
+
+
+def test_32_bit_counter_wrap_still_gives_a_rate():
+    old = model.build_ports(_tables(), {}, {})
+    tables = _tables()
+    tables["rx"]["1"] = 1_000  # wrapped: it was 2**32 - 124_999_000 before
+    old[1].rx_bytes = 2**32 - 124_999_000
+    new = model.build_ports(tables, {}, {})
+    model.add_rates(new, old, 1.0, counter_bits=32)
+    assert new[1].rx_rate == 1000.0  # 125 000 000 bytes in a second
+
+
+def test_64_bit_counter_drop_gives_no_rate():
+    old = model.build_ports(_tables(), {}, {})
+    tables = _tables()
+    tables["rx"]["1"] = 10
+    new = model.build_ports(tables, {}, {})
+    model.add_rates(new, old, 1.0, counter_bits=64)
+    assert new[1].rx_rate is None

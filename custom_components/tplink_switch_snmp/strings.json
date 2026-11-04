@@ -3,25 +3,45 @@
     "step": {
       "user": {
         "title": "TP-Link Switch (SNMP)",
-        "description": "SNMP muss am Switch eingeschaltet und eine Community mit Lesezugriff angelegt sein.",
+        "description": "Adresse und SNMP-Version des Switches. SNMP muss am Switch eingeschaltet sein.",
         "data": {
           "host": "Host",
-          "community": "Community",
-          "port": "Port"
+          "port": "Port",
+          "version": "SNMP-Version"
         }
       },
       "reconfigure": {
         "title": "Switch neu konfigurieren",
-        "description": "Neue Adresse, Community oder neuer Port für {title}. Es muss derselbe Switch antworten.",
+        "description": "Neue Adresse, Version oder Zugangsdaten für {title}. Es muss derselbe Switch antworten.",
         "data": {
           "host": "Host",
-          "community": "Community",
-          "port": "Port"
+          "port": "Port",
+          "version": "SNMP-Version"
+        }
+      },
+      "community": {
+        "title": "SNMP-Community",
+        "description": "Eine Community mit Lesezugriff. Bei v1 und v2c geht sie im Klartext übers Netz.",
+        "data": {
+          "community": "Community"
+        }
+      },
+      "auth": {
+        "title": "SNMPv3-Benutzer",
+        "description": "Der Benutzer muss am Switch angelegt sein. Schlüssel haben mindestens 8 Zeichen.",
+        "data": {
+          "username": "Benutzername",
+          "auth_protocol": "Authentifizierung",
+          "auth_key": "Schlüssel für die Authentifizierung",
+          "priv_protocol": "Verschlüsselung",
+          "priv_key": "Schlüssel für die Verschlüsselung"
         }
       }
     },
     "error": {
-      "cannot_connect": "Der Switch antwortet nicht. Prüfe Adresse, Community und ob SNMP am Switch eingeschaltet und gespeichert ist."
+      "cannot_connect": "Der Switch antwortet nicht. Prüfe Adresse, Zugangsdaten und ob SNMP am Switch eingeschaltet und gespeichert ist.",
+      "key_too_short": "Ein Schlüssel hat mindestens 8 Zeichen.",
+      "privacy_needs_authentication": "Verschlüsselung geht nur zusammen mit einer Authentifizierung."
     },
     "abort": {
       "already_configured": "Dieser Switch ist bereits eingerichtet.",
@@ -62,6 +82,35 @@
       },
       "macs": {
         "name": "Port {port} MAC-Adressen"
+      }
+    }
+  },
+  "selector": {
+    "version": {
+      "options": {
+        "1": "SNMP v1",
+        "2c": "SNMP v2c",
+        "3": "SNMP v3"
+      }
+    },
+    "auth_protocol": {
+      "options": {
+        "none": "Keine",
+        "md5": "MD5",
+        "sha": "SHA",
+        "sha224": "SHA-224",
+        "sha256": "SHA-256",
+        "sha384": "SHA-384",
+        "sha512": "SHA-512"
+      }
+    },
+    "priv_protocol": {
+      "options": {
+        "none": "Keine",
+        "des": "DES",
+        "aes128": "AES-128",
+        "aes192": "AES-192",
+        "aes256": "AES-256"
       }
     }
   }

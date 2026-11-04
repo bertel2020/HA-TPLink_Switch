@@ -155,10 +155,20 @@ def build_ports(
     return ports
 
 
+def _delta(new: int, old: int, bits: int) -> int | None:
+    """How far a counter advanced; None if it went backwards and cannot be a wrap."""
+    if new >= old:
+        return new - old
+    # A 32 bit counter wraps every 34 seconds at 1 Gbit/s, so a drop is a wrap there.
+    # A 64 bit counter never does: a drop means the switch was reset.
+    return new + 2**32 - old if bits == 32 else None
+
+
 def add_rates(
     ports: dict[int, PortData],
     previous: dict[int, PortData] | None,
     seconds: float,
+    counter_bits: int = 64,
 ) -> None:
     """Fill rx_rate and tx_rate (Mbit/s) from the change since the last poll."""
     if not previous or seconds <= 0:
@@ -167,8 +177,9 @@ def add_rates(
         old = previous.get(number)
         if old is None:
             continue
-        # A counter that went backwards means the switch was reset: skip once.
-        if port.rx_bytes >= old.rx_bytes:
-            port.rx_rate = round((port.rx_bytes - old.rx_bytes) * 8 / seconds / 1e6, 3)
-        if port.tx_bytes >= old.tx_bytes:
-            port.tx_rate = round((port.tx_bytes - old.tx_bytes) * 8 / seconds / 1e6, 3)
+        rx = _delta(port.rx_bytes, old.rx_bytes, counter_bits)
+        tx = _delta(port.tx_bytes, old.tx_bytes, counter_bits)
+        if rx is not None:
+            port.rx_rate = round(rx * 8 / seconds / 1e6, 3)
+        if tx is not None:
+            port.tx_rate = round(tx * 8 / seconds / 1e6, 3)

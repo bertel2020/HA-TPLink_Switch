@@ -5,6 +5,23 @@ from __future__ import annotations
 DOMAIN = "tplink_switch_snmp"
 
 CONF_COMMUNITY = "community"
+CONF_VERSION = "version"
+CONF_USERNAME = "username"
+CONF_AUTH_PROTOCOL = "auth_protocol"
+CONF_AUTH_KEY = "auth_key"
+CONF_PRIV_PROTOCOL = "priv_protocol"
+CONF_PRIV_KEY = "priv_key"
+
+VERSION_1 = "1"
+VERSION_2C = "2c"
+VERSION_3 = "3"
+VERSIONS = (VERSION_1, VERSION_2C, VERSION_3)
+DEFAULT_VERSION = VERSION_2C
+
+NO_PROTOCOL = "none"
+AUTH_PROTOCOLS = ("md5", "sha", "sha224", "sha256", "sha384", "sha512")
+PRIV_PROTOCOLS = ("des", "aes128", "aes192", "aes256")
+MIN_KEY_LENGTH = 8  # SNMPv3 passphrases must have at least eight characters
 
 DEFAULT_PORT = 161
 DEFAULT_COMMUNITY = "public"
@@ -21,6 +38,8 @@ OID_IF_NAME = "1.3.6.1.2.1.31.1.1.1.1"
 OID_IF_OPER_STATUS = "1.3.6.1.2.1.2.2.1.8"
 OID_IF_IN_ERRORS = "1.3.6.1.2.1.2.2.1.14"
 OID_IF_OUT_ERRORS = "1.3.6.1.2.1.2.2.1.20"
+OID_IF_IN_OCTETS = "1.3.6.1.2.1.2.2.1.10"  # 32 bit, the only ones SNMPv1 has
+OID_IF_OUT_OCTETS = "1.3.6.1.2.1.2.2.1.16"
 OID_IF_HC_IN_OCTETS = "1.3.6.1.2.1.31.1.1.1.6"
 OID_IF_HC_OUT_OCTETS = "1.3.6.1.2.1.31.1.1.1.10"
 OID_IF_HIGH_SPEED = "1.3.6.1.2.1.31.1.1.1.15"

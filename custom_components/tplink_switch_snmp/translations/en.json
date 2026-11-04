@@ -3,25 +3,45 @@
     "step": {
       "user": {
         "title": "TP-Link Switch (SNMP)",
-        "description": "SNMP must be switched on at the switch and a community with read access created.",
+        "description": "Address and SNMP version of the switch. SNMP must be switched on at the switch.",
         "data": {
           "host": "Host",
-          "community": "Community",
-          "port": "Port"
+          "port": "Port",
+          "version": "SNMP version"
         }
       },
       "reconfigure": {
         "title": "Reconfigure switch",
-        "description": "New address, community or port for {title}. The same switch must answer.",
+        "description": "New address, version or credentials for {title}. The same switch must answer.",
         "data": {
           "host": "Host",
-          "community": "Community",
-          "port": "Port"
+          "port": "Port",
+          "version": "SNMP version"
+        }
+      },
+      "community": {
+        "title": "SNMP community",
+        "description": "A community with read access. With v1 and v2c it travels in clear text.",
+        "data": {
+          "community": "Community"
+        }
+      },
+      "auth": {
+        "title": "SNMPv3 user",
+        "description": "The user must exist at the switch. Keys have at least 8 characters.",
+        "data": {
+          "username": "User name",
+          "auth_protocol": "Authentication",
+          "auth_key": "Authentication key",
+          "priv_protocol": "Encryption",
+          "priv_key": "Encryption key"
         }
       }
     },
     "error": {
-      "cannot_connect": "The switch does not answer. Check the address, the community and that SNMP is switched on and saved at the switch."
+      "cannot_connect": "The switch does not answer. Check the address, the credentials and that SNMP is switched on and saved at the switch.",
+      "key_too_short": "A key has at least 8 characters.",
+      "privacy_needs_authentication": "Encryption only works together with authentication."
     },
     "abort": {
       "already_configured": "This switch is already set up.",
@@ -62,6 +82,35 @@
       },
       "macs": {
         "name": "Port {port} MAC addresses"
+      }
+    }
+  },
+  "selector": {
+    "version": {
+      "options": {
+        "1": "SNMP v1",
+        "2c": "SNMP v2c",
+        "3": "SNMP v3"
+      }
+    },
+    "auth_protocol": {
+      "options": {
+        "none": "None",
+        "md5": "MD5",
+        "sha": "SHA",
+        "sha224": "SHA-224",
+        "sha256": "SHA-256",
+        "sha384": "SHA-384",
+        "sha512": "SHA-512"
+      }
+    },
+    "priv_protocol": {
+      "options": {
+        "none": "None",
+        "des": "DES",
+        "aes128": "AES-128",
+        "aes192": "AES-192",
+        "aes256": "AES-256"
       }
     }
   }

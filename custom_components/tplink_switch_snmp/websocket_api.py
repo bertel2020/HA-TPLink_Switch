@@ -4,11 +4,10 @@ from __future__ import annotations
 
 from typing import Any
 
-import voluptuous as vol
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
+import voluptuous as vol
 
 from .const import CONF_PORT_NAMES, DOMAIN, PORT_NAME_MAX
 from .coordinator import SwitchConfigEntry
@@ -26,9 +25,7 @@ def async_register(hass: HomeAssistant) -> None:
 
 def _device_names(hass: HomeAssistant, mac: str) -> dict[str, str | None]:
     """Name and maker of a device that Home Assistant knows by this MAC address."""
-    device = dr.async_get(hass).async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, mac)}
-    )
+    device = dr.async_get(hass).async_get_device(connections={(dr.CONNECTION_NETWORK_MAC, mac)})
     if device is None:
         return {"name": None, "manufacturer": None}
     return {
@@ -85,14 +82,10 @@ def _switch(hass: HomeAssistant, entry: SwitchConfigEntry) -> dict[str, Any]:
 @websocket_api.require_admin
 @websocket_api.websocket_command({vol.Required("type"): f"{DOMAIN}/snapshot"})
 @callback
-def ws_snapshot(
-    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
-) -> None:
+def ws_snapshot(hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict) -> None:
     """All switches with their ports."""
     entries = hass.config_entries.async_loaded_entries(DOMAIN)
-    connection.send_result(
-        msg["id"], {"switches": [_switch(hass, entry) for entry in entries]}
-    )
+    connection.send_result(msg["id"], {"switches": [_switch(hass, entry) for entry in entries]})
 
 
 @websocket_api.require_admin
@@ -119,7 +112,5 @@ def ws_set_port_name(
         names[str(msg["port"])] = name
     else:
         names.pop(str(msg["port"]), None)
-    hass.config_entries.async_update_entry(
-        entry, options={**entry.options, CONF_PORT_NAMES: names}
-    )
+    hass.config_entries.async_update_entry(entry, options={**entry.options, CONF_PORT_NAMES: names})
     connection.send_result(msg["id"], {"name": name})

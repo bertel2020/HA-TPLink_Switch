@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-import re
 from dataclasses import dataclass, field
+import re
 from typing import Any
 
 PORT_NAME = re.compile(r"^port\s*(\d+)", re.IGNORECASE)

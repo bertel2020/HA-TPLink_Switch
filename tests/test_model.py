@@ -1,8 +1,8 @@
 """Tests for the pure data model (loaded by path, no Home Assistant needed)."""
 
-import sys
 from importlib.util import module_from_spec, spec_from_file_location
 from pathlib import Path
+import sys
 
 _PATH = Path(__file__).parents[1] / "custom_components/tplink_switch_snmp/model.py"
 _spec = spec_from_file_location("switch_model", _PATH)

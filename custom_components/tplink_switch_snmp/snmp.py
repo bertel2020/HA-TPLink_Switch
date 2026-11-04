@@ -86,9 +86,7 @@ class SnmpClient:
         if status:
             raise SnmpError(f"{status.prettyPrint()} at {index}")
         return {
-            str(name): _py(value)
-            for name, value in binds
-            if type(value).__name__ not in _MISSING
+            str(name): _py(value) for name, value in binds if type(value).__name__ not in _MISSING
         }
 
     async def walk(self, oid: str) -> dict[str, Any]:

@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
+from datetime import timedelta
 import logging
 import time
-from datetime import timedelta
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant

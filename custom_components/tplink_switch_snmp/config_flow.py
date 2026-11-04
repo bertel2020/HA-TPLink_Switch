@@ -4,11 +4,11 @@ from __future__ import annotations
 
 from typing import Any
 
-import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from pysnmp.hlapi.v3arch.asyncio import SnmpEngine
+import voluptuous as vol
 
 from .const import (
     CONF_COMMUNITY,
@@ -25,9 +25,7 @@ from .snmp import SnmpClient, SnmpError
 async def _probe(hass: HomeAssistant, data: dict[str, Any]) -> tuple[str, str]:
     """Ask the switch for its name and bridge MAC; raise SnmpError if it fails."""
     engine = await hass.async_add_executor_job(SnmpEngine)
-    client = SnmpClient(
-        engine, data[CONF_HOST], data[CONF_PORT], data[CONF_COMMUNITY], retries=0
-    )
+    client = SnmpClient(engine, data[CONF_HOST], data[CONF_PORT], data[CONF_COMMUNITY], retries=0)
     try:
         values = await client.get(OID_SYS_NAME, OID_BRIDGE_ADDRESS)
     finally:
@@ -44,9 +42,7 @@ class SwitchConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    async def async_step_user(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
+    async def async_step_user(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         errors: dict[str, str] = {}
         if user_input is not None:
             try:

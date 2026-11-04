@@ -52,6 +52,12 @@ nav { display: flex; gap: 2px; flex-wrap: wrap; }
 .stat { padding: 0 20px; border-left: 1px solid var(--line); min-width: 112px; }
 .stat b { font-size: max(10.5px, calc(17px * var(--fs))); font-weight: 500; } .stat span { font-size: max(10.5px, calc(12px * var(--fs))); color: var(--muted); }
 .stat .sub { display: block; }
+@media (max-width: 600px) {
+  .stats { display: grid; grid-template-columns: 1fr 1fr; width: 100%; gap: 14px 0; }
+  .stat { border-left: 0; padding: 0; min-width: 0; }
+  .stat:nth-child(even) { border-left: 1px solid var(--line); padding-left: 16px; }
+  .stat:last-child { grid-column: 1 / -1; border-left: 0; padding-left: 0; }
+}
 .details { padding: 0 20px 18px; }
 .kv { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 6px 28px; border-top: 1px solid var(--line); padding-top: 14px; }
 .kv div { display: flex; justify-content: space-between; gap: 12px; font-size: max(10.5px, calc(13px * var(--fs))); }

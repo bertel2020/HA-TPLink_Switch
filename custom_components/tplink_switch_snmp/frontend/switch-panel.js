@@ -2,12 +2,31 @@
 // commands of the integration (websocket_api.py) and the history of the port rate sensors.
 // Its parts are loaded with the query string of this file, so an update loads every part new.
 const V = new URL(import.meta.url).search;
-const [{ STYLES }, { translator }, theme, { csvNumber, csvText }] = await Promise.all([
-  import(`./styles.js${V}`),
-  import(`./texts.js${V}`),
-  import(`./theme.js${V}`),
-  import(`./csv.js${V}`),
-]);
+let parts;
+try {
+  parts = await Promise.all([
+    import(`./styles.js${V}`),
+    import(`./texts.js${V}`),
+    import(`./theme.js${V}`),
+    import(`./csv.js${V}`),
+  ]);
+} catch (err) {
+  // Without its parts the panel cannot work; say so instead of staying blank.
+  console.error("tplink_switch_snmp: the panel could not load its parts", err);
+  customElements.define(
+    "tplink-switch-panel",
+    class extends HTMLElement {
+      set hass(_value) {
+        this.textContent = `Switch panel: could not load its files (${err?.message || err}). Reload the page with Ctrl+Shift+R.`;
+        this.style.cssText = "display:block;padding:24px;font:14px sans-serif;color:var(--primary-text-color)";
+      }
+      set narrow(_value) {}
+      set panel(_value) {}
+    },
+  );
+  throw err;
+}
+const [{ STYLES }, { translator }, theme, { csvNumber, csvText }] = parts;
 const { applyAppearance, cleanPrefs, DEFAULTS, MODES, SCHEMES, SIZES, tokens } = theme;
 
 const DOMAIN = "tplink_switch_snmp";
@@ -325,6 +344,16 @@ class TplinkSwitchPanel extends HTMLElement {
   // ---- rendering -----------------------------------------------------------------------------
 
   _render() {
+    try {
+      this._draw();
+    } catch (err) {
+      // a failure in drawing must not leave the panel blank
+      console.error("tplink_switch_snmp: the panel could not be drawn", err);
+      this.shadowRoot.innerHTML = `<style>${STYLES}</style><main class="app"><div class="card error">${esc(this._t("loadError", { e: err?.message || String(err) }))}</div></main>`;
+    }
+  }
+
+  _draw() {
     const root = this.shadowRoot;
     const active = root.activeElement;
     const focus = active && active.id ? { id: active.id, start: active.selectionStart, end: active.selectionEnd } : null;

@@ -8,6 +8,11 @@
           "host": "Host",
           "port": "Port",
           "version": "SNMP version"
+        },
+        "data_description": {
+          "host": "IP address or name of the switch.",
+          "port": "UDP port of the SNMP service, normally 161.",
+          "version": "v2c fits most switches; v3 is encrypted, v1 is only for very old devices."
         }
       },
       "reconfigure": {
@@ -17,6 +22,11 @@
           "host": "Host",
           "port": "Port",
           "version": "SNMP version"
+        },
+        "data_description": {
+          "host": "IP address or name of the switch.",
+          "port": "UDP port of the SNMP service, normally 161.",
+          "version": "The SNMP version; when you change it, the next step asks for the matching credentials."
         }
       },
       "community": {
@@ -24,6 +34,9 @@
         "description": "A community with read access. With v1 and v2c it travels in clear text.",
         "data": {
           "community": "Community"
+        },
+        "data_description": {
+          "community": "The community with read access from the switch (SNMP → Community)."
         }
       },
       "auth": {
@@ -35,6 +48,13 @@
           "auth_key": "Authentication key",
           "priv_protocol": "Encryption",
           "priv_key": "Encryption key"
+        },
+        "data_description": {
+          "username": "The SNMPv3 user from the switch.",
+          "auth_protocol": "How the user logs in. \"None\" also switches encryption off.",
+          "auth_key": "The password for authentication, at least 8 characters.",
+          "priv_protocol": "How the traffic is encrypted. It needs authentication.",
+          "priv_key": "The password for encryption, at least 8 characters."
         }
       }
     },

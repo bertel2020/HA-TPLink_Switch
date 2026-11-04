@@ -1,0 +1,59 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "link": {
+        "default": "mdi:ethernet-off",
+        "state": {
+          "on": "mdi:ethernet"
+        }
+      }
+    },
+    "sensor": {
+      "rx_rate": {
+        "default": "mdi:download-network"
+      },
+      "tx_rate": {
+        "default": "mdi:upload-network"
+      },
+      "speed": {
+        "default": "mdi:speedometer"
+      },
+      "rx_total": {
+        "default": "mdi:download"
+      },
+      "tx_total": {
+        "default": "mdi:upload"
+      },
+      "rx_errors": {
+        "default": "mdi:alert-circle-outline"
+      },
+      "tx_errors": {
+        "default": "mdi:alert-circle-outline"
+      },
+      "rx_discards": {
+        "default": "mdi:cancel"
+      },
+      "tx_discards": {
+        "default": "mdi:cancel"
+      },
+      "rx_utilization": {
+        "default": "mdi:gauge"
+      },
+      "tx_utilization": {
+        "default": "mdi:gauge"
+      },
+      "link_changed": {
+        "default": "mdi:link-variant"
+      },
+      "macs": {
+        "default": "mdi:devices"
+      },
+      "device_port": {
+        "default": "mdi:ethernet-cable"
+      },
+      "uptime": {
+        "default": "mdi:timer-outline"
+      }
+    }
+  }
+}

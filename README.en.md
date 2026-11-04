@@ -42,6 +42,24 @@ To change it later: **Devices & services → TP-Link Switch (SNMP) → ⋮ → R
 - **Polling interval** (10 to 3600 seconds, default 30). Shorter intervals give more precise rates but put more load on the switch.
 - **Trap port** (0 = off), see below.
 
+## Troubleshooting
+
+- **"The switch does not answer" during set-up:** check the address, the version and the community, and that SNMP is switched on **and saved** at the switch. `snmpget -v2c -c <community> <address> 1.3.6.1.2.1.1.1.0` on the machine that runs Home Assistant checks this. With a wrong community SNMP says nothing back; it looks like a switch that is off.
+- **Entities "unavailable":** the switch did not answer two polls in a row. Home Assistant says so once in the log and keeps asking.
+- **Data rates missing after the start:** the first poll has nothing to compare with; the rate appears after the second.
+- **Reporting a bug:** download the diagnostics (see below) and add the log lines with `tplink_switch_snmp`.
+
+## Use cases
+
+- A message on your phone when the wallbox or the camera loses its link (event `tplink_switch_snmp_link_changed`).
+- See which port a device is plugged into, and get a message when it changes port (for example an access point that was moved).
+- A link that got slow: ports at 100 Mbit/s only and error counters point to a bad cable.
+- The utilization of an uplink over time, without opening the switch itself.
+
+## Removal
+
+*Devices & services → TP-Link Switch (SNMP) → ⋮ → Delete.* The stored history is deleted with it. Nothing changes at the switch; SNMP and the community stay set up there. Afterwards the integration's files can be removed in HACS.
+
 ## Sidebar panel
 
 The integration adds the entry **Switch** to the sidebar (admins only):

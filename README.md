@@ -43,6 +43,24 @@ Später ändern: **Geräte & Dienste → TP-Link Switch (SNMP) → ⋮ → Neu k
 - **Abfrageintervall** (10 bis 3600 Sekunden, Standard 30). Kürzere Abstände geben genauere Datenraten, belasten aber den Switch stärker.
 - **Trap-Port** (0 = aus), siehe unten.
 
+## Fehlersuche
+
+- **„Der Switch antwortet nicht“ bei der Einrichtung:** Adresse, Version und Community prüfen, und ob SNMP am Switch eingeschaltet **und gespeichert** ist. Mit `snmpget -v2c -c <Community> <Adresse> 1.3.6.1.2.1.1.1.0` auf dem Rechner mit Home Assistant lässt sich das prüfen. Bei einer falschen Community meldet SNMP nichts zurück, es sieht aus wie ein ausgeschalteter Switch.
+- **Entitäten „nicht verfügbar“:** Der Switch hat in zwei Abfragen nacheinander nicht geantwortet. Home Assistant meldet das einmal im Log und fragt weiter.
+- **Datenraten fehlen nach dem Start:** Die erste Abfrage hat nichts zum Vergleichen, die Rate erscheint nach der zweiten.
+- **Fehler melden:** Diagnosedaten herunterladen (siehe unten) und das Log mit `tplink_switch_snmp` anhängen.
+
+## Anwendungsfälle
+
+- Eine Meldung aufs Handy, wenn die Wallbox oder die Kamera den Link verliert (Ereignis `tplink_switch_snmp_link_changed`).
+- Sehen, an welchem Port ein Gerät hängt, und eine Meldung, wenn es den Port wechselt (z. B. ein Access Point, der umgesteckt wurde).
+- Ein langsam gewordener Link: Ports mit nur 100 Mbit/s und Fehlerzähler zeigen ein schlechtes Kabel.
+- Auslastung eines Uplinks über die Zeit, ohne den Switch selbst zu öffnen.
+
+## Entfernen
+
+*Geräte & Dienste → TP-Link Switch (SNMP) → ⋮ → Löschen.* Der gespeicherte Verlauf wird mit gelöscht. Am Switch ändert sich nichts; SNMP und die Community bleiben dort eingerichtet. Die Dateien der Integration lassen sich danach in HACS entfernen.
+
 ## Seitenleisten-Panel
 
 Die Integration legt in der Seitenleiste (nur für Administratoren) den Eintrag **Switch** an:

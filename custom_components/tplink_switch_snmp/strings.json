@@ -8,6 +8,11 @@
           "host": "Host",
           "port": "Port",
           "version": "SNMP-Version"
+        },
+        "data_description": {
+          "host": "IP-Adresse oder Name des Switches.",
+          "port": "UDP-Port des SNMP-Dienstes, normalerweise 161.",
+          "version": "v2c passt für die meisten Switches; v3 ist verschlüsselt, v1 ist nur für sehr alte Geräte."
         }
       },
       "reconfigure": {
@@ -17,6 +22,11 @@
           "host": "Host",
           "port": "Port",
           "version": "SNMP-Version"
+        },
+        "data_description": {
+          "host": "IP-Adresse oder Name des Switches.",
+          "port": "UDP-Port des SNMP-Dienstes, normalerweise 161.",
+          "version": "Die SNMP-Version; beim Wechsel fragt der nächste Schritt die passenden Zugangsdaten ab."
         }
       },
       "community": {
@@ -24,6 +34,9 @@
         "description": "Eine Community mit Lesezugriff. Bei v1 und v2c geht sie im Klartext übers Netz.",
         "data": {
           "community": "Community"
+        },
+        "data_description": {
+          "community": "Die Community mit Lesezugriff aus dem Switch (SNMP → Community)."
         }
       },
       "auth": {
@@ -35,6 +48,13 @@
           "auth_key": "Schlüssel für die Authentifizierung",
           "priv_protocol": "Verschlüsselung",
           "priv_key": "Schlüssel für die Verschlüsselung"
+        },
+        "data_description": {
+          "username": "Der SNMPv3-Benutzer aus dem Switch.",
+          "auth_protocol": "Das Verfahren, mit dem der Benutzer sich anmeldet. „Keine“ schaltet auch die Verschlüsselung ab.",
+          "auth_key": "Das Passwort für die Authentifizierung, mindestens 8 Zeichen.",
+          "priv_protocol": "Das Verfahren, mit dem der Verkehr verschlüsselt wird. Es braucht eine Authentifizierung.",
+          "priv_key": "Das Passwort für die Verschlüsselung, mindestens 8 Zeichen."
         }
       }
     },

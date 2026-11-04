@@ -1,4 +1,6 @@
 [tool.pytest.ini_options]
+asyncio_mode = "auto"
+addopts = "-p pytest_homeassistant_custom_component"
 testpaths = ["tests"]
 
 [tool.ruff]

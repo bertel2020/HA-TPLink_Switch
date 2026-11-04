@@ -8,13 +8,17 @@ import time
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
 from .const import (
+    ADMIN_DOWN,
+    ADMIN_UP,
     CONF_PORT_NAMES,
+    CONF_PROTECTED_PORTS,
     CONF_SCAN_INTERVAL,
     CONF_VERSION,
     DEFAULT_SCAN_INTERVAL,
@@ -25,6 +29,8 @@ from .const import (
     OID_BASE_PORT_IF_INDEX,
     OID_FDB,
     OID_FDB_Q,
+    OID_IF_ADMIN_STATUS,
+    OID_IF_ALIAS,
     OID_IF_HC_IN_OCTETS,
     OID_IF_HC_OUT_OCTETS,
     OID_IF_HC_PACKETS,
@@ -46,6 +52,7 @@ from .const import (
     OID_SYS_UPTIME,
     OID_TPLINK_FIRMWARE,
     OID_TPLINK_HARDWARE,
+    PROTECTED_MAC_COUNT,
     VERSION_1,
 )
 from .history import RateHistory
@@ -74,6 +81,8 @@ TABLES = {
     "rx_err": OID_IF_IN_ERRORS,
     "tx_err": OID_IF_OUT_ERRORS,
     "last_change": OID_IF_LAST_CHANGE,
+    "admin": OID_IF_ADMIN_STATUS,
+    "alias": OID_IF_ALIAS,
     **OID_IF_HC_PACKETS,
     "rx_disc": OID_IF_IN_DISCARDS,
     "tx_disc": OID_IF_OUT_DISCARDS,
@@ -111,6 +120,8 @@ class SwitchCoordinator(DataUpdateCoordinator[SwitchData]):
         self.client = client
         self._v1 = entry.data.get(CONF_VERSION, DEFAULT_VERSION) == VERSION_1
         self.trap_port = 0  # the configured trap port, set by the setup
+        # what the options say about writing; a change of any of it reloads the entry
+        self.write_key: tuple[bool, str] = (False, "")
         self.history = RateHistory()
         self._info: dict[str, str | None] | None = None
         self._store: Store[dict] = Store(hass, 1, f"{DOMAIN}.{entry.entry_id}.history")
@@ -212,7 +223,6 @@ class SwitchCoordinator(DataUpdateCoordinator[SwitchData]):
     def _fire_link_events(self, ports: dict[int, PortData], previous: dict[int, PortData]) -> None:
         """Fire an event for every port whose link changed since the last poll."""
         registry = er.async_get(self.hass)
-        names = self.config_entry.options.get(CONF_PORT_NAMES, {})
         for number, port in ports.items():
             old = previous.get(number)
             if old is None or old.last_change == port.last_change:
@@ -223,7 +233,7 @@ class SwitchCoordinator(DataUpdateCoordinator[SwitchData]):
                     "entry_id": self.config_entry.entry_id,
                     "switch": self.config_entry.title,
                     "port": number,
-                    "port_name": names.get(str(number), ""),
+                    "port_name": self.port_label(number),
                     "up": port.up,
                     "speed": port.speed,
                     # The link went down and up again between two polls.
@@ -233,6 +243,63 @@ class SwitchCoordinator(DataUpdateCoordinator[SwitchData]):
                     ),
                 },
             )
+
+    @property
+    def can_write(self) -> bool:
+        """Whether writing to the switch is switched on in the options."""
+        return bool(self.write_key[0])
+
+    def port_label(self, number: int) -> str:
+        """The name of a port: the one given in Home Assistant, else the one at the switch."""
+        custom = self.config_entry.options.get(CONF_PORT_NAMES, {}).get(str(number), "")
+        if custom:
+            return custom
+        port = self.data.ports.get(number) if self.data else None
+        return port.alias if port else ""
+
+    def is_protected(self, number: int) -> bool:
+        """A port that must not be switched off: chosen in the options, or an uplink.
+
+        An uplink is a port that has learned many MAC addresses; switching it off can cut
+        Home Assistant off from the switch, and with it the way to switch the port on again.
+        """
+        chosen = {int(n) for n in self.config_entry.options.get(CONF_PROTECTED_PORTS, [])}
+        port = self.data.ports.get(number) if self.data else None
+        return number in chosen or (port is not None and len(port.macs) >= PROTECTED_MAC_COUNT)
+
+    async def _write(self, oid: str, value: int | str, number: int) -> None:
+        if not self.can_write:
+            raise ServiceValidationError(translation_domain=DOMAIN, translation_key="write_off")
+        port = self.data.ports.get(number) if self.data else None
+        if port is None:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="unknown_port",
+                translation_placeholders={"port": str(number)},
+            )
+        try:
+            await self.client.set(f"{oid}.{port.if_index}", value)
+        except SnmpError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="write_failed",
+                translation_placeholders={"port": str(number), "error": str(err)},
+            ) from err
+        await self.async_request_refresh()
+
+    async def async_set_port_enabled(self, number: int, enabled: bool) -> None:
+        """Switch a port on or off (ifAdminStatus)."""
+        if not enabled and self.is_protected(number):
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="port_protected",
+                translation_placeholders={"port": str(number)},
+            )
+        await self._write(OID_IF_ADMIN_STATUS, ADMIN_UP if enabled else ADMIN_DOWN, number)
+
+    async def async_set_port_alias(self, number: int, name: str) -> None:
+        """Give a port a name at the switch (ifAlias)."""
+        await self._write(OID_IF_ALIAS, name, number)
 
     def known_device(self, mac: str) -> dr.DeviceEntry | None:
         """A device of another integration that has this MAC address, if Home Assistant has one."""
@@ -246,7 +313,6 @@ class SwitchCoordinator(DataUpdateCoordinator[SwitchData]):
 
     def _fire_move_events(self, data: SwitchData, previous: SwitchData) -> None:
         """Fire an event when a device that Home Assistant knows shows up on another port."""
-        names = self.config_entry.options.get(CONF_PORT_NAMES, {})
         old = previous.mac_ports
         for mac, number in data.mac_ports.items():
             before = old.get(mac)
@@ -264,8 +330,8 @@ class SwitchCoordinator(DataUpdateCoordinator[SwitchData]):
                     "name": device.name_by_user or device.name,
                     "device_id": device.id,
                     "from_port": before,
-                    "from_port_name": names.get(str(before), ""),
+                    "from_port_name": self.port_label(before),
                     "to_port": number,
-                    "to_port_name": names.get(str(number), ""),
+                    "to_port_name": self.port_label(number),
                 },
             )

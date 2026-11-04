@@ -109,7 +109,9 @@ async def test_set_and_clear_a_port_name(hass: HomeAssistant, hass_ws_client, sn
     )
     assert (await client.receive_json())["success"]
     assert entry.options["port_names"] == {}
-    assert (await _snapshot(client))["ports"][0]["name"] == ""
+    port = (await _snapshot(client))["ports"][0]
+    assert port["custom_name"] == ""
+    assert port["name"] == "Lenovo M920q-1"  # without a name of your own, the one at the switch
 
 
 async def test_port_name_is_limited_in_length(

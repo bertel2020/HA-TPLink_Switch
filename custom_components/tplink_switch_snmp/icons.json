@@ -66,6 +66,14 @@
       "rx_multicast": {
         "default": "mdi:access-point-network"
       }
+    },
+    "switch": {
+      "port_enabled": {
+        "default": "mdi:power-plug-off",
+        "state": {
+          "on": "mdi:power-plug"
+        }
+      }
     }
   }
 }

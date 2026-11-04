@@ -76,6 +76,8 @@ nav { display: flex; gap: 2px; flex-wrap: wrap; }
 @media (max-width: 820px) { .pd { grid-template-columns: minmax(0, 1fr); } .stats { margin-left: 0; } .stat:first-child { border-left: 0; padding-left: 0; } }
 .pd h3 { margin: 0 0 4px; font-size: max(10.5px, calc(15px * var(--fs))); font-weight: 500; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
 .nameedit { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.check { display: inline-flex; align-items: center; gap: 6px; font-size: max(10.5px, calc(13px * var(--fs))); color: var(--muted); }
+.nameedit input[type="checkbox"] { min-width: 0; min-height: 0; }
 .nameedit input { border: 1px solid var(--input-line); border-radius: 18px; padding: 4px 12px; min-height: 32px; background: var(--surface); min-width: 220px; }
 .spark { width: 100%; height: 96px; background: var(--soft); border: 1px solid var(--line); border-radius: 10px; display: block; }
 .spark path.f { fill-opacity: .14; stroke: none; } .spark path.l { fill: none; stroke-width: 1.6; vector-effect: non-scaling-stroke; }

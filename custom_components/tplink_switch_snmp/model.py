@@ -7,6 +7,8 @@ from datetime import datetime
 import re
 from typing import Any
 
+from .const import ADMIN_DOWN, ADMIN_UP
+
 PORT_NAME = re.compile(r"^port\s*(\d+)", re.IGNORECASE)
 OPER_UP = 1
 
@@ -40,6 +42,8 @@ class PortData:
     rx_util: float | None = None  # percent of the link speed
     tx_util: float | None = None
     last_change: int = 0  # ifLastChange: sysUpTime ticks of the last link change
+    admin_up: bool = True  # the port is switched on (a switched-off port has no link)
+    alias: str = ""  # the name given to the port at the switch (ifAlias)
     link_changed_at: datetime | None = None
 
 
@@ -195,6 +199,8 @@ def build_ports(
             tx_bytes=int(tables["tx"].get(suffix, 0)),
             rx_errors=int(tables["rx_err"].get(suffix, 0)),
             tx_errors=int(tables["tx_err"].get(suffix, 0)),
+            admin_up=tables.get("admin", {}).get(suffix, ADMIN_UP) != ADMIN_DOWN,
+            alias=text(tables.get("alias", {}).get(suffix, b"")).strip(),
             last_change=int(tables.get("last_change", {}).get(suffix, 0)),
             rx_pkts=_count(tables, suffix, "rx_uc")
             + _count(tables, suffix, "rx_mc")

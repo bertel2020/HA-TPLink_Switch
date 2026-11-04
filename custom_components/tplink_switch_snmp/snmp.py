@@ -9,13 +9,16 @@ from typing import Any
 from pysnmp.hlapi.v3arch.asyncio import (
     CommunityData,
     ContextData,
+    Integer32,
     ObjectIdentity,
     ObjectType,
+    OctetString,
     SnmpEngine,
     UdpTransportTarget,
     UsmUserData,
     bulk_walk_cmd,
     get_cmd,
+    set_cmd,
     usmAesCfb128Protocol,
     usmAesCfb192Protocol,
     usmAesCfb256Protocol,
@@ -37,6 +40,7 @@ from .const import (
     CONF_PRIV_PROTOCOL,
     CONF_USERNAME,
     CONF_VERSION,
+    CONF_WRITE_COMMUNITY,
     DEFAULT_VERSION,
     NO_PROTOCOL,
     VERSION_1,
@@ -65,12 +69,21 @@ class SnmpError(Exception):
     """The switch did not answer or refused the request."""
 
 
-def build_auth(config: Mapping[str, Any]) -> CommunityData | UsmUserData:
-    """The SNMP credentials of a config entry: a community or a v3 user."""
+def build_auth(config: Mapping[str, Any], *, write: bool = False) -> CommunityData | UsmUserData:
+    """The SNMP credentials of a config entry: a community or a v3 user.
+
+    For writing, v1 and v2c use their own community; a v3 user is the same one, with the
+    rights the switch gives it.
+    """
     version = config.get(CONF_VERSION, DEFAULT_VERSION)
     if version != VERSION_3:
+        community = config[CONF_COMMUNITY]
+        if write:
+            community = config.get(CONF_WRITE_COMMUNITY) or ""
+            if not community:
+                raise SnmpError("no write community is set")
         # mpModel 0 is SNMP v1, 1 is v2c
-        return CommunityData(config[CONF_COMMUNITY], mpModel=0 if version == VERSION_1 else 1)
+        return CommunityData(community, mpModel=0 if version == VERSION_1 else 1)
 
     kwargs: dict[str, Any] = {}
     auth = config.get(CONF_AUTH_PROTOCOL, NO_PROTOCOL)
@@ -111,6 +124,7 @@ class SnmpClient:
         self._port = port
         self._timeout = timeout
         self._retries = retries
+        self._config = config
         self._auth = build_auth(config)
         # SNMPv1 has no GETBULK, so it walks with GETNEXT.
         self._v1 = config.get(CONF_VERSION, DEFAULT_VERSION) == VERSION_1
@@ -182,6 +196,20 @@ class SnmpClient:
                 if name.startswith(prefix) and type(value).__name__ not in _MISSING:
                     result[name[len(prefix) :]] = _py(value)
         return result
+
+    async def set(self, oid: str, value: int | str) -> None:
+        """Write one value: a whole number or text."""
+        auth = build_auth(self._config, write=True)
+        target = await self._get_target()
+        typed = Integer32(value) if isinstance(value, int) else OctetString(value)
+        error, status, index, _ = await set_cmd(
+            self._engine, auth, target, self._context, ObjectType(ObjectIdentity(oid), typed)
+        )
+        if error:
+            # A switch answers a write that its community may not make with nothing at all
+            raise SnmpError(f"{error} (a read-only community gets no answer to a write)")
+        if status:
+            raise SnmpError(f"{status.prettyPrint()} at {index}")
 
     async def walk_many(self, oids: dict[str, str]) -> dict[str, dict[str, Any]]:
         """Walk several columns at once, keyed by the given names."""

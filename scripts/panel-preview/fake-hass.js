@@ -21,6 +21,7 @@ function snapshot() {
       rx_rate: up ? s[2] : 0, tx_rate: up ? s[3] : 0, rx_bytes: up ? s[2] * 4e11 + 1e9 : 0, tx_bytes: up ? s[3] * 4e11 + 1e9 : 0,
       link_changed_at: n === 16 ? new Date(Date.now() - 3 * 3600000).toISOString() : new Date(Date.now() - 40 * 86400000).toISOString(),
       rx_pps: up ? Math.round(s[2] * 90) : null, tx_pps: up ? Math.round(s[3] * 90) : null, rx_mcast_pps: up ? 2.5 : null, rx_bcast_pps: up ? (n === 16 ? 820 : 3.1) : null,
+      custom_name: names[n] ?? "", alias: s ? s[0] : "", admin_up: n !== 20,
       rx_errors: up ? s[4] : 0, tx_errors: n === 6 ? 3 : 0, rx_discards: up && n === 16 ? 40 : 0, tx_discards: 0,
       rx_util: up ? Math.round((s[2] / s[1]) * 1000) / 10 : null, tx_util: up ? Math.round((s[3] / s[1]) * 1000) / 10 : null,
       macs: up ? Array.from({ length: s[5] }, (_, i) => ({ mac: mac(n, i + 1), name: i === 0 ? NAMES[n] || null : null, manufacturer: i === 0 && NAMES[n] ? "Beispiel GmbH" : null })) : [],
@@ -28,7 +29,7 @@ function snapshot() {
   });
   return {
     switches: [{ entry_id: "e1", title: "TL-SG3424 Keller", host: "192.168.79.15", mac: "64:66:b3:6c:28:64", manufacturer: "TP-Link", model: "TL-SG3424", hw_version: "1.0", sw_version: "1.11.10 Build 20150713 Rel.53496(n)", location: "Technikraum", contact: "Roberto", description: "JetStream 24-Port Gigabit L2 Managed Switch with 4 Combo SFP Slots",
-      uptime: 158 * 86400 + 4 * 3600, interval: 30, last_update_success: true, ports }],
+      can_write: true, uptime: 158 * 86400 + 4 * 3600, interval: 30, last_update_success: true, ports }],
   };
 }
 

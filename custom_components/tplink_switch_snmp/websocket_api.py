@@ -8,6 +8,7 @@ from typing import Any
 from homeassistant.components import websocket_api
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 import voluptuous as vol
 
@@ -53,7 +54,10 @@ def _switch(hass: HomeAssistant, entry: SwitchConfigEntry) -> dict[str, Any]:
         ports.append(
             {
                 "n": number,
-                "name": names.get(str(number), ""),
+                "name": names.get(str(number), "") or port.alias,
+                "custom_name": names.get(str(number), ""),
+                "alias": port.alias,
+                "admin_up": port.admin_up,
                 "if_name": port.name,
                 "up": port.up,
                 "speed": port.speed,
@@ -92,6 +96,7 @@ def _switch(hass: HomeAssistant, entry: SwitchConfigEntry) -> dict[str, Any]:
         "uptime": data.uptime,
         "interval": int(coordinator.update_interval.total_seconds()),
         "last_update_success": coordinator.last_update_success,
+        "can_write": coordinator.can_write,
         "ports": ports,
     }
 
@@ -173,10 +178,11 @@ def ws_history(hass: HomeAssistant, connection: websocket_api.ActiveConnection, 
         vol.Required("entry_id"): str,
         vol.Required("port"): vol.All(int, vol.Range(min=1, max=999)),
         vol.Required("name"): vol.All(str, vol.Length(max=PORT_NAME_MAX)),
+        vol.Optional("to_switch", default=False): bool,
     }
 )
-@callback
-def ws_set_port_name(
+@websocket_api.async_response
+async def ws_set_port_name(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
 ) -> None:
     """Give a port a name of your own; an empty name removes it."""
@@ -191,4 +197,10 @@ def ws_set_port_name(
     else:
         names.pop(str(msg["port"]), None)
     hass.config_entries.async_update_entry(entry, options={**entry.options, CONF_PORT_NAMES: names})
+    if msg["to_switch"]:
+        try:
+            await entry.runtime_data.async_set_port_alias(msg["port"], name)
+        except HomeAssistantError as err:
+            connection.send_error(msg["id"], "write_failed", str(err))
+            return
     connection.send_result(msg["id"], {"name": name})

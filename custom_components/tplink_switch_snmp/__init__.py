@@ -15,10 +15,12 @@ from pysnmp.hlapi.v3arch.asyncio import SnmpEngine
 
 from . import websocket_api
 from .const import (
+    CONF_ALLOW_WRITE,
     CONF_COMMUNITY,
     CONF_SCAN_INTERVAL,
     CONF_TRAP_PORT,
     CONF_VERSION,
+    CONF_WRITE_COMMUNITY,
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_VERSION,
     DOMAIN,
@@ -32,7 +34,7 @@ from .vendor import async_load as async_load_vendors
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR, Platform.SWITCH]
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
@@ -46,8 +48,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: SwitchConfigEntry) -> bo
     """Set up one switch."""
     # Creating the engine loads MIB data from disk, so keep it off the event loop.
     engine = await hass.async_add_executor_job(SnmpEngine)
-    client = SnmpClient(engine, entry.data[CONF_HOST], entry.data[CONF_PORT], entry.data)
+    allow_write = bool(entry.options.get(CONF_ALLOW_WRITE))
+    write_community = entry.options.get(CONF_WRITE_COMMUNITY, "") if allow_write else ""
+    config = {**entry.data, CONF_WRITE_COMMUNITY: write_community}
+    client = SnmpClient(engine, entry.data[CONF_HOST], entry.data[CONF_PORT], config)
     coordinator = SwitchCoordinator(hass, entry, client)
+    coordinator.write_key = (allow_write, write_community)
     await async_load_vendors()
     await coordinator.async_load_history()
     try:
@@ -99,8 +105,16 @@ async def _async_setup_traps(
 async def _options_updated(hass: HomeAssistant, entry: SwitchConfigEntry) -> None:
     """Apply a new polling interval without reloading; port names are options too."""
     coordinator = entry.runtime_data
-    if entry.options.get(CONF_TRAP_PORT, 0) != coordinator.trap_port:
-        # A new port, or switching traps on or off, means another listener: start over.
+    write_key = (
+        bool(entry.options.get(CONF_ALLOW_WRITE)),
+        entry.options.get(CONF_WRITE_COMMUNITY, "") if entry.options.get(CONF_ALLOW_WRITE) else "",
+    )
+    if (
+        entry.options.get(CONF_TRAP_PORT, 0) != coordinator.trap_port
+        or write_key != coordinator.write_key
+    ):
+        # Another trap port, or writing switched on or off or with another community, means
+        # another listener, another client or other entities: start over.
         hass.config_entries.async_schedule_reload(entry.entry_id)
         return
     interval = timedelta(seconds=entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL))

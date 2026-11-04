@@ -104,6 +104,8 @@ Per port:
 | **Receive / transmit errors** | off | |
 | **Receive / transmit discarded** | off | discarded packets |
 | **Link changed** (timestamp) | off | time of the last link change |
+| **Packets/s receive/transmit**, **broadcast/multicast receive** | off | from the packet counters |
+| **Port N enabled** (switch) | only with writing | turns the port on or off |
 
 On the device: **Uptime**. For every device that Home Assistant knows by its MAC address and that was learned at the switch, a sensor **Port of …** is added. It shows the port number and, in the attribute `port_name`, the name of the port. The sensor belongs to the switch, not to the other integration's device, because in Home Assistant a device belongs to exactly one integration.
 
@@ -123,6 +125,20 @@ triggers:
       up: false
 ```
 
+## Writing to the switch (optional)
+
+By default the integration only reads. In the options you can switch on **Allow writing to the switch**; then there are:
+
+- a switch **Port N enabled** per port (`ifAdminStatus`): off means no link, whatever is plugged in.
+- in the panel, when renaming a port, the box **Also save at the switch** (`ifAlias`). The names that already stand at the ports on the switch are shown as the default anyway; a name from the panel takes precedence.
+
+Requirements and protection:
+
+- **v1 and v2c** need a **community of their own with write access** (at the switch under *SNMP → Community*, access *read-write*), entered in the options. **v3** writes with the same user if it has write access. A switch does not answer a write from a read-only community at all; the integration reports that as an error.
+- **Protected ports** are never switched off by Home Assistant: those chosen in the options and always those at which at least 10 MAC addresses were learned (mostly uplinks). Whoever switches off the port that Home Assistant reaches the switch through locks themselves out. Switching on is always allowed.
+- Changes at the switch last **until it restarts** unless you save the configuration there (*System Tools → Save Config*). The integration does not save it.
+- Writing has **not** been tried with the test switch (TL-SG3424, firmware 1.11.10): the community there may only read. It is tested against a fake switch.
+
 ## SNMP traps for instant notifications
 
 By default Home Assistant asks the switch at the set interval, so a link change only shows at the next poll. With **Trap port** in the options, Home Assistant also receives SNMP traps (v1 and v2c only): as soon as a trap from the switch arrives, a poll follows at once. The content of the trap is not evaluated.
@@ -138,7 +154,7 @@ A trap counts only if it comes from the switch's address, resolved when the inte
 
 ## Limits
 
-- It only reads; nothing is changed at the switch.
+- Without the option "Allow writing" it only reads; nothing is changed at the switch.
 - **SNMP v1** has no 64-bit counters: the data rates then come from 32-bit counters that wrap every 34 seconds at 1 Gbit/s, and the data volume (off by default) is imprecise. With an interval above 34 seconds, a wrap is lost at full load and the rate comes out too low. Use v2c or v3 for precise values.
 - **SNMP v1 and v2c** send the community in clear text. v3 has been checked at the real switch only up to the login (it answers), not with a user that is set up.
 - Ports are the ports of the switch's bridge table (the number is the bridge port number), whatever they are called. VLAN, loopback and management interfaces are not ports. This has only been tested with a TL-SG3424; other JetStream models are untested.

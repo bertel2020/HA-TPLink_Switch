@@ -30,15 +30,18 @@ import voluptuous as vol
 
 from .const import (
     AUTH_PROTOCOLS,
+    CONF_ALLOW_WRITE,
     CONF_AUTH_KEY,
     CONF_AUTH_PROTOCOL,
     CONF_COMMUNITY,
     CONF_PRIV_KEY,
     CONF_PRIV_PROTOCOL,
+    CONF_PROTECTED_PORTS,
     CONF_SCAN_INTERVAL,
     CONF_TRAP_PORT,
     CONF_USERNAME,
     CONF_VERSION,
+    CONF_WRITE_COMMUNITY,
     DEFAULT_COMMUNITY,
     DEFAULT_PORT,
     DEFAULT_SCAN_INTERVAL,
@@ -232,6 +235,10 @@ class SwitchOptionsFlow(OptionsFlow):
             # The options also hold the port names, which are not part of this form.
             options = {**self.config_entry.options, **user_input}
             options[CONF_SCAN_INTERVAL] = int(options[CONF_SCAN_INTERVAL])
+            if CONF_PROTECTED_PORTS in options:
+                options[CONF_PROTECTED_PORTS] = sorted(
+                    int(n) for n in options[CONF_PROTECTED_PORTS]
+                )
             if CONF_TRAP_PORT in options:
                 options[CONF_TRAP_PORT] = int(options[CONF_TRAP_PORT])
             return self.async_create_entry(data=options)
@@ -247,14 +254,35 @@ class SwitchOptionsFlow(OptionsFlow):
                 )
             )
         }
+        v3 = self.config_entry.data.get(CONF_VERSION, DEFAULT_VERSION) == VERSION_3
         # Traps need a community, which SNMPv3 does not have.
-        if self.config_entry.data.get(CONF_VERSION, DEFAULT_VERSION) != VERSION_3:
+        if not v3:
             fields[vol.Required(CONF_TRAP_PORT, default=0)] = NumberSelector(
                 NumberSelectorConfig(min=0, max=65535, step=1, mode=NumberSelectorMode.BOX)
             )
+        # Writing: off unless asked for. v1 and v2c write with a community of their own.
+        fields[vol.Required(CONF_ALLOW_WRITE, default=False)] = bool
+        if not v3:
+            fields[vol.Optional(CONF_WRITE_COMMUNITY)] = TextSelector(
+                TextSelectorConfig(type=TextSelectorType.PASSWORD)
+            )
+        coordinator = getattr(self.config_entry, "runtime_data", None)
+        if coordinator is not None and coordinator.data:
+            fields[vol.Optional(CONF_PROTECTED_PORTS, default=[])] = SelectSelector(
+                SelectSelectorConfig(
+                    options=[str(n) for n in sorted(coordinator.data.ports)],
+                    multiple=True,
+                    mode=SelectSelectorMode.DROPDOWN,
+                )
+            )
         return self.async_show_form(
             step_id="init",
-            data_schema=self.add_suggested_values_to_schema(
-                vol.Schema(fields), self.config_entry.options
-            ),
+            data_schema=self.add_suggested_values_to_schema(vol.Schema(fields), self._suggested()),
         )
+
+    def _suggested(self) -> dict[str, Any]:
+        """The saved options as the form shows them: the port numbers as text."""
+        options = dict(self.config_entry.options)
+        if CONF_PROTECTED_PORTS in options:
+            options[CONF_PROTECTED_PORTS] = [str(n) for n in options[CONF_PROTECTED_PORTS]]
+        return options

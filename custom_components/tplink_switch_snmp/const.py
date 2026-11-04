@@ -26,6 +26,9 @@ MIN_KEY_LENGTH = 8  # SNMPv3 passphrases must have at least eight characters
 DEFAULT_PORT = 161
 DEFAULT_COMMUNITY = "public"
 CONF_SCAN_INTERVAL = "scan_interval"
+CONF_ALLOW_WRITE = "allow_write"
+CONF_WRITE_COMMUNITY = "write_community"
+CONF_PROTECTED_PORTS = "protected_ports"
 CONF_TRAP_PORT = "trap_port"  # 0 switches the trap receiver off
 DEFAULT_SCAN_INTERVAL = 30  # seconds
 MIN_SCAN_INTERVAL = 10
@@ -63,6 +66,13 @@ OID_IF_PACKETS = {
     "tx_mc": "1.3.6.1.2.1.31.1.1.1.4",
     "tx_bc": "1.3.6.1.2.1.31.1.1.1.5",
 }
+OID_IF_ADMIN_STATUS = "1.3.6.1.2.1.2.2.1.7"
+OID_IF_ALIAS = "1.3.6.1.2.1.31.1.1.1.18"
+ADMIN_UP = 1
+ADMIN_DOWN = 2
+# A port that has learned this many MAC addresses is an uplink to more of the network: it is
+# not switched off from Home Assistant, whoever asks.
+PROTECTED_MAC_COUNT = 10
 OID_IF_IN_DISCARDS = "1.3.6.1.2.1.2.2.1.13"
 OID_IF_OUT_DISCARDS = "1.3.6.1.2.1.2.2.1.19"
 OID_IF_IN_ERRORS = "1.3.6.1.2.1.2.2.1.14"

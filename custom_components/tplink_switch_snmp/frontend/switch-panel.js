@@ -446,9 +446,9 @@ class TplinkSwitchPanel extends HTMLElement {
     const p = sw.ports.find((x) => x.n === this._sel);
     if (!p) return "";
     const title = this._editing
-      ? `<div class="nameedit"><b>${esc(t("port"))} ${p.n}</b><input id="portname" maxlength="40" value="${esc(p.name)}" placeholder="${esc(t("portName"))}" aria-label="${esc(t("portName"))}"><button class="chip" data-a="save">${esc(t("save"))}</button><button class="chip" data-a="cancel">${esc(t("cancel"))}</button></div>`
+      ? `<div class="nameedit"><b>${esc(t("port"))} ${p.n}</b><input id="portname" maxlength="40" value="${esc(p.name)}" placeholder="${esc(t("portName"))}" aria-label="${esc(t("portName"))}">${sw.can_write ? `<label class="check"><input type="checkbox" id="toswitch"> ${esc(t("alsoAtSwitch"))}</label>` : ""}<button class="chip" data-a="save">${esc(t("save"))}</button><button class="chip" data-a="cancel">${esc(t("cancel"))}</button></div>`
       : `<h3>${esc(t("port"))} ${p.n}${p.name ? " · " + esc(p.name) : ""} <button class="rowbtn" data-a="rename" title="${esc(t("rename"))}" aria-label="${esc(t("rename"))}">${icon("edit")}</button>
-          <span class="tag ${p.up ? "ok" : ""}">${p.up ? esc(t("link")) + " " + esc(this._speedText(p)) : esc(t("noLink"))}</span>${p.up && p.speed > 0 && p.speed < 1000 ? `<span class="tag warn">${esc(t("only100"))}</span>` : ""}${this._errors(p) ? `<span class="tag bad">${esc(t("errorsN", { n: this._errors(p) }))}</span>` : ""}</h3>`;
+          ${p.admin_up === false ? `<span class="tag bad">${esc(t("switchedOff"))}</span>` : ""}<span class="tag ${p.up ? "ok" : ""}">${p.up ? esc(t("link")) + " " + esc(this._speedText(p)) : esc(t("noLink"))}</span>${p.up && p.speed > 0 && p.speed < 1000 ? `<span class="tag warn">${esc(t("only100"))}</span>` : ""}${this._errors(p) ? `<span class="tag bad">${esc(t("errorsN", { n: this._errors(p) }))}</span>` : ""}</h3>`;
     const macs = p.macs.slice(0, MAX_MACS);
     const macList = macs.length
       ? `<div class="maclist">${macs.map((m) => `<div><span>${m.name ? esc(m.name) : `<span class="muted">${esc(t("unknown"))}</span>`}</span><span class="mono muted">${esc(m.mac)}</span></div>`).join("")}${p.macs.length > MAX_MACS ? `<div><span class="muted">${esc(t("moreN", { n: p.macs.length - MAX_MACS }))}</span></div>` : ""}</div>`
@@ -709,7 +709,7 @@ class TplinkSwitchPanel extends HTMLElement {
     const input = this.shadowRoot.getElementById("portname");
     if (!sw || !input) return;
     try {
-      await this._hass.callWS({ type: `${DOMAIN}/set_port_name`, entry_id: sw.entry_id, port: this._sel, name: input.value });
+      await this._hass.callWS({ type: `${DOMAIN}/set_port_name`, entry_id: sw.entry_id, port: this._sel, name: input.value, to_switch: !!this.shadowRoot.getElementById("toswitch")?.checked });
     } catch (err) {
       this._error = err?.message || String(err);
     }

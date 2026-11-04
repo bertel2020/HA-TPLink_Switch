@@ -219,7 +219,12 @@ async def test_options_keep_the_port_names(hass: HomeAssistant, snmp, entry) -> 
     result = await hass.config_entries.options.async_init(entry.entry_id)
     await hass.config_entries.options.async_configure(result["flow_id"], {"scan_interval": 60})
 
-    assert entry.options == {"port_names": {"1": "NAS"}, "scan_interval": 60, "trap_port": 0}
+    assert entry.options == {
+        "port_names": {"1": "NAS"},
+        "scan_interval": 60,
+        "trap_port": 0,
+        "allow_write": False,
+    }
 
 
 async def test_options_start_with_the_saved_interval(hass: HomeAssistant, snmp, entry) -> None:

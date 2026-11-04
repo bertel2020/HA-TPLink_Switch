@@ -133,6 +133,11 @@
       "rx_multicast": {
         "name": "Port {port} Multicast Empfang"
       }
+    },
+    "switch": {
+      "port_enabled": {
+        "name": "Port {port} aktiv"
+      }
     }
   },
   "selector": {
@@ -171,12 +176,32 @@
         "description": "Wie oft Home Assistant den Switch abfragt. Kürzere Abstände geben genauere Datenraten, belasten aber den Switch stärker.",
         "data": {
           "scan_interval": "Abfrageintervall (Sekunden)",
-          "trap_port": "Trap-Port (0 = aus)"
+          "trap_port": "Trap-Port (0 = aus)",
+          "allow_write": "Schreiben am Switch erlauben",
+          "write_community": "Community mit Schreibrecht",
+          "protected_ports": "Geschützte Ports"
         },
         "data_description": {
-          "trap_port": "UDP-Port, auf dem Home Assistant SNMP-Traps des Switches empfängt (nur v1 und v2c). Am Switch unter SNMP → Notification diesen Rechner mit dem Port und derselben Community als Ziel eintragen, dann zeigt Home Assistant einen Link-Wechsel sofort. Ports unter 1024 brauchen Rechte; in Docker muss der UDP-Port freigegeben sein."
+          "trap_port": "UDP-Port, auf dem Home Assistant SNMP-Traps des Switches empfängt (nur v1 und v2c). Am Switch unter SNMP → Notification diesen Rechner mit dem Port und derselben Community als Ziel eintragen, dann zeigt Home Assistant einen Link-Wechsel sofort. Ports unter 1024 brauchen Rechte; in Docker muss der UDP-Port freigegeben sein.",
+          "allow_write": "Schaltet Schalter zum Ein- und Ausschalten der Ports ein und erlaubt, Port-Namen am Switch zu speichern. Aus, solange du es nicht brauchst. Änderungen am Switch gelten bis zu seinem Neustart, wenn du die Konfiguration dort nicht speicherst (System Tools → Save Config).",
+          "write_community": "Nur für SNMP v1 und v2c: eine Community, die am Switch schreiben darf (SNMP → Community, Zugriff „read-write“). Bei v3 schreibt derselbe Benutzer, wenn er Schreibrecht hat.",
+          "protected_ports": "Diese Ports schaltet Home Assistant nie aus. Ports, an denen mindestens 10 MAC-Adressen gelernt wurden (meist Uplinks), sind immer geschützt."
         }
       }
+    }
+  },
+  "exceptions": {
+    "write_off": {
+      "message": "Schreiben am Switch ist in den Optionen nicht erlaubt."
+    },
+    "unknown_port": {
+      "message": "Der Switch hat keinen Port {port}."
+    },
+    "port_protected": {
+      "message": "Port {port} ist geschützt und wird nicht ausgeschaltet: Er ist in den Optionen gewählt oder ein Uplink mit vielen Geräten."
+    },
+    "write_failed": {
+      "message": "Port {port} ließ sich am Switch nicht ändern: {error}"
     }
   }
 }

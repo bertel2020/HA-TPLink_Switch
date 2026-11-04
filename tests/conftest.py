@@ -51,6 +51,8 @@ TABLES = {
     "tx_uc": {"1": 2000, "2": 0, "25": 0},
     "tx_mc": {"1": 10, "2": 0, "25": 0},
     "tx_bc": {"1": 5, "2": 0, "25": 0},
+    "admin": {"1": 1, "2": 1, "25": 1},
+    "alias": {"1": b"Lenovo M920q-1", "2": b"", "25": b""},
     "last_change": {"1": 1000, "2": 500, "25": 0},
     "rx_disc": {"1": 7, "2": 0, "25": 0},
     "tx_disc": {"1": 0, "2": 0, "25": 0},
@@ -78,6 +80,7 @@ def snmp(tables):
     client.get = AsyncMock(side_effect=lambda *oids: {o: SYSTEM[o] for o in oids if o in SYSTEM})
     client.walk_many = AsyncMock(side_effect=lambda _oids: deepcopy(tables))
     client.close = MagicMock()
+    client.set = AsyncMock()
     base = "custom_components.tplink_switch_snmp"
     with (
         patch(f"{base}.SnmpClient", return_value=client),

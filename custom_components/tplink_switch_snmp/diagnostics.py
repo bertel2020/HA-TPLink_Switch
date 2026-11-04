@@ -15,11 +15,19 @@ from .const import (
     CONF_PRIV_KEY,
     CONF_USERNAME,
     CONF_VERSION,
+    CONF_WRITE_COMMUNITY,
     DEFAULT_VERSION,
 )
 from .coordinator import SwitchConfigEntry
 
-TO_REDACT = {CONF_HOST, CONF_COMMUNITY, CONF_USERNAME, CONF_AUTH_KEY, CONF_PRIV_KEY}
+TO_REDACT = {
+    CONF_HOST,
+    CONF_COMMUNITY,
+    CONF_WRITE_COMMUNITY,
+    CONF_USERNAME,
+    CONF_AUTH_KEY,
+    CONF_PRIV_KEY,
+}
 
 
 async def async_get_config_entry_diagnostics(
@@ -28,7 +36,7 @@ async def async_get_config_entry_diagnostics(
     """Return the diagnostics of one switch."""
     coordinator = entry.runtime_data
     data = coordinator.data
-    options = dict(entry.options)
+    options = async_redact_data(entry.options, TO_REDACT)
     # The names are the user's own text; say how many there are, not what they are.
     options[CONF_PORT_NAMES] = len(options.get(CONF_PORT_NAMES, {}))
     return {

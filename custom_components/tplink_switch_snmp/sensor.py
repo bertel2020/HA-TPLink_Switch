@@ -22,7 +22,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import CONF_PORT_NAMES
 from .coordinator import SwitchConfigEntry, SwitchCoordinator
 from .entity import PortEntity, SwitchEntity
 from .model import PortData
@@ -293,9 +292,8 @@ class DevicePort(SwitchEntity, SensorEntity):
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         number = self.native_value
-        names = self.coordinator.config_entry.options.get(CONF_PORT_NAMES, {})
         return {
             "mac": self._device_mac,
             "device_name": self._device_name,
-            "port_name": names.get(str(number), "") if number is not None else "",
+            "port_name": self.coordinator.port_label(number) if number is not None else "",
         }

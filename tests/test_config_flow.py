@@ -191,3 +191,42 @@ async def test_reconfigure_with_a_silent_switch(hass: HomeAssistant, snmp, entry
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
     assert entry.data["host"] == "192.168.79.15"
+
+
+async def test_options_set_the_polling_interval(hass: HomeAssistant, snmp, entry) -> None:
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    assert entry.runtime_data.update_interval.total_seconds() == 30
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    assert result["step_id"] == "init"
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {"scan_interval": 120}
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert entry.options["scan_interval"] == 120
+    assert entry.runtime_data.update_interval.total_seconds() == 120
+    assert entry.state is ConfigEntryState.LOADED  # no reload needed
+
+
+async def test_options_keep_the_port_names(hass: HomeAssistant, snmp, entry) -> None:
+    entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(entry, options={"port_names": {"1": "NAS"}})
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    await hass.config_entries.options.async_configure(result["flow_id"], {"scan_interval": 60})
+
+    assert entry.options == {"port_names": {"1": "NAS"}, "scan_interval": 60}
+
+
+async def test_options_start_with_the_saved_interval(hass: HomeAssistant, snmp, entry) -> None:
+    entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(entry, options={"scan_interval": 45})
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.runtime_data.update_interval.total_seconds() == 45

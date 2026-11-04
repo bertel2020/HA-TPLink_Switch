@@ -113,5 +113,16 @@
         "aes256": "AES-256"
       }
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Einstellungen",
+        "description": "Wie oft Home Assistant den Switch abfragt. Kürzere Abstände geben genauere Datenraten, belasten aber den Switch stärker.",
+        "data": {
+          "scan_interval": "Abfrageintervall (Sekunden)"
+        }
+      }
+    }
   }
 }

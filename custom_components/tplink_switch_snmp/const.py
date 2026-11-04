@@ -25,7 +25,10 @@ MIN_KEY_LENGTH = 8  # SNMPv3 passphrases must have at least eight characters
 
 DEFAULT_PORT = 161
 DEFAULT_COMMUNITY = "public"
-DEFAULT_SCAN_INTERVAL = 30
+CONF_SCAN_INTERVAL = "scan_interval"
+DEFAULT_SCAN_INTERVAL = 30  # seconds
+MIN_SCAN_INTERVAL = 10
+MAX_SCAN_INTERVAL = 3600
 
 # SNMP object identifiers (numeric, so no MIB files are needed).
 OID_SYS_DESCR = "1.3.6.1.2.1.1.1.0"

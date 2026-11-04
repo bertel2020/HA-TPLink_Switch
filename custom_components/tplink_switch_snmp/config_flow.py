@@ -5,10 +5,19 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any
 
-from homeassistant.config_entries import SOURCE_RECONFIGURE, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_RECONFIGURE,
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import CONF_HOST, CONF_PORT
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.selector import (
+    NumberSelector,
+    NumberSelectorConfig,
+    NumberSelectorMode,
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
@@ -26,13 +35,17 @@ from .const import (
     CONF_COMMUNITY,
     CONF_PRIV_KEY,
     CONF_PRIV_PROTOCOL,
+    CONF_SCAN_INTERVAL,
     CONF_USERNAME,
     CONF_VERSION,
     DEFAULT_COMMUNITY,
     DEFAULT_PORT,
+    DEFAULT_SCAN_INTERVAL,
     DEFAULT_VERSION,
     DOMAIN,
+    MAX_SCAN_INTERVAL,
     MIN_KEY_LENGTH,
+    MIN_SCAN_INTERVAL,
     NO_PROTOCOL,
     OID_BRIDGE_ADDRESS,
     OID_SYS_NAME,
@@ -203,3 +216,39 @@ class SwitchConfigFlow(ConfigFlow, domain=DOMAIN):
 
         self._abort_if_unique_id_configured(updates=data)
         return self.async_create_entry(title=name, data=data)
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry: ConfigEntry) -> SwitchOptionsFlow:
+        return SwitchOptionsFlow()
+
+
+class SwitchOptionsFlow(OptionsFlow):
+    """How often the switch is asked."""
+
+    async def async_step_init(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+        if user_input is not None:
+            # The options also hold the port names, which are not part of this form.
+            return self.async_create_entry(
+                data={
+                    **self.config_entry.options,
+                    CONF_SCAN_INTERVAL: int(user_input[CONF_SCAN_INTERVAL]),
+                }
+            )
+        schema = vol.Schema(
+            {
+                vol.Required(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): NumberSelector(
+                    NumberSelectorConfig(
+                        min=MIN_SCAN_INTERVAL,
+                        max=MAX_SCAN_INTERVAL,
+                        step=1,
+                        unit_of_measurement="s",
+                        mode=NumberSelectorMode.BOX,
+                    )
+                )
+            }
+        )
+        return self.async_show_form(
+            step_id="init",
+            data_schema=self.add_suggested_values_to_schema(schema, self.config_entry.options),
+        )

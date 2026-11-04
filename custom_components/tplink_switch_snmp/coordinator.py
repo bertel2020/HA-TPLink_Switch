@@ -11,6 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
+    CONF_SCAN_INTERVAL,
     CONF_VERSION,
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_VERSION,
@@ -72,7 +73,9 @@ class SwitchCoordinator(DataUpdateCoordinator[SwitchData]):
             _LOGGER,
             config_entry=entry,
             name=DOMAIN,
-            update_interval=timedelta(seconds=DEFAULT_SCAN_INTERVAL),
+            update_interval=timedelta(
+                seconds=entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
+            ),
         )
         self.client = client
         self._v1 = entry.data.get(CONF_VERSION, DEFAULT_VERSION) == VERSION_1

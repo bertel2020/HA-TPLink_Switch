@@ -113,5 +113,16 @@
         "aes256": "AES-256"
       }
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Settings",
+        "description": "How often Home Assistant asks the switch. Shorter intervals give more precise rates but put more load on the switch.",
+        "data": {
+          "scan_interval": "Polling interval (seconds)"
+        }
+      }
+    }
   }
 }

@@ -144,3 +144,25 @@ async def test_commands_are_for_admins_only(
 
     assert msg["success"] is False
     assert msg["error"]["code"] == "unauthorized"
+
+
+async def test_naming_a_port_does_not_change_the_polling(
+    hass: HomeAssistant, hass_ws_client, snmp, entry
+) -> None:
+    await _setup(hass, entry)
+    client = await hass_ws_client(hass)
+    polls = snmp.walk_many.await_count
+
+    await client.send_json_auto_id(
+        {
+            "type": "tplink_switch_snmp/set_port_name",
+            "entry_id": entry.entry_id,
+            "port": 1,
+            "name": "NAS",
+        }
+    )
+    await client.receive_json()
+    await hass.async_block_till_done()
+
+    assert snmp.walk_many.await_count == polls  # no extra poll, no reload
+    assert entry.runtime_data.update_interval.total_seconds() == 30

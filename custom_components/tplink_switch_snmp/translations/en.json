@@ -138,7 +138,11 @@
         "title": "Settings",
         "description": "How often Home Assistant asks the switch. Shorter intervals give more precise rates but put more load on the switch.",
         "data": {
-          "scan_interval": "Polling interval (seconds)"
+          "scan_interval": "Polling interval (seconds)",
+          "trap_port": "Trap port (0 = off)"
+        },
+        "data_description": {
+          "trap_port": "UDP port on which Home Assistant receives SNMP traps from the switch (v1 and v2c only). At the switch under SNMP → Notification, add this machine with the port and the same community as a target, and Home Assistant shows a link change at once. Ports below 1024 need privileges; in Docker the UDP port must be published."
         }
       }
     }

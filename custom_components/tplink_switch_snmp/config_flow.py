@@ -36,6 +36,7 @@ from .const import (
     CONF_PRIV_KEY,
     CONF_PRIV_PROTOCOL,
     CONF_SCAN_INTERVAL,
+    CONF_TRAP_PORT,
     CONF_USERNAME,
     CONF_VERSION,
     DEFAULT_COMMUNITY,
@@ -224,31 +225,36 @@ class SwitchConfigFlow(ConfigFlow, domain=DOMAIN):
 
 
 class SwitchOptionsFlow(OptionsFlow):
-    """How often the switch is asked."""
+    """How often the switch is asked, and whether it may send traps."""
 
     async def async_step_init(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         if user_input is not None:
             # The options also hold the port names, which are not part of this form.
-            return self.async_create_entry(
-                data={
-                    **self.config_entry.options,
-                    CONF_SCAN_INTERVAL: int(user_input[CONF_SCAN_INTERVAL]),
-                }
-            )
-        schema = vol.Schema(
-            {
-                vol.Required(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): NumberSelector(
-                    NumberSelectorConfig(
-                        min=MIN_SCAN_INTERVAL,
-                        max=MAX_SCAN_INTERVAL,
-                        step=1,
-                        unit_of_measurement="s",
-                        mode=NumberSelectorMode.BOX,
-                    )
+            options = {**self.config_entry.options, **user_input}
+            options[CONF_SCAN_INTERVAL] = int(options[CONF_SCAN_INTERVAL])
+            if CONF_TRAP_PORT in options:
+                options[CONF_TRAP_PORT] = int(options[CONF_TRAP_PORT])
+            return self.async_create_entry(data=options)
+
+        fields: dict[Any, Any] = {
+            vol.Required(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): NumberSelector(
+                NumberSelectorConfig(
+                    min=MIN_SCAN_INTERVAL,
+                    max=MAX_SCAN_INTERVAL,
+                    step=1,
+                    unit_of_measurement="s",
+                    mode=NumberSelectorMode.BOX,
                 )
-            }
-        )
+            )
+        }
+        # Traps need a community, which SNMPv3 does not have.
+        if self.config_entry.data.get(CONF_VERSION, DEFAULT_VERSION) != VERSION_3:
+            fields[vol.Required(CONF_TRAP_PORT, default=0)] = NumberSelector(
+                NumberSelectorConfig(min=0, max=65535, step=1, mode=NumberSelectorMode.BOX)
+            )
         return self.async_show_form(
             step_id="init",
-            data_schema=self.add_suggested_values_to_schema(schema, self.config_entry.options),
+            data_schema=self.add_suggested_values_to_schema(
+                vol.Schema(fields), self.config_entry.options
+            ),
         )

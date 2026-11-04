@@ -26,6 +26,7 @@ MIN_KEY_LENGTH = 8  # SNMPv3 passphrases must have at least eight characters
 DEFAULT_PORT = 161
 DEFAULT_COMMUNITY = "public"
 CONF_SCAN_INTERVAL = "scan_interval"
+CONF_TRAP_PORT = "trap_port"  # 0 switches the trap receiver off
 DEFAULT_SCAN_INTERVAL = 30  # seconds
 MIN_SCAN_INTERVAL = 10
 MAX_SCAN_INTERVAL = 3600

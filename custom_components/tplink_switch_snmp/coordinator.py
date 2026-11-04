@@ -90,6 +90,7 @@ class SwitchCoordinator(DataUpdateCoordinator[SwitchData]):
         )
         self.client = client
         self._v1 = entry.data.get(CONF_VERSION, DEFAULT_VERSION) == VERSION_1
+        self.trap_port = 0  # the configured trap port, set by the setup
         self._last_poll: float | None = None
         self._uptime = UptimeTracker()
         self._last_ticks: int | None = None

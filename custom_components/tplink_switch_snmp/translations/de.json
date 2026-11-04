@@ -138,7 +138,11 @@
         "title": "Einstellungen",
         "description": "Wie oft Home Assistant den Switch abfragt. Kürzere Abstände geben genauere Datenraten, belasten aber den Switch stärker.",
         "data": {
-          "scan_interval": "Abfrageintervall (Sekunden)"
+          "scan_interval": "Abfrageintervall (Sekunden)",
+          "trap_port": "Trap-Port (0 = aus)"
+        },
+        "data_description": {
+          "trap_port": "UDP-Port, auf dem Home Assistant SNMP-Traps des Switches empfängt (nur v1 und v2c). Am Switch unter SNMP → Notification diesen Rechner mit dem Port und derselben Community als Ziel eintragen, dann zeigt Home Assistant einen Link-Wechsel sofort. Ports unter 1024 brauchen Rechte; in Docker muss der UDP-Port freigegeben sein."
         }
       }
     }

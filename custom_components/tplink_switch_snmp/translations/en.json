@@ -1,0 +1,37 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "TP-Link Switch (SNMP)",
+        "description": "SNMP must be switched on at the switch and a community with read access created.",
+        "data": {
+          "host": "Host",
+          "community": "Community",
+          "port": "Port"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "The switch does not answer. Check the address, the community and that SNMP is switched on and saved at the switch."
+    },
+    "abort": {
+      "already_configured": "This switch is already set up."
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "link": { "name": "Port {port} link" }
+    },
+    "sensor": {
+      "uptime": { "name": "Uptime" },
+      "rx_rate": { "name": "Port {port} receive" },
+      "tx_rate": { "name": "Port {port} transmit" },
+      "speed": { "name": "Port {port} speed" },
+      "rx_total": { "name": "Port {port} received total" },
+      "tx_total": { "name": "Port {port} sent total" },
+      "rx_errors": { "name": "Port {port} receive errors" },
+      "tx_errors": { "name": "Port {port} transmit errors" },
+      "macs": { "name": "Port {port} MAC addresses" }
+    }
+  }
+}

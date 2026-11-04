@@ -1,0 +1,92 @@
+"""Data update coordinator for the switch."""
+
+from __future__ import annotations
+
+import logging
+import time
+from datetime import timedelta
+
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+
+from .const import (
+    DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
+    OID_BASE_PORT_IF_INDEX,
+    OID_FDB,
+    OID_FDB_Q,
+    OID_IF_HC_IN_OCTETS,
+    OID_IF_HC_OUT_OCTETS,
+    OID_IF_HIGH_SPEED,
+    OID_IF_IN_ERRORS,
+    OID_IF_NAME,
+    OID_IF_OPER_STATUS,
+    OID_IF_OUT_ERRORS,
+    OID_SYS_UPTIME,
+)
+from .model import SwitchData, add_rates, build_ports
+from .snmp import SnmpClient, SnmpError
+
+_LOGGER = logging.getLogger(__name__)
+
+TABLES = {
+    "name": OID_IF_NAME,
+    "oper": OID_IF_OPER_STATUS,
+    "speed": OID_IF_HIGH_SPEED,
+    "rx": OID_IF_HC_IN_OCTETS,
+    "tx": OID_IF_HC_OUT_OCTETS,
+    "rx_err": OID_IF_IN_ERRORS,
+    "tx_err": OID_IF_OUT_ERRORS,
+    "fdb_q": OID_FDB_Q,
+    "fdb": OID_FDB,
+    "base_port": OID_BASE_PORT_IF_INDEX,
+}
+
+type SwitchConfigEntry = ConfigEntry[SwitchCoordinator]
+
+
+class SwitchCoordinator(DataUpdateCoordinator[SwitchData]):
+    """Poll the switch and compute traffic rates."""
+
+    config_entry: SwitchConfigEntry
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        entry: SwitchConfigEntry,
+        client: SnmpClient,
+    ) -> None:
+        super().__init__(
+            hass,
+            _LOGGER,
+            config_entry=entry,
+            name=DOMAIN,
+            update_interval=timedelta(seconds=DEFAULT_SCAN_INTERVAL),
+        )
+        self.client = client
+        self._last_poll: float | None = None
+
+    async def _async_update_data(self) -> SwitchData:
+        try:
+            uptime = await self.client.get(OID_SYS_UPTIME)
+            tables = await self.client.walk_many(TABLES)
+        except SnmpError as err:
+            raise UpdateFailed(f"switch did not answer: {err}") from err
+
+        now = time.monotonic()
+        # Q-BRIDGE lists the table per VLAN; use the classic table if it is empty.
+        fdb = tables["fdb_q"] or tables["fdb"]
+        ports = build_ports(tables, fdb, tables["base_port"])
+        if not ports:
+            raise UpdateFailed("switch returned no ports")
+
+        previous = self.data.ports if self.data else None
+        elapsed = now - self._last_poll if self._last_poll is not None else 0
+        add_rates(ports, previous, elapsed)
+        self._last_poll = now
+
+        return SwitchData(
+            uptime=int(next(iter(uptime.values()), 0)) // 100,
+            ports=ports,
+        )

@@ -160,3 +160,58 @@ async def test_logbook_text(hass: HomeAssistant) -> None:
 
     assert result["name"] == "Drucker"
     assert result["message"] == "moved from Port 1 to Port 12 (AP) at TL-SG3424"
+
+
+async def test_the_port_sensor_goes_when_the_device_is_deleted(
+    hass: HomeAssistant, snmp, entry
+) -> None:
+    device = _known_device(hass, MAC_PRINTER, "Drucker")
+    await _setup(hass, entry)
+    assert _sensor(hass, MAC_PRINTER)
+
+    dr.async_get(hass).async_remove_device(device.id)
+    await entry.runtime_data.async_refresh()
+    await hass.async_block_till_done()
+
+    assert _sensor(hass, MAC_PRINTER) is None
+
+
+async def test_a_port_sensor_left_over_from_before_a_restart_is_removed(
+    hass: HomeAssistant, snmp, entry
+) -> None:
+    device = _known_device(hass, MAC_PRINTER, "Drucker")
+    await _setup(hass, entry)
+    assert _sensor(hass, MAC_PRINTER)
+    assert await hass.config_entries.async_unload(entry.entry_id)
+
+    dr.async_get(hass).async_remove_device(device.id)  # deleted while the integration was off
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert _sensor(hass, MAC_PRINTER) is None
+
+
+async def test_the_sensor_comes_back_with_the_device(hass: HomeAssistant, snmp, entry) -> None:
+    device = _known_device(hass, MAC_PRINTER, "Drucker")
+    await _setup(hass, entry)
+    dr.async_get(hass).async_remove_device(device.id)
+    await entry.runtime_data.async_refresh()
+    await hass.async_block_till_done()
+    assert _sensor(hass, MAC_PRINTER) is None
+
+    _known_device(hass, MAC_PRINTER, "Drucker neu")
+    await entry.runtime_data.async_refresh()
+    await hass.async_block_till_done()
+
+    assert _sensor(hass, MAC_PRINTER)
+
+
+async def test_other_entities_are_left_alone(hass: HomeAssistant, snmp, entry) -> None:
+    _known_device(hass, MAC_PRINTER, "Drucker")
+    await _setup(hass, entry)
+    before = len(er.async_entries_for_config_entry(er.async_get(hass), entry.entry_id))
+
+    await entry.runtime_data.async_refresh()
+    await hass.async_block_till_done()
+
+    assert len(er.async_entries_for_config_entry(er.async_get(hass), entry.entry_id)) == before

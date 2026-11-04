@@ -20,6 +20,7 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import SwitchConfigEntry, SwitchCoordinator
@@ -205,8 +206,23 @@ async def async_setup_entry(
     # including devices that show up at the switch or in the registry later on.
     known: set[str] = set()
 
+    registry = er.async_get(hass)
+    prefix = f"{entry.unique_id}_device_"
+
+    @callback
+    def remove_stale() -> None:
+        """Remove the port sensor of a device that Home Assistant no longer has."""
+        for reg in er.async_entries_for_config_entry(registry, entry.entry_id):
+            if reg.translation_key != "device_port":
+                continue
+            mac = reg.unique_id.removeprefix(prefix).removesuffix("_port")
+            if coordinator.known_device(mac) is None:
+                registry.async_remove(reg.entity_id)
+                known.discard(mac)
+
     @callback
     def add_devices() -> None:
+        remove_stale()
         new = []
         for mac in coordinator.data.mac_ports:
             if mac in known:

@@ -44,9 +44,18 @@ function history(ids, start, end) {
   return out;
 }
 
-export function makeHass({ dark = false, language = "de" } = {}) {
+export function makeHass({ dark = false, language = "de", pushEvery = 5000 } = {}) {
   return {
     language, themes: { darkMode: dark },
+    // the panel subscribes; the preview pushes a new snapshot every few seconds like a poll
+    connection: {
+      async subscribeMessage(callback, message) {
+        if (message.type !== "tplink_switch_snmp/subscribe") throw new Error(`unknown command ${message.type}`);
+        const timer = setInterval(() => callback(snapshot()), pushEvery);
+        window.__pushes = (window.__pushes || 0) + 1;
+        return () => { clearInterval(timer); window.__pushes -= 1; };
+      },
+    },
     async callWS(msg) {
       await new Promise((r) => setTimeout(r, 30));
       if (msg.type === "tplink_switch_snmp/snapshot") return snapshot();

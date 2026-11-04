@@ -170,3 +170,68 @@ async def test_naming_a_port_does_not_change_the_polling(
 
     assert snmp.walk_many.await_count == polls  # no extra poll, no reload
     assert entry.runtime_data.update_interval.total_seconds() == 30
+
+
+async def test_subscribe_pushes_a_snapshot_after_each_poll(
+    hass: HomeAssistant, hass_ws_client, snmp, entry
+) -> None:
+    await _setup(hass, entry)
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id({"type": "tplink_switch_snmp/subscribe"})
+    assert (await client.receive_json())["success"]
+
+    await entry.runtime_data.async_refresh()
+    event = await client.receive_json()
+
+    assert event["type"] == "event"
+    switch = event["event"]["switches"][0]
+    assert switch["entry_id"] == entry.entry_id
+    assert [p["n"] for p in switch["ports"]] == [1, 2]
+
+
+async def test_subscribe_also_tells_when_the_switch_goes_silent(
+    hass: HomeAssistant, hass_ws_client, snmp, entry
+) -> None:
+    from custom_components.tplink_switch_snmp.snmp import SnmpError
+
+    await _setup(hass, entry)
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id({"type": "tplink_switch_snmp/subscribe"})
+    await client.receive_json()
+
+    snmp.walk_many.side_effect = SnmpError("timeout")
+    await entry.runtime_data.async_refresh()
+    event = await client.receive_json()
+
+    assert event["event"]["switches"][0]["last_update_success"] is False
+
+
+async def test_nothing_is_pushed_after_unsubscribing(
+    hass: HomeAssistant, hass_ws_client, snmp, entry
+) -> None:
+    await _setup(hass, entry)
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id({"type": "tplink_switch_snmp/subscribe"})
+    subscription = (await client.receive_json())["id"]
+
+    await client.send_json_auto_id({"type": "unsubscribe_events", "subscription": subscription})
+    assert (await client.receive_json())["success"]
+    await entry.runtime_data.async_refresh()
+    await hass.async_block_till_done()
+
+    await client.send_json_auto_id({"type": "ping"})
+    assert (await client.receive_json())["type"] == "pong"  # no event in between
+
+
+async def test_subscribe_is_for_admins_only(
+    hass: HomeAssistant, hass_ws_client, hass_read_only_access_token, snmp, entry
+) -> None:
+    await _setup(hass, entry)
+    client = await hass_ws_client(hass, hass_read_only_access_token)
+
+    await client.send_json_auto_id({"type": "tplink_switch_snmp/subscribe"})
+    msg = await client.receive_json()
+
+    assert msg["success"] is False
+    assert msg["error"]["code"] == "unauthorized"

@@ -5,7 +5,9 @@ const V = new URL(import.meta.url).search;
 const [{ STYLES }, { translator }] = await Promise.all([import(`./styles.js${V}`), import(`./texts.js${V}`)]);
 
 const DOMAIN = "tplink_switch_snmp";
-const REFRESH_MS = 15000;
+// The server pushes every poll. This slow check only matters if the subscription is lost.
+const FALLBACK_MS = 60000;
+const STALE_MS = 5 * 60000;
 const HISTORY_HOURS = 24;
 const MAX_MACS = 50;
 
@@ -47,6 +49,9 @@ class TplinkSwitchPanel extends HTMLElement {
     this._history = new Map(); // port key -> {at, rx, tx}
     this._timer = null;
     this._loading = false;
+    this._unsub = null;
+    this._subscribing = false;
+    this._lastData = 0;
   }
 
   set hass(hass) {
@@ -61,6 +66,7 @@ class TplinkSwitchPanel extends HTMLElement {
       if (this._data) this._render();
     }
     if (first) this._load();
+    if (this.isConnected) this._subscribe();
   }
 
   set narrow(value) {
@@ -70,12 +76,42 @@ class TplinkSwitchPanel extends HTMLElement {
   set panel(_value) {}
 
   connectedCallback() {
-    this._timer = setInterval(() => this._load(), REFRESH_MS);
-    if (this._hass) this._load();
+    this._timer = setInterval(() => {
+      // with a working subscription nothing is polled, unless the data has gone stale
+      if (!this._unsub || Date.now() - this._lastData > STALE_MS) this._load();
+    }, FALLBACK_MS);
+    if (this._hass) {
+      this._load();
+      this._subscribe();
+    }
   }
 
   disconnectedCallback() {
     clearInterval(this._timer);
+    this._unsub?.();
+    this._unsub = null;
+  }
+
+  // The integration sends the snapshot after each poll of a switch; the connection brings the
+  // subscription back after a reconnect.
+  async _subscribe() {
+    if (this._unsub || this._subscribing || !this._hass?.connection) return;
+    this._subscribing = true;
+    try {
+      this._unsub = await this._hass.connection.subscribeMessage(
+        (event) => {
+          this._data = event.switches;
+          this._error = null;
+          this._lastData = Date.now();
+          this._render();
+        },
+        { type: `${DOMAIN}/subscribe` },
+      );
+    } catch {
+      this._unsub = null; // the slow check keeps the panel up to date
+    } finally {
+      this._subscribing = false;
+    }
   }
 
   async _load() {
@@ -85,6 +121,7 @@ class TplinkSwitchPanel extends HTMLElement {
       const result = await this._hass.callWS({ type: `${DOMAIN}/snapshot` });
       this._data = result.switches;
       this._error = null;
+      this._lastData = Date.now();
     } catch (err) {
       this._error = err?.message || String(err);
     } finally {

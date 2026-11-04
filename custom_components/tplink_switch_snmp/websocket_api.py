@@ -21,6 +21,7 @@ HISTORY_KEYS = (("sensor", "rx_rate"), ("sensor", "tx_rate"))
 def async_register(hass: HomeAssistant) -> None:
     """Register the commands once."""
     websocket_api.async_register_command(hass, ws_snapshot)
+    websocket_api.async_register_command(hass, ws_subscribe)
     websocket_api.async_register_command(hass, ws_set_port_name)
 
 
@@ -96,8 +97,39 @@ def _switch(hass: HomeAssistant, entry: SwitchConfigEntry) -> dict[str, Any]:
 @callback
 def ws_snapshot(hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict) -> None:
     """All switches with their ports."""
+    connection.send_result(msg["id"], _snapshot(hass))
+
+
+def _snapshot(hass: HomeAssistant) -> dict[str, Any]:
+    return {
+        "switches": [
+            _switch(hass, entry) for entry in hass.config_entries.async_loaded_entries(DOMAIN)
+        ]
+    }
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command({vol.Required("type"): f"{DOMAIN}/subscribe"})
+@callback
+def ws_subscribe(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+) -> None:
+    """Send the snapshot each time a switch has been polled, so the panel does not poll."""
     entries = hass.config_entries.async_loaded_entries(DOMAIN)
-    connection.send_result(msg["id"], {"switches": [_switch(hass, entry) for entry in entries]})
+
+    @callback
+    def send() -> None:
+        connection.send_message(websocket_api.event_message(msg["id"], _snapshot(hass)))
+
+    unsubscribers = [entry.runtime_data.async_add_listener(send) for entry in entries]
+
+    @callback
+    def unsubscribe() -> None:
+        for remove in unsubscribers:
+            remove()
+
+    connection.subscriptions[msg["id"]] = unsubscribe
+    connection.send_result(msg["id"])
 
 
 @websocket_api.require_admin

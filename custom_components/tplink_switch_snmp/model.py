@@ -57,6 +57,29 @@ def text(value: Any) -> str:
     return str(value)
 
 
+TICKS_WRAP = 2**32  # sysUpTime counts hundredths of a second in 32 bits
+# A drop is a wrap and not a reboot if the last value was this close to the limit (one hour).
+WRAP_WINDOW = 360_000
+
+
+class UptimeTracker:
+    """Uptime in seconds that carries on past the 497 days after which sysUpTime wraps."""
+
+    def __init__(self) -> None:
+        self._last: int | None = None
+        self._wraps = 0
+
+    def seconds(self, ticks: int) -> int:
+        """The uptime for the latest sysUpTime reading."""
+        if self._last is not None and ticks < self._last:
+            if self._last > TICKS_WRAP - WRAP_WINDOW:
+                self._wraps += 1
+            else:
+                self._wraps = 0  # the counter fell from somewhere low: a reboot
+        self._last = ticks
+        return (self._wraps * TICKS_WRAP + ticks) // 100
+
+
 def format_mac(raw: bytes | str) -> str:
     """Format six bytes as aa:bb:cc:dd:ee:ff."""
     if isinstance(raw, str):

@@ -102,3 +102,41 @@ def test_manufacturer_from_the_enterprise_number():
     assert model.manufacturer("1.3.6.1.4.1.9.1.1") is None  # not a known maker
     assert model.manufacturer("") is None
     assert model.manufacturer("1.3.6.1.2.1.1.1") is None  # not an enterprise OID
+
+
+def test_uptime_in_seconds():
+    tracker = model.UptimeTracker()
+    assert tracker.seconds(15_800_000 * 100) == 15_800_000
+    assert tracker.seconds(15_800_000 * 100 + 3000) == 15_800_030
+
+
+def test_uptime_carries_on_after_the_counter_wraps():
+    tracker = model.UptimeTracker()
+    near_limit = model.TICKS_WRAP - 1000  # ten seconds before the wrap
+    before = tracker.seconds(near_limit)
+    after = tracker.seconds(2000)  # 20 seconds later, the counter started again
+    assert before == near_limit // 100
+    assert after == (model.TICKS_WRAP + 2000) // 100
+    assert after > before
+
+
+def test_uptime_survives_several_wraps():
+    tracker = model.UptimeTracker()
+    for _ in range(3):
+        tracker.seconds(model.TICKS_WRAP - 100)
+        wrapped = tracker.seconds(100)
+    assert wrapped == (3 * model.TICKS_WRAP + 100) // 100
+
+
+def test_uptime_starts_over_after_a_reboot():
+    tracker = model.UptimeTracker()
+    tracker.seconds(158 * 86400 * 100)
+    assert tracker.seconds(6000) == 60  # fell from far below the limit: not a wrap
+
+
+def test_reboot_after_a_wrap_resets_the_count():
+    tracker = model.UptimeTracker()
+    tracker.seconds(model.TICKS_WRAP - 100)
+    tracker.seconds(100)  # wrapped once
+    tracker.seconds(10_000_000)
+    assert tracker.seconds(300) == 3  # rebooted

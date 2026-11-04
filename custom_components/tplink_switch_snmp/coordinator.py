@@ -27,7 +27,7 @@ from .const import (
     OID_SYS_OBJECT_ID,
     OID_SYS_UPTIME,
 )
-from .model import SwitchData, add_rates, build_ports, text
+from .model import SwitchData, UptimeTracker, add_rates, build_ports, text
 from .snmp import SnmpClient, SnmpError
 
 _LOGGER = logging.getLogger(__name__)
@@ -68,6 +68,7 @@ class SwitchCoordinator(DataUpdateCoordinator[SwitchData]):
         )
         self.client = client
         self._last_poll: float | None = None
+        self._uptime = UptimeTracker()
 
     async def _async_update_data(self) -> SwitchData:
         try:
@@ -89,7 +90,7 @@ class SwitchCoordinator(DataUpdateCoordinator[SwitchData]):
         self._last_poll = now
 
         return SwitchData(
-            uptime=int(system.get(OID_SYS_UPTIME, 0)) // 100,
+            uptime=self._uptime.seconds(int(system.get(OID_SYS_UPTIME, 0))),
             description=text(system.get(OID_SYS_DESCR, b"")),
             object_id=text(system.get(OID_SYS_OBJECT_ID, "")),
             ports=ports,

@@ -5,7 +5,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-from custom_components.tplink_switch_snmp.const import DOMAIN, OID_SYS_OBJECT_ID
+from custom_components.tplink_switch_snmp.const import DOMAIN, OID_SYS_OBJECT_ID, OID_SYS_UPTIME
 from custom_components.tplink_switch_snmp.snmp import SnmpError
 
 from .conftest import BRIDGE_MAC, MAC_OTHER, MAC_PRINTER, SYSTEM
@@ -121,3 +121,19 @@ async def test_unknown_maker_is_left_empty(hass: HomeAssistant, snmp, entry) -> 
 
     device = dr.async_get(hass).async_get_device_by_identifier((DOMAIN, BRIDGE_MAC), entry.entry_id)
     assert device.manufacturer is None
+
+
+async def test_uptime_keeps_counting_after_the_counter_wraps(
+    hass: HomeAssistant, snmp, entry
+) -> None:
+    near_limit = {**SYSTEM, OID_SYS_UPTIME: 2**32 - 1000}
+    snmp.get.side_effect = lambda *oids: {o: near_limit[o] for o in oids if o in near_limit}
+    await _setup(hass, entry)
+    before = entry.runtime_data.data.uptime
+
+    wrapped = {**SYSTEM, OID_SYS_UPTIME: 2000}
+    snmp.get.side_effect = lambda *oids: {o: wrapped[o] for o in oids if o in wrapped}
+    await entry.runtime_data.async_refresh()
+
+    assert entry.runtime_data.data.uptime == (2**32 + 2000) // 100
+    assert entry.runtime_data.data.uptime > before

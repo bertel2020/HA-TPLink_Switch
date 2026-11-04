@@ -95,3 +95,22 @@ PANEL_PATH = "tplink-switch"
 
 EVENT_LINK_CHANGED = f"{DOMAIN}_link_changed"
 EVENT_DEVICE_MOVED = f"{DOMAIN}_device_moved"
+
+# Which entities are created: groups of them can be left out, and so can ports (options).
+CONF_ENTITY_GROUPS = "entity_groups"
+CONF_ENTITY_PORTS = "entity_ports"  # empty: all ports
+# group -> the keys of the per-port entities in it (the last part of their unique IDs)
+PORT_ENTITY_GROUPS: dict[str, tuple[str, ...]] = {
+    "link": ("link",),
+    "rates": ("rx_rate", "tx_rate"),
+    "speed": ("speed",),
+    "totals": ("rx_total", "tx_total"),
+    "errors": ("rx_errors", "tx_errors", "rx_discards", "tx_discards"),
+    "packets": ("rx_packets", "tx_packets", "rx_broadcast", "rx_multicast"),
+    "utilization": ("rx_utilization", "tx_utilization"),
+    "link_changed": ("link_changed",),
+    "macs": ("macs",),
+}
+# groups of entities that belong to the switch and not to a port
+SWITCH_ENTITY_GROUPS = ("uptime", "devices")
+ENTITY_GROUPS = (*PORT_ENTITY_GROUPS, *SWITCH_ENTITY_GROUPS)

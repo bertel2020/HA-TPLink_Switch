@@ -11,6 +11,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import SwitchConfigEntry, SwitchCoordinator
 from .entity import PortEntity
+from .selection import wants
 
 PARALLEL_UPDATES = 0
 
@@ -22,7 +23,9 @@ async def async_setup_entry(
 ) -> None:
     """Add a link sensor per port."""
     coordinator = entry.runtime_data
-    async_add_entities(PortLink(coordinator, n) for n in coordinator.data.ports)
+    async_add_entities(
+        PortLink(coordinator, n) for n in coordinator.data.ports if wants(entry, n, "link")
+    )
 
 
 class PortLink(PortEntity, BinarySensorEntity):

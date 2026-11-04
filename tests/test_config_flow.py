@@ -213,6 +213,9 @@ async def test_options_set_the_polling_interval(hass: HomeAssistant, snmp, entry
 
 
 async def test_options_keep_the_port_names(hass: HomeAssistant, snmp, entry) -> None:
+    from custom_components.tplink_switch_snmp.const import ENTITY_GROUPS
+
+    s_all = list(ENTITY_GROUPS)
     entry.add_to_hass(hass)
     hass.config_entries.async_update_entry(entry, options={"port_names": {"1": "NAS"}})
 
@@ -224,6 +227,7 @@ async def test_options_keep_the_port_names(hass: HomeAssistant, snmp, entry) -> 
         "scan_interval": 60,
         "trap_port": 0,
         "allow_write": False,
+        "entity_groups": s_all,
     }
 
 
@@ -235,3 +239,42 @@ async def test_options_start_with_the_saved_interval(hass: HomeAssistant, snmp, 
     await hass.async_block_till_done()
 
     assert entry.runtime_data.update_interval.total_seconds() == 45
+
+
+async def test_options_choose_which_entities_are_created(hass: HomeAssistant, snmp, entry) -> None:
+    from homeassistant.helpers import entity_registry as er
+
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    registry = er.async_get(hass)
+    # an entity that no group knows is left alone
+    registry.async_get_or_create("sensor", "tplink_switch_snmp", "odd", config_entry=entry)
+    before = {e.unique_id for e in er.async_entries_for_config_entry(registry, entry.entry_id)}
+    assert any(u.endswith("_port1_rx_rate") for u in before)
+    assert any(u.endswith("_port2_link") for u in before)
+    assert any(u.endswith("_uptime") for u in before)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {"scan_interval": 30, "entity_groups": ["link", "speed"], "entity_ports": ["1"]},
+    )
+    await hass.async_block_till_done()
+
+    assert entry.options["entity_groups"] == ["link", "speed"]
+    assert entry.options["entity_ports"] == [1]
+    assert entry.state is ConfigEntryState.LOADED
+    after = {e.unique_id for e in er.async_entries_for_config_entry(registry, entry.entry_id)}
+    assert {u.rsplit("_", 1)[-1] for u in after if "_port" in u} == {"link", "speed"}
+    assert all("_port1_" in u for u in after if u != "odd")
+    assert not any(u.endswith("_uptime") for u in after)
+    assert registry.async_get_entity_id("sensor", "tplink_switch_snmp", "odd")
+
+
+async def test_all_entities_by_default(hass: HomeAssistant, snmp, entry) -> None:
+    from custom_components.tplink_switch_snmp.selection import selected_groups, selected_ports
+
+    entry.add_to_hass(hass)
+    assert selected_ports(entry) is None
+    assert "devices" in selected_groups(entry)

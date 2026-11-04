@@ -10,6 +10,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import SwitchConfigEntry, SwitchCoordinator
 from .entity import PortEntity
+from .selection import wants_port
 
 PARALLEL_UPDATES = 1  # one write at a time
 
@@ -23,7 +24,11 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
     if not coordinator.can_write:
         return
-    async_add_entities(PortEnabled(coordinator, number) for number in coordinator.data.ports)
+    async_add_entities(
+        PortEnabled(coordinator, number)
+        for number in coordinator.data.ports
+        if wants_port(entry, number)
+    )
 
 
 class PortEnabled(PortEntity, HomeAssistantSwitchEntity):

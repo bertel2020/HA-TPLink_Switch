@@ -124,6 +124,7 @@ class SwitchCoordinator(DataUpdateCoordinator[SwitchData]):
         self.trap_port = 0  # the configured trap port, set by the setup
         # what the options say about writing; a change of any of it reloads the entry
         self.write_key: tuple[bool, str] = (False, "")
+        self.selection: object = None  # which entities the options asked for, set by the setup
         self.history = RateHistory()
         self._failing_since: datetime | None = None
         self._info: dict[str, str | None] | None = None

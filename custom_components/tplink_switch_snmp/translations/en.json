@@ -167,6 +167,21 @@
         "aes192": "AES-192",
         "aes256": "AES-256"
       }
+    },
+    "entity_groups": {
+      "options": {
+        "link": "Link per port (connected or not)",
+        "rates": "Receive and transmit rates",
+        "speed": "Negotiated speed",
+        "totals": "Total data transferred",
+        "errors": "Errors and discarded packets",
+        "packets": "Packets per second, broadcast and multicast",
+        "utilization": "Line utilization in percent",
+        "link_changed": "Time of the last link change",
+        "macs": "Number of MAC addresses per port",
+        "uptime": "Uptime of the switch",
+        "devices": "Port of known devices"
+      }
     }
   },
   "options": {
@@ -179,13 +194,17 @@
           "trap_port": "Trap port (0 = off)",
           "allow_write": "Allow writing to the switch",
           "write_community": "Community with write access",
-          "protected_ports": "Protected ports"
+          "protected_ports": "Protected ports",
+          "entity_groups": "Entities (groups)",
+          "entity_ports": "Entities only for ports"
         },
         "data_description": {
           "trap_port": "UDP port on which Home Assistant receives SNMP traps from the switch (v1 and v2c only). At the switch under SNMP → Notification, add this machine with the port and the same community as a target, and Home Assistant shows a link change at once. Ports below 1024 need privileges; in Docker the UDP port must be published.",
           "allow_write": "Adds switches that turn ports on and off and lets port names be saved at the switch. Leave it off until you need it. Changes at the switch last until it restarts unless you save its configuration there (System Tools → Save Config).",
           "write_community": "For SNMP v1 and v2c only: a community that may write at the switch (SNMP → Community, access “read-write”). With v3 the same user writes, if it has write access.",
-          "protected_ports": "Home Assistant never turns these ports off. Ports that have learned at least 10 MAC addresses (mostly uplinks) are always protected."
+          "protected_ports": "Home Assistant never turns these ports off. Ports that have learned at least 10 MAC addresses (mostly uplinks) are always protected.",
+          "entity_groups": "Groups that are not selected are not created, and existing entities of them are removed. Many of them are disabled by default and can be enabled one by one later.",
+          "entity_ports": "Entities are created for these ports only. Empty means all ports. Existing entities of other ports are removed."
         }
       }
     }

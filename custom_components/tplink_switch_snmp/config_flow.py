@@ -34,6 +34,8 @@ from .const import (
     CONF_AUTH_KEY,
     CONF_AUTH_PROTOCOL,
     CONF_COMMUNITY,
+    CONF_ENTITY_GROUPS,
+    CONF_ENTITY_PORTS,
     CONF_PRIV_KEY,
     CONF_PRIV_PROTOCOL,
     CONF_PROTECTED_PORTS,
@@ -47,6 +49,7 @@ from .const import (
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_VERSION,
     DOMAIN,
+    ENTITY_GROUPS,
     MAX_SCAN_INTERVAL,
     MIN_KEY_LENGTH,
     MIN_SCAN_INTERVAL,
@@ -241,6 +244,8 @@ class SwitchOptionsFlow(OptionsFlow):
                 options[CONF_PROTECTED_PORTS] = sorted(
                     int(n) for n in options[CONF_PROTECTED_PORTS]
                 )
+            if CONF_ENTITY_PORTS in options:
+                options[CONF_ENTITY_PORTS] = sorted(int(n) for n in options[CONF_ENTITY_PORTS])
             if CONF_TRAP_PORT in options:
                 options[CONF_TRAP_PORT] = int(options[CONF_TRAP_PORT])
             return self.async_create_entry(data=options)
@@ -256,6 +261,15 @@ class SwitchOptionsFlow(OptionsFlow):
                 )
             )
         }
+        # Which entities to create: groups of them, and the ports they are made for.
+        fields[probatio.Required(CONF_ENTITY_GROUPS, default=list(ENTITY_GROUPS))] = SelectSelector(
+            SelectSelectorConfig(
+                options=list(ENTITY_GROUPS),
+                multiple=True,
+                translation_key="entity_groups",
+                mode=SelectSelectorMode.LIST,
+            )
+        )
         v3 = self.config_entry.data.get(CONF_VERSION, DEFAULT_VERSION) == VERSION_3
         # Traps need a community, which SNMPv3 does not have.
         if not v3:
@@ -270,6 +284,13 @@ class SwitchOptionsFlow(OptionsFlow):
             )
         coordinator = getattr(self.config_entry, "runtime_data", None)
         if coordinator is not None and coordinator.data:
+            fields[probatio.Optional(CONF_ENTITY_PORTS, default=[])] = SelectSelector(
+                SelectSelectorConfig(
+                    options=[str(n) for n in sorted(coordinator.data.ports)],
+                    multiple=True,
+                    mode=SelectSelectorMode.DROPDOWN,
+                )
+            )
             fields[probatio.Optional(CONF_PROTECTED_PORTS, default=[])] = SelectSelector(
                 SelectSelectorConfig(
                     options=[str(n) for n in sorted(coordinator.data.ports)],
@@ -287,6 +308,7 @@ class SwitchOptionsFlow(OptionsFlow):
     def _suggested(self) -> dict[str, Any]:
         """The saved options as the form shows them: the port numbers as text."""
         options = dict(self.config_entry.options)
-        if CONF_PROTECTED_PORTS in options:
-            options[CONF_PROTECTED_PORTS] = [str(n) for n in options[CONF_PROTECTED_PORTS]]
+        for key in (CONF_PROTECTED_PORTS, CONF_ENTITY_PORTS):
+            if key in options:
+                options[key] = [str(n) for n in options[key]]
         return options

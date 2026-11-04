@@ -28,6 +28,7 @@ from .const import (
 )
 from .coordinator import SwitchConfigEntry, SwitchCoordinator
 from .panel import async_register_panel, async_remove_panel
+from .selection import async_remove_unwanted, selection_key
 from .snmp import SnmpClient
 from .traps import async_subscribe
 from .vendor import async_load as async_load_vendors
@@ -61,9 +62,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: SwitchConfigEntry) -> bo
     except Exception:
         engine.close_dispatcher()
         raise
+    coordinator.selection = selection_key(entry)
     entry.runtime_data = coordinator
     entry.async_on_unload(coordinator.clear_issue)
     entry.async_on_unload(entry.add_update_listener(_options_updated))
+    async_remove_unwanted(hass, entry)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     await _async_setup_traps(hass, entry, coordinator)
     await async_register_panel(hass)
@@ -113,9 +116,10 @@ async def _options_updated(hass: HomeAssistant, entry: SwitchConfigEntry) -> Non
     if (
         entry.options.get(CONF_TRAP_PORT, 0) != coordinator.trap_port
         or write_key != coordinator.write_key
+        or selection_key(entry) != coordinator.selection
     ):
-        # Another trap port, or writing switched on or off or with another community, means
-        # another listener, another client or other entities: start over.
+        # Another trap port, writing switched on or off or with another community, or another
+        # selection of entities means another listener, client or set of entities: start over.
         hass.config_entries.async_schedule_reload(entry.entry_id)
         return
     interval = timedelta(seconds=entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL))

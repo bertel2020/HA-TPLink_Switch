@@ -109,6 +109,10 @@ Per port:
 
 On the device: **Uptime**. For every device that Home Assistant knows by its MAC address and that was learned at the switch, a sensor **Port of …** is added. It shows the port number and, in the attribute `port_name`, the name of the port. The sensor belongs to the switch, not to the other integration's device, because in Home Assistant a device belongs to exactly one integration.
 
+### Which entities are created
+
+Under **Configure** you choose which groups of entities exist (link, rates, speed, data totals, errors, packets, utilization, link changes, MAC addresses, uptime, port of devices) and for which ports (empty = all). What you deselect is not created and is removed from the entity list; its history in Home Assistant is no longer updated. The panel is not affected, it reads from the switch directly.
+
 ## Events and logbook
 
 Both events appear in the logbook and can be used as triggers in automations:

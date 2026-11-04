@@ -167,6 +167,21 @@
         "aes192": "AES-192",
         "aes256": "AES-256"
       }
+    },
+    "entity_groups": {
+      "options": {
+        "link": "Link je Port (verbunden oder nicht)",
+        "rates": "Datenraten Empfang und Senden",
+        "speed": "Verhandelte Geschwindigkeit",
+        "totals": "Übertragene Datenmenge gesamt",
+        "errors": "Fehler und verworfene Pakete",
+        "packets": "Pakete pro Sekunde, Broadcast und Multicast",
+        "utilization": "Auslastung der Leitung in Prozent",
+        "link_changed": "Zeitpunkt des letzten Link-Wechsels",
+        "macs": "Anzahl der MAC-Adressen je Port",
+        "uptime": "Laufzeit des Switches",
+        "devices": "Port von bekannten Geräten"
+      }
     }
   },
   "options": {
@@ -179,13 +194,17 @@
           "trap_port": "Trap-Port (0 = aus)",
           "allow_write": "Schreiben am Switch erlauben",
           "write_community": "Community mit Schreibrecht",
-          "protected_ports": "Geschützte Ports"
+          "protected_ports": "Geschützte Ports",
+          "entity_groups": "Entitäten (Gruppen)",
+          "entity_ports": "Entitäten nur für Ports"
         },
         "data_description": {
           "trap_port": "UDP-Port, auf dem Home Assistant SNMP-Traps des Switches empfängt (nur v1 und v2c). Am Switch unter SNMP → Notification diesen Rechner mit dem Port und derselben Community als Ziel eintragen, dann zeigt Home Assistant einen Link-Wechsel sofort. Ports unter 1024 brauchen Rechte; in Docker muss der UDP-Port freigegeben sein.",
           "allow_write": "Schaltet Schalter zum Ein- und Ausschalten der Ports ein und erlaubt, Port-Namen am Switch zu speichern. Aus, solange du es nicht brauchst. Änderungen am Switch gelten bis zu seinem Neustart, wenn du die Konfiguration dort nicht speicherst (System Tools → Save Config).",
           "write_community": "Nur für SNMP v1 und v2c: eine Community, die am Switch schreiben darf (SNMP → Community, Zugriff „read-write“). Bei v3 schreibt derselbe Benutzer, wenn er Schreibrecht hat.",
-          "protected_ports": "Diese Ports schaltet Home Assistant nie aus. Ports, an denen mindestens 10 MAC-Adressen gelernt wurden (meist Uplinks), sind immer geschützt."
+          "protected_ports": "Diese Ports schaltet Home Assistant nie aus. Ports, an denen mindestens 10 MAC-Adressen gelernt wurden (meist Uplinks), sind immer geschützt.",
+          "entity_groups": "Nicht gewählte Gruppen werden nicht angelegt, bereits vorhandene Entitäten daraus werden entfernt. Viele davon sind standardmäßig deaktiviert und lassen sich später einzeln einschalten.",
+          "entity_ports": "Nur für diese Ports werden Entitäten angelegt. Leer heißt: für alle Ports. Bereits vorhandene Entitäten anderer Ports werden entfernt."
         }
       }
     }

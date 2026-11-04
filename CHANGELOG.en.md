@@ -2,6 +2,12 @@
 
 All notable changes to this integration are recorded here.
 
+## 0.8.0 – unreleased
+
+### New
+
+- **Choose the entities:** In the options you decide which groups of entities are created (link, rates, speed, data totals, errors, packets, utilization, link changes, MAC addresses, uptime, port of devices) and for which ports. Deselected entities are removed from the registry. Without a choice everything stays as before.
+
 ## 0.7.0 – 2026-11-04
 
 ### New

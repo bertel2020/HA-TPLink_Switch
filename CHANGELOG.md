@@ -2,6 +2,12 @@
 
 Alle nennenswerten Änderungen an dieser Integration werden hier festgehalten.
 
+## 0.8.0 – unveröffentlicht
+
+### Neu
+
+- **Entitäten wählbar:** In den Optionen legst du fest, welche Gruppen von Entitäten angelegt werden (Link, Datenraten, Geschwindigkeit, Datenmenge, Fehler, Pakete, Auslastung, Link-Wechsel, MAC-Adressen, Laufzeit, Port von Geräten) und für welche Ports. Abgewählte Entitäten werden aus der Registry entfernt. Ohne Auswahl bleibt alles wie bisher.
+
 ## 0.7.0 – 2026-11-04
 
 ### Neu

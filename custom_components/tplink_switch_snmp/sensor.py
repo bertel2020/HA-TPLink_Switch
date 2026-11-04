@@ -26,6 +26,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .coordinator import SwitchConfigEntry, SwitchCoordinator
 from .entity import PortEntity, SwitchEntity
 from .model import PortData
+from .selection import selected_groups, wants
 
 PARALLEL_UPDATES = 0
 
@@ -194,11 +195,13 @@ async def async_setup_entry(
 ) -> None:
     """Add the switch and port sensors."""
     coordinator = entry.runtime_data
-    entities: list[SensorEntity] = [SwitchUptime(coordinator)]
+    groups = selected_groups(entry)
+    entities: list[SensorEntity] = [SwitchUptime(coordinator)] if "uptime" in groups else []
     entities.extend(
         PortSensor(coordinator, number, description)
         for number in coordinator.data.ports
         for description in PORT_SENSORS
+        if wants(entry, number, description.key)
     )
     async_add_entities(entities)
 
@@ -234,8 +237,9 @@ async def async_setup_entry(
         if new:
             async_add_entities(new)
 
-    add_devices()
-    entry.async_on_unload(coordinator.async_add_listener(add_devices))
+    if "devices" in groups:
+        add_devices()
+        entry.async_on_unload(coordinator.async_add_listener(add_devices))
 
 
 class SwitchUptime(SwitchEntity, SensorEntity):

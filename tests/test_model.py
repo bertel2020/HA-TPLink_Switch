@@ -36,10 +36,40 @@ def test_only_physical_ports_are_kept():
 
 
 def test_macs_are_assigned_through_the_base_port_table():
-    fdb = {"1.0.4.32.249.54.2": 7, "1.0.8.220.84.149.70": 7}
-    ports = model.build_ports(_tables(), fdb, {"7": 1})
+    fdb = {"1.0.4.32.249.54.2": 1, "1.0.8.220.84.149.70": 1}
+    ports = model.build_ports(_tables(), fdb, {"1": 1, "2": 2})
     assert ports[1].macs == ["00:04:20:f9:36:02", "00:08:dc:54:95:46"]
     assert ports[2].macs == []
+
+
+def test_ports_are_the_bridge_ports_whatever_they_are_called():
+    tables = _tables()
+    tables["name"] = {
+        "1": b"gigabitEthernet 1/0/1",
+        "2": b"gigabitEthernet 1/0/2",
+        "99": b"Vlan-interface1",
+    }
+    tables["oper"]["99"] = 1
+    ports = model.build_ports(tables, {}, {"1": 1, "2": 2})
+    assert sorted(ports) == [1, 2]  # the VLAN interface is not a bridge port
+    assert ports[1].name == "gigabitEthernet 1/0/1"
+
+
+def test_port_number_is_the_bridge_port_and_macs_follow_it():
+    tables = _tables()
+    tables["name"] = {"49157": b"1/0/7"}
+    tables["oper"] = {"49157": 1}
+    for key in ("speed", "rx", "tx", "rx_err", "tx_err"):
+        tables[key] = {"49157": 1000 if key == "speed" else 0}
+    ports = model.build_ports(tables, {"1.0.4.32.249.54.2": 7}, {"7": 49157})
+    assert list(ports) == [7]
+    assert ports[7].if_index == 49157
+    assert ports[7].macs == ["00:04:20:f9:36:02"]
+
+
+def test_port_without_interface_data_is_skipped():
+    ports = model.build_ports(_tables(), {}, {"1": 1, "2": 2, "3": 3})
+    assert sorted(ports) == [1, 2]
 
 
 def test_rates_from_counter_difference():

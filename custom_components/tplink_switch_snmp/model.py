@@ -75,6 +75,27 @@ def mac_from_suffix(suffix: str) -> str | None:
         return None
 
 
+def _physical_ports(names: dict[str, Any], base_port_to_if: dict[str, Any]) -> dict[int, int]:
+    """Map ifIndex to port number for the physical ports.
+
+    The bridge port table lists exactly the interfaces that forward traffic, so the VLAN,
+    loopback and management interfaces are not in it, whatever the model calls its ports.
+    Without that table, fall back to the "port N" names of the JetStream firmware.
+    """
+    if base_port_to_if:
+        return {
+            int(if_index): int(base_port)
+            for base_port, if_index in base_port_to_if.items()
+            if base_port.isdigit() and isinstance(if_index, int)
+        }
+    ports = {}
+    for suffix, name in names.items():
+        match = PORT_NAME.match(text(name))
+        if match and suffix.isdigit():
+            ports[int(suffix)] = int(match.group(1))
+    return ports
+
+
 def build_ports(
     tables: dict[str, dict[str, Any]],
     fdb: dict[str, Any],
@@ -91,18 +112,15 @@ def build_ports(
             macs_by_if.setdefault(if_index, set()).add(mac)
 
     ports: dict[int, PortData] = {}
-    for suffix, name in tables["name"].items():
-        name = text(name)
-        match = PORT_NAME.match(name)
-        if match is None or not suffix.isdigit():
-            continue
-        if_index = int(suffix)
-        number = int(match.group(1))
-        up = tables["oper"].get(suffix) == OPER_UP
+    for if_index, number in sorted(_physical_ports(tables["name"], base_port_to_if).items()):
+        suffix = str(if_index)
+        if suffix not in tables["oper"]:
+            continue  # listed as a port but not present in the interface table
+        up = tables["oper"][suffix] == OPER_UP
         ports[number] = PortData(
             if_index=if_index,
             number=number,
-            name=name,
+            name=text(tables["name"].get(suffix, f"port {number}")),
             up=up,
             speed=int(tables["speed"].get(suffix, 0)) if up else 0,
             rx_bytes=int(tables["rx"].get(suffix, 0)),

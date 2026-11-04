@@ -7,9 +7,10 @@ import logging
 import time
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er, issue_registry as ir
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
@@ -70,6 +71,7 @@ from .snmp import SnmpClient, SnmpError
 
 _LOGGER = logging.getLogger(__name__)
 
+UNREACHABLE_AFTER = 600  # seconds without an answer before a repair issue is raised
 HISTORY_SAVE_DELAY = 300  # seconds between writes of the stored rates
 
 TABLES = {
@@ -123,6 +125,7 @@ class SwitchCoordinator(DataUpdateCoordinator[SwitchData]):
         # what the options say about writing; a change of any of it reloads the entry
         self.write_key: tuple[bool, str] = (False, "")
         self.history = RateHistory()
+        self._failing_since: datetime | None = None
         self._info: dict[str, str | None] | None = None
         self._store: Store[dict] = Store(hass, 1, f"{DOMAIN}.{entry.entry_id}.history")
         self._last_poll: float | None = None
@@ -163,7 +166,10 @@ class SwitchCoordinator(DataUpdateCoordinator[SwitchData]):
             system = await self.client.get(OID_SYS_UPTIME, OID_SYS_DESCR, OID_SYS_OBJECT_ID)
             tables = await self.client.walk_many(TABLES_V1 if self._v1 else TABLES)
         except SnmpError as err:
+            self._note_failure()
             raise UpdateFailed(f"switch did not answer: {err}") from err
+
+        self._note_success()
 
         now = time.monotonic()
         # Q-BRIDGE lists the table per VLAN; use the classic table if it is empty.
@@ -300,6 +306,39 @@ class SwitchCoordinator(DataUpdateCoordinator[SwitchData]):
     async def async_set_port_alias(self, number: int, name: str) -> None:
         """Give a port a name at the switch (ifAlias)."""
         await self._write(OID_IF_ALIAS, name, number)
+
+    @property
+    def _issue_id(self) -> str:
+        return f"unreachable_{self.config_entry.entry_id}"
+
+    def _note_failure(self) -> None:
+        """Raise a repair issue once the switch has been silent for a while."""
+        now = dt_util.utcnow()
+        if self._failing_since is None:
+            self._failing_since = now
+        if (now - self._failing_since).total_seconds() >= UNREACHABLE_AFTER:
+            ir.async_create_issue(
+                self.hass,
+                DOMAIN,
+                self._issue_id,
+                is_fixable=False,
+                severity=ir.IssueSeverity.WARNING,
+                translation_key="unreachable",
+                translation_placeholders={
+                    "name": self.config_entry.title,
+                    "host": self.config_entry.data[CONF_HOST],
+                },
+            )
+
+    def _note_success(self) -> None:
+        """The switch answers: the issue is over."""
+        if self._failing_since is not None:
+            self._failing_since = None
+            ir.async_delete_issue(self.hass, DOMAIN, self._issue_id)
+
+    def clear_issue(self) -> None:
+        """Take the issue away, e.g. when the switch is removed."""
+        ir.async_delete_issue(self.hass, DOMAIN, self._issue_id)
 
     def known_device(self, mac: str) -> dr.DeviceEntry | None:
         """A device of another integration that has this MAC address, if Home Assistant has one."""

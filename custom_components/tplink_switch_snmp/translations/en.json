@@ -203,5 +203,11 @@
     "write_failed": {
       "message": "Port {port} could not be changed at the switch: {error}"
     }
+  },
+  "issues": {
+    "unreachable": {
+      "title": "{name} does not answer",
+      "description": "The switch {name} ({host}) has not answered SNMP for over 10 minutes. Check that it is switched on and reachable, and that SNMP and the community are unchanged at the switch. This notice goes away as soon as it answers again."
+    }
   }
 }

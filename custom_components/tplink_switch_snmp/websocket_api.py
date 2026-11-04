@@ -2,19 +2,19 @@
 
 from __future__ import annotations
 
+import time
 from typing import Any
 
 from homeassistant.components import websocket_api
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import device_registry as dr
 import voluptuous as vol
 
 from .const import CONF_PORT_NAMES, DOMAIN, PORT_NAME_MAX
 from .coordinator import SwitchConfigEntry
+from .history import BUCKET, KEEP
 from .model import manufacturer
-
-# (platform, key) of the entities whose history the panel draws
-HISTORY_KEYS = (("sensor", "rx_rate"), ("sensor", "tx_rate"))
 
 
 @callback
@@ -22,6 +22,7 @@ def async_register(hass: HomeAssistant) -> None:
     """Register the commands once."""
     websocket_api.async_register_command(hass, ws_snapshot)
     websocket_api.async_register_command(hass, ws_subscribe)
+    websocket_api.async_register_command(hass, ws_history)
     websocket_api.async_register_command(hass, ws_set_port_name)
 
 
@@ -42,17 +43,9 @@ def _switch(hass: HomeAssistant, entry: SwitchConfigEntry) -> dict[str, Any]:
     """Everything the panel shows about one switch."""
     coordinator = entry.runtime_data
     data = coordinator.data
-    registry = er.async_get(hass)
     names = entry.options.get(CONF_PORT_NAMES, {})
     ports = []
     for number, port in sorted(data.ports.items()):
-        entities = {}
-        for platform, key in HISTORY_KEYS:
-            entity_id = registry.async_get_entity_id(
-                platform, DOMAIN, f"{entry.unique_id}_port{number}_{key}"
-            )
-            if entity_id:
-                entities[key] = entity_id
         ports.append(
             {
                 "n": number,
@@ -74,7 +67,6 @@ def _switch(hass: HomeAssistant, entry: SwitchConfigEntry) -> dict[str, Any]:
                 "rx_util": port.rx_util,
                 "tx_util": port.tx_util,
                 "macs": [{"mac": mac, **_device_names(hass, mac)} for mac in port.macs],
-                "entities": entities,
             }
         )
     return {
@@ -130,6 +122,36 @@ def ws_subscribe(
 
     connection.subscriptions[msg["id"]] = unsubscribe
     connection.send_result(msg["id"])
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): f"{DOMAIN}/history",
+        vol.Required("entry_id"): str,
+        vol.Required("port"): int,
+    }
+)
+@callback
+def ws_history(hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict) -> None:
+    """The receive and transmit rates of one port over the last 24 hours."""
+    entry = hass.config_entries.async_get_entry(msg["entry_id"])
+    if entry is None or entry.domain != DOMAIN or entry.state is not ConfigEntryState.LOADED:
+        connection.send_error(msg["id"], "not_found", "switch not found")
+        return
+    now = time.time()
+    connection.send_result(
+        msg["id"],
+        {
+            "start": now - KEEP,
+            "end": now,
+            "bucket": BUCKET,
+            "points": [
+                [t, round(rx, 3), round(tx, 3)]
+                for t, rx, tx in entry.runtime_data.history.series(msg["port"])
+            ],
+        },
+    )
 
 
 @websocket_api.require_admin

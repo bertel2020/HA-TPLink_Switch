@@ -9,6 +9,7 @@ import socket
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
 from pysnmp.hlapi.v3arch.asyncio import SnmpEngine
 
@@ -46,6 +47,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SwitchConfigEntry) -> bo
     engine = await hass.async_add_executor_job(SnmpEngine)
     client = SnmpClient(engine, entry.data[CONF_HOST], entry.data[CONF_PORT], entry.data)
     coordinator = SwitchCoordinator(hass, entry, client)
+    await coordinator.async_load_history()
     try:
         await coordinator.async_config_entry_first_refresh()
     except Exception:
@@ -103,6 +105,11 @@ async def _options_updated(hass: HomeAssistant, entry: SwitchConfigEntry) -> Non
     if coordinator.update_interval != interval:
         coordinator.update_interval = interval
         await coordinator.async_request_refresh()  # schedules the next poll with the new interval
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: SwitchConfigEntry) -> None:
+    """Delete what the integration stored for this switch."""
+    await Store(hass, 1, f"{DOMAIN}.{entry.entry_id}.history").async_remove()
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: SwitchConfigEntry) -> bool:

@@ -46,12 +46,12 @@ To change it later: **Devices & services → TP-Link Switch (SNMP) → ⋮ → R
 
 The integration adds the entry **Switch** to the sidebar (admins only):
 
-- **Overview:** a front panel with every port coloured by link speed, a port detail with the last 24 hours (from Home Assistant's history), the time of the last link change and the utilization, the ports with the most traffic and notes on errors, ports that run at 100 Mbit/s only and link changes in the last 24 hours.
+- **Overview:** a front panel with every port coloured by link speed, a port detail with the last 24 hours, the time of the last link change and the utilization, the ports with the most traffic and notes on errors, ports that run at 100 Mbit/s only and link changes in the last 24 hours.
 - **Ports:** a table with filters, search and utilization in percent.
 - **Devices:** the learned MAC addresses per port; names and manufacturers come from devices Home Assistant knows by their MAC address (for example from "FRITZ!Box Network").
 - **Diagnostics:** errors, discarded packets and data volume per port.
 
-Ports can be renamed in the panel (the pencil next to the port name); the name is stored with the integration. The history needs the recorder and the port's "Receive" and "Transmit" sensors.
+Ports can be renamed in the panel (the pencil next to the port name); the name is stored with the integration. The history comes from a buffer of the integration's own (24 hours in five-minute values, saved in `.storage`), so it needs neither the recorder nor the sensors; it starts when the integration starts and is deleted with the switch.
 
 Without Home Assistant, the panel can be viewed with sample data: start `python3 -m http.server 8765` in the repository folder and open `/scripts/panel-preview/index.html` (`?dark=1`, `?lang=en`, `?narrow=1`).
 

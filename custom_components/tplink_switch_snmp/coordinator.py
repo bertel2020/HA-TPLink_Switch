@@ -9,6 +9,7 @@ import time
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
@@ -41,10 +42,13 @@ from .const import (
     OID_SYS_UPTIME,
     VERSION_1,
 )
+from .history import RateHistory
 from .model import PortData, SwitchData, UptimeTracker, add_rates, build_ports, text
 from .snmp import SnmpClient, SnmpError
 
 _LOGGER = logging.getLogger(__name__)
+
+HISTORY_SAVE_DELAY = 300  # seconds between writes of the stored rates
 
 TABLES = {
     "name": OID_IF_NAME,
@@ -91,10 +95,22 @@ class SwitchCoordinator(DataUpdateCoordinator[SwitchData]):
         self.client = client
         self._v1 = entry.data.get(CONF_VERSION, DEFAULT_VERSION) == VERSION_1
         self.trap_port = 0  # the configured trap port, set by the setup
+        self.history = RateHistory()
+        self._store: Store[dict] = Store(hass, 1, f"{DOMAIN}.{entry.entry_id}.history")
         self._last_poll: float | None = None
         self._uptime = UptimeTracker()
         self._last_ticks: int | None = None
         self._changed: dict[int, tuple[int, datetime]] = {}
+
+    async def async_load_history(self) -> None:
+        """Restore the rates of the last hours, so a restart does not leave a gap."""
+        self.history = RateHistory.from_dict(
+            await self._store.async_load(), dt_util.utcnow().timestamp()
+        )
+
+    async def async_remove_history(self) -> None:
+        """Delete the stored rates when the switch is removed."""
+        await self._store.async_remove()
 
     async def _async_update_data(self) -> SwitchData:
         try:
@@ -121,6 +137,12 @@ class SwitchCoordinator(DataUpdateCoordinator[SwitchData]):
         if previous and self._last_ticks is not None and ticks >= self._last_ticks:
             self._fire_link_events(ports, previous)
         self._last_ticks = ticks
+
+        self.history.add(
+            dt_util.utcnow().timestamp(),
+            {number: (port.rx_rate, port.tx_rate) for number, port in ports.items() if port.up},
+        )
+        self._store.async_delay_save(self.history.as_dict, HISTORY_SAVE_DELAY)
 
         data = SwitchData(
             uptime=self._uptime.seconds(ticks),

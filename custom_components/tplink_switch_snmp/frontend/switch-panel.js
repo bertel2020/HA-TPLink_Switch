@@ -14,7 +14,6 @@ const LOOK_KEY = "tplink_switch_snmp_look";
 // The server pushes every poll. This slow check only matters if the subscription is lost.
 const FALLBACK_MS = 60000;
 const STALE_MS = 5 * 60000;
-const HISTORY_HOURS = 24;
 const MAX_MACS = 50;
 
 // Material Design Icons (Apache 2.0)
@@ -287,34 +286,18 @@ class TplinkSwitchPanel extends HTMLElement {
     const key = `${sw.entry_id}:${port.n}`;
     const cached = this._history.get(key);
     if (cached && Date.now() - cached.at < 60000) return;
-    const ids = [port.entities.rx_rate, port.entities.tx_rate].filter(Boolean);
-    if (!ids.length) return;
-    this._history.set(key, { at: Date.now(), rx: cached?.rx, tx: cached?.tx });
-    const end = new Date();
-    const start = new Date(end.getTime() - HISTORY_HOURS * 3600000);
+    this._history.set(key, { ...cached, at: Date.now() });
     try {
-      const res = await this._hass.callWS({
-        type: "history/history_during_period",
-        start_time: start.toISOString(),
-        end_time: end.toISOString(),
-        entity_ids: ids,
-        minimal_response: true,
-        no_attributes: true,
-        significant_changes_only: false,
-      });
-      const series = (id) =>
-        (res[id] || [])
-          .map((r) => ({ t: (r.lu ?? Date.parse(r.last_updated) / 1000) * 1000, v: parseFloat(r.s ?? r.state) }))
-          .filter((r) => Number.isFinite(r.v) && Number.isFinite(r.t));
+      const res = await this._hass.callWS({ type: `${DOMAIN}/history`, entry_id: sw.entry_id, port: port.n });
       this._history.set(key, {
         at: Date.now(),
-        t0: start.getTime(),
-        t1: end.getTime(),
-        rx: series(port.entities.rx_rate),
-        tx: series(port.entities.tx_rate),
+        t0: res.start * 1000,
+        t1: res.end * 1000,
+        rx: res.points.map(([t, rx]) => ({ t: t * 1000, v: rx })),
+        tx: res.points.map(([t, , tx]) => ({ t: t * 1000, v: tx })),
       });
     } catch {
-      this._history.set(key, { at: Date.now(), rx: [], tx: [], t0: start.getTime(), t1: end.getTime() });
+      this._history.set(key, { at: Date.now(), rx: [], tx: [], t0: Date.now() - 86400000, t1: Date.now() });
     }
     if (this._tab === "overview" && this._sel === port.n) this._render();
   }

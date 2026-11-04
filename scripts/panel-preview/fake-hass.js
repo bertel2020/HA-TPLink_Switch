@@ -23,7 +23,6 @@ function snapshot() {
       rx_errors: up ? s[4] : 0, tx_errors: n === 6 ? 3 : 0, rx_discards: up && n === 16 ? 40 : 0, tx_discards: 0,
       rx_util: up ? Math.round((s[2] / s[1]) * 1000) / 10 : null, tx_util: up ? Math.round((s[3] / s[1]) * 1000) / 10 : null,
       macs: up ? Array.from({ length: s[5] }, (_, i) => ({ mac: mac(n, i + 1), name: i === 0 ? NAMES[n] || null : null, manufacturer: i === 0 && NAMES[n] ? "Beispiel GmbH" : null })) : [],
-      entities: up ? { rx_rate: `sensor.rx${n}`, tx_rate: `sensor.tx${n}` } : {},
     };
   });
   return {
@@ -32,17 +31,17 @@ function snapshot() {
   };
 }
 
-function history(ids, start, end) {
-  const out = {};
-  for (const id of ids) {
-    const base = SAMPLE[+id.replace(/\D/g, "")]?.[id.startsWith("sensor.rx") ? 2 : 3] || 0.05;
-    let seed = id.length * 7919;
-    out[id] = Array.from({ length: 96 }, (_, i) => {
-      seed = (seed * 9301 + 49297) % 233280;
-      return { s: String(Math.max(0, base * (0.3 + (seed / 233280) * 1.5)).toFixed(3)), lu: (Date.parse(start) + (i / 95) * (Date.parse(end) - Date.parse(start))) / 1000 };
-    });
-  }
-  return out;
+// the integration's own 24 hour history: five-minute values, for ports that have a link
+function history(port) {
+  const sample = SAMPLE[port];
+  const end = Date.now() / 1000, start = end - 86400;
+  let seed = port * 7919;
+  const points = !sample ? [] : Array.from({ length: 288 }, (_, i) => {
+    seed = (seed * 9301 + 49297) % 233280;
+    const r = () => { seed = (seed * 9301 + 49297) % 233280; return 0.3 + (seed / 233280) * 1.5; };
+    return [Math.floor(start / 300) * 300 + i * 300, +(sample[2] * r()).toFixed(3), +(sample[3] * r()).toFixed(3)];
+  });
+  return { start, end, bucket: 300, points };
 }
 
 export function makeHass({ dark = false, language = "de", pushEvery = 5000 } = {}) {
@@ -63,7 +62,7 @@ export function makeHass({ dark = false, language = "de", pushEvery = 5000 } = {
       if (msg.type === "tplink_switch_snmp/set_port_name") { names[msg.port] = msg.name.trim(); return { name: msg.name }; }
       if (msg.type === "frontend/get_user_data") return { value: userData[msg.key] ?? null };
       if (msg.type === "frontend/set_user_data") { userData[msg.key] = msg.value; return null; }
-      if (msg.type === "history/history_during_period") return history(msg.entity_ids, msg.start_time, msg.end_time);
+      if (msg.type === "tplink_switch_snmp/history") return history(msg.port);
       throw new Error(`unknown command ${msg.type}`);
     },
   };

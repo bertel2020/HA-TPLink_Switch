@@ -1,7 +1,7 @@
 {
   "domain": "tplink_switch_snmp",
   "name": "TP-Link Switch (SNMP)",
-  "after_dependencies": ["frontend", "http", "panel_custom", "recorder"],
+  "after_dependencies": ["frontend", "http", "panel_custom"],
   "codeowners": ["@bertel2020"],
   "config_flow": true,
   "dependencies": ["websocket_api"],

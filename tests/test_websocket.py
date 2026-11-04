@@ -50,9 +50,7 @@ async def test_snapshot_port_values(hass: HomeAssistant, hass_ws_client, snmp, e
     assert ports[1]["rx_util"] is None  # the first poll has no rate yet
     assert ports[2]["tx_util"] is None
     assert [m["mac"] for m in ports[1]["macs"]] == [MAC_PRINTER, MAC_OTHER]
-    # The rate sensors are the ones the panel draws the history from.
-    assert ports[1]["entities"]["rx_rate"].startswith("sensor.")
-    assert ports[1]["entities"]["tx_rate"].startswith("sensor.")
+    assert "entities" not in ports[1]  # the history no longer comes from the recorder
 
 
 async def test_device_names_come_from_the_device_registry(
@@ -235,3 +233,50 @@ async def test_subscribe_is_for_admins_only(
 
     assert msg["success"] is False
     assert msg["error"]["code"] == "unauthorized"
+
+
+async def test_history_returns_the_collected_rates(
+    hass: HomeAssistant, hass_ws_client, snmp, entry, tables
+) -> None:
+    await _setup(hass, entry)
+    tables["rx"]["1"] += 125_000_000
+    await entry.runtime_data.async_refresh()
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {"type": "tplink_switch_snmp/history", "entry_id": entry.entry_id, "port": 1}
+    )
+    result = (await client.receive_json())["result"]
+
+    assert result["bucket"] == 300
+    assert result["end"] - result["start"] == 86400
+    assert len(result["points"]) == 1
+    t, rx, tx = result["points"][0]
+    assert rx > 0 and t <= result["end"]
+
+
+async def test_history_of_a_port_without_data(
+    hass: HomeAssistant, hass_ws_client, snmp, entry
+) -> None:
+    await _setup(hass, entry)
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {"type": "tplink_switch_snmp/history", "entry_id": entry.entry_id, "port": 2}
+    )
+
+    assert (await client.receive_json())["result"]["points"] == []
+
+
+async def test_history_of_an_unknown_switch(
+    hass: HomeAssistant, hass_ws_client, snmp, entry
+) -> None:
+    await _setup(hass, entry)
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {"type": "tplink_switch_snmp/history", "entry_id": "nope", "port": 1}
+    )
+    msg = await client.receive_json()
+
+    assert msg["success"] is False and msg["error"]["code"] == "not_found"

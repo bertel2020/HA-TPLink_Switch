@@ -2,10 +2,11 @@
 // commands of the integration (websocket_api.py) and the history of the port rate sensors.
 // Its parts are loaded with the query string of this file, so an update loads every part new.
 const V = new URL(import.meta.url).search;
-const [{ STYLES }, { translator }, theme] = await Promise.all([
+const [{ STYLES }, { translator }, theme, { csvNumber, csvText }] = await Promise.all([
   import(`./styles.js${V}`),
   import(`./texts.js${V}`),
   import(`./theme.js${V}`),
+  import(`./csv.js${V}`),
 ]);
 const { applyAppearance, cleanPrefs, DEFAULTS, MODES, SCHEMES, SIZES, tokens } = theme;
 
@@ -19,6 +20,7 @@ const BROADCAST_STORM = 500; // broadcast packets per second that look like a lo
 
 // Material Design Icons (Apache 2.0)
 const ICON = {
+  download: "M5,20H19V18H5M19,9H15V3H9V9H5L12,16L19,9Z",
   palette: "M12,3A9,9 0 0,0 3,12A9,9 0 0,0 12,21A1.5,1.5 0 0,0 13.5,19.5C13.5,19.11 13.35,18.76 13.11,18.5C12.88,18.23 12.75,17.88 12.75,17.5A1.5,1.5 0 0,1 14.25,16H16A5,5 0 0,0 21,11C21,6.58 16.97,3 12,3M6.5,12A1.5,1.5 0 0,1 5,10.5A1.5,1.5 0 0,1 6.5,9A1.5,1.5 0 0,1 8,10.5A1.5,1.5 0 0,1 6.5,12M9.5,8A1.5,1.5 0 0,1 8,6.5A1.5,1.5 0 0,1 9.5,5A1.5,1.5 0 0,1 11,6.5A1.5,1.5 0 0,1 9.5,8M14.5,8A1.5,1.5 0 0,1 13,6.5A1.5,1.5 0 0,1 14.5,5A1.5,1.5 0 0,1 16,6.5A1.5,1.5 0 0,1 14.5,8M17.5,12A1.5,1.5 0 0,1 16,10.5A1.5,1.5 0 0,1 17.5,9A1.5,1.5 0 0,1 19,10.5A1.5,1.5 0 0,1 17.5,12Z",
   lan: "M10,2C8.89,2 8,2.89 8,4V7C8,8.11 8.89,9 10,9H11V11H2V13H6V15H5C3.89,15 3,15.89 3,17V20C3,21.11 3.89,22 5,22H9C10.11,22 11,21.11 11,20V17C11,15.89 10.11,15 9,15H8V13H16V15H15C13.89,15 13,15.89 13,17V20C13,21.11 13.89,22 15,22H19C20.11,22 21,21.11 21,20V17C21,15.89 20.11,15 19,15H18V13H22V11H13V9H14C15.11,9 16,8.11 16,7V4C16,2.89 15.11,2 14,2H10Z",
   search: "M9.5,3A6.5,6.5 0 0,1 16,9.5C16,11.11 15.41,12.59 14.44,13.73L14.71,14H15.5L20.5,19L19,20.5L14,15.5V14.71L13.73,14.44C12.59,15.41 11.11,16 9.5,16A6.5,6.5 0 0,1 3,9.5A6.5,6.5 0 0,1 9.5,3M9.5,5C7,5 5,7 5,9.5C5,12 7,14 9.5,14C12,14 14,12 14,9.5C14,7 12,5 9.5,5Z",
@@ -58,6 +60,7 @@ class TplinkSwitchPanel extends HTMLElement {
     this._loading = false;
     this._unsub = null;
     this._subscribing = false;
+    this._sort = { ports: { key: "n", dir: 1 }, devices: { key: "port", dir: 1 } };
     this._look = { ...DEFAULTS };
     this._lookKey = null;
     this._menuOpen = false;
@@ -458,24 +461,71 @@ class TplinkSwitchPanel extends HTMLElement {
     </div></section>`;
   }
 
+  // A column header that sorts the table; a second click turns the order around.
+  _head(table, key, label, cls = "") {
+    const sort = this._sort[table];
+    const aria = sort.key === key ? (sort.dir > 0 ? "ascending" : "descending") : "none";
+    return `<th class="${cls}" aria-sort="${aria}"><button class="thbtn" data-a="sort" data-table="${table}" data-v="${key}">${esc(label)}</button></th>`;
+  }
+
+  _sorted(rows, table, values) {
+    const { key, dir } = this._sort[table];
+    const get = values[key];
+    return [...rows].sort((a, b) => {
+      const x = get(a);
+      const y = get(b);
+      // an empty value goes last in either order
+      if ((x == null) !== (y == null)) return x == null ? 1 : -1;
+      const order = typeof x === "string" ? x.localeCompare(y, this._lang) : (x ?? 0) - (y ?? 0);
+      return order * dir || (a.n ?? a.port?.n ?? 0) - (b.n ?? b.port?.n ?? 0);
+    });
+  }
+
+  // the ports the filter and the search leave, in the order of the sorted column
+  _portRows(sw) {
+    const q = this._q.trim().toLowerCase();
+    const test = { all: () => true, up: (p) => p.up, down: (p) => !p.up, slow: (p) => p.up && p.speed > 0 && p.speed < 1000, err: (p) => this._errors(p) > 0 }[this._filter];
+    const rows = sw.ports.filter(test).filter((p) => !q || `port ${p.n} ${p.name} ${p.macs.map((m) => `${m.name || ""} ${m.mac}`).join(" ")}`.toLowerCase().includes(q));
+    return this._sorted(rows, "ports", {
+      n: (p) => p.n,
+      status: (p) => (p.up ? 0 : 1),
+      speed: (p) => (p.up ? p.speed : null),
+      rx: (p) => p.rx_rate,
+      tx: (p) => p.tx_rate,
+      errors: (p) => this._errors(p),
+      devs: (p) => p.macs.length,
+    });
+  }
+
+  _deviceRows(sw) {
+    const q = this._dq.trim().toLowerCase();
+    const rows = this._allMacs(sw)
+      .filter((d) => this._dfilter === "all" || (this._dfilter === "named" ? d.name : !d.name))
+      .filter((d) => !q || `${d.name || ""} ${d.mac} ${d.manufacturer || ""} port ${d.port.n} ${d.port.name}`.toLowerCase().includes(q));
+    return this._sorted(rows, "devices", {
+      name: (d) => d.name?.toLowerCase() || null,
+      mac: (d) => d.mac,
+      vendor: (d) => d.manufacturer?.toLowerCase() || null,
+      port: (d) => d.port.n,
+    });
+  }
+
   _portsView(sw) {
     const t = this._t;
-    const q = this._q.trim().toLowerCase();
     const chip = (id, label) => `<button class="chip" data-a="filter" data-v="${id}" aria-pressed="${this._filter === id}">${esc(label)}</button>`;
     const slow = sw.ports.filter((p) => p.up && p.speed > 0 && p.speed < 1000).length;
     return `<section class="card"><div class="card-h"><h2>${esc(t("ports"))}</h2><span class="live"><span class="dot"></span>${esc(t("live"))}</span></div>
       <div class="tools">${chip("all", t("allPorts"))}${chip("up", t("activeF"))}${chip("down", t("noLinkF"))}${chip("slow", t("slowF"))}${chip("err", t("errF"))}
-        <label class="search">${icon("search")}<input id="q" value="${esc(this._q)}" placeholder="${esc(t("searchPorts"))}" aria-label="${esc(t("search"))}"></label></div>
+        <label class="search">${icon("search")}<input id="q" value="${esc(this._q)}" placeholder="${esc(t("searchPorts"))}" aria-label="${esc(t("search"))}"></label>
+        <button class="chip" data-a="csv" data-v="ports" title="${esc(t("csvHint"))}">${icon("download")}CSV</button></div>
       <div class="infobar"><span id="count"></span><span class="warnnote">${slow ? esc(t("slowNote", { n: slow })) : ""}</span></div>
-      <div class="tablewrap"><table><thead><tr><th>${esc(t("port"))}</th><th>${esc(t("status"))}</th><th class="num">${esc(t("speed"))}</th><th class="num">${esc(t("rx"))}</th><th class="num">${esc(t("tx"))}</th><th class="num">${esc(t("errors"))}</th><th>${esc(t("devs"))}</th><th></th></tr></thead><tbody id="ptb"></tbody></table></div>
+      <div class="tablewrap"><table><thead><tr>${this._head("ports", "n", t("port"))}${this._head("ports", "status", t("status"))}${this._head("ports", "speed", t("speed"), "num")}${this._head("ports", "rx", t("rx"), "num")}${this._head("ports", "tx", t("tx"), "num")}${this._head("ports", "errors", t("errors"), "num")}${this._head("ports", "devs", t("devs"))}<th></th></tr></thead><tbody id="ptb"></tbody></table></div>
       <div class="empty" id="pempty" hidden>${esc(t("noPortMatches"))}</div></section>`;
   }
 
   _fillPorts(sw) {
     const t = this._t;
-    const q = this._q.trim().toLowerCase();
-    const test = { all: () => true, up: (p) => p.up, down: (p) => !p.up, slow: (p) => p.up && p.speed > 0 && p.speed < 1000, err: (p) => this._errors(p) > 0 }[this._filter];
-    const rows = sw.ports.filter(test).filter((p) => !q || `port ${p.n} ${p.name} ${p.macs.map((m) => `${m.name || ""} ${m.mac}`).join(" ")}`.toLowerCase().includes(q));
+    const rows = this._portRows(sw);
     const peak = Math.max(1, ...sw.ports.map((p) => Math.max(p.rx_rate || 0, p.tx_rate || 0)));
     const bar = (p, v, color, util) => `<span class="bar" title="${esc(t("utilization"))}: ${esc(this._util(util) || t("noData"))}"><span class="b"><i style="width:${Math.min(100, ((v || 0) / peak) * 100)}%;background:${color}"></i></span><span class="mono">${p.up ? this._num(v) : "–"}</span>${p.up && util != null ? `<span class="sub">${esc(this._util(util))}</span>` : ""}</span>`;
     const shadow = this.shadowRoot;
@@ -500,24 +550,52 @@ class TplinkSwitchPanel extends HTMLElement {
     const chip = (id, label) => `<button class="chip" data-a="dfilter" data-v="${id}" aria-pressed="${this._dfilter === id}">${esc(label)}</button>`;
     return `<section class="card"><div class="card-h"><h2>${esc(t("devicesAtSwitch"))}</h2><span class="grow"></span><span class="sub">${esc(t("devicesHint"))}</span></div>
       <div class="tools">${chip("all", t("all"))}${chip("named", t("named"))}${chip("unknown", t("unknownF"))}
-        <label class="search">${icon("search")}<input id="dq" value="${esc(this._dq)}" placeholder="${esc(t("searchDevices"))}" aria-label="${esc(t("search"))}"></label></div>
-      <div class="tablewrap"><table><thead><tr><th>${esc(t("device"))}</th><th>${esc(t("mac"))}</th><th>${esc(t("vendor"))}</th><th>${esc(t("port"))}</th></tr></thead><tbody id="dtb"></tbody></table></div>
+        <label class="search">${icon("search")}<input id="dq" value="${esc(this._dq)}" placeholder="${esc(t("searchDevices"))}" aria-label="${esc(t("search"))}"></label>
+        <button class="chip" data-a="csv" data-v="devices" title="${esc(t("csvHint"))}">${icon("download")}CSV</button></div>
+      <div class="tablewrap"><table><thead><tr>${this._head("devices", "name", t("device"))}${this._head("devices", "mac", t("mac"))}${this._head("devices", "vendor", t("vendor"))}${this._head("devices", "port", t("port"))}</tr></thead><tbody id="dtb"></tbody></table></div>
       <div class="empty" id="dempty" hidden>${esc(t("noDeviceMatches"))}</div></section>`;
   }
 
   _fillDevices(sw) {
     const t = this._t;
-    const q = this._dq.trim().toLowerCase();
-    const rows = this._allMacs(sw)
-      .filter((d) => this._dfilter === "all" || (this._dfilter === "named" ? d.name : !d.name))
-      .filter((d) => !q || `${d.name || ""} ${d.mac} ${d.manufacturer || ""} port ${d.port.n} ${d.port.name}`.toLowerCase().includes(q))
-      .sort((a, b) => a.port.n - b.port.n);
+    const rows = this._deviceRows(sw);
     const shadow = this.shadowRoot;
     shadow.getElementById("dtb").innerHTML = rows
       .map((d) => `<tr class="row"><td>${d.name ? esc(d.name) : `<span class="muted">${esc(t("unknown"))}</span>`}</td><td class="mono">${esc(d.mac)}</td><td>${esc(d.manufacturer || "–")}</td>
         <td><span class="tag acc">${esc(t("port"))} ${d.port.n}</span> <span class="sub">${esc(d.port.name)}</span></td></tr>`)
       .join("");
     shadow.getElementById("dempty").hidden = rows.length > 0;
+  }
+
+  // ---- CSV export: what the filter and the sort leave, as Excel reads it -----------------------
+
+  _csv(kind) {
+    const sw = this._switch;
+    const t = this._t;
+    const n = (v) => csvNumber(v, this._lang);
+    const lines = [];
+    if (kind === "ports") {
+      lines.push([t("port"), t("portName"), t("status"), `${t("speed")} Mbit/s`, `${t("rx")} Mbit/s`, `${t("tx")} Mbit/s`, `${t("utilization")} ${t("rx")} %`, `${t("utilization")} ${t("tx")} %`, t("rxErrors"), t("txErrors"), t("rxDiscards"), t("txDiscards"), t("devs")]);
+      for (const p of this._portRows(sw)) {
+        lines.push([p.n, p.name, p.up ? t("linked") : t("noLink"), p.up ? p.speed : "", n(p.rx_rate), n(p.tx_rate), n(p.rx_util), n(p.tx_util), p.rx_errors, p.tx_errors, p.rx_discards, p.tx_discards, p.macs.length]);
+      }
+    } else {
+      lines.push([t("device"), t("mac"), t("vendor"), t("port"), t("portName")]);
+      for (const d of this._deviceRows(sw)) lines.push([d.name || "", d.mac, d.manufacturer || "", d.port.n, d.port.name]);
+    }
+    return csvText(lines);
+  }
+
+  _download(name, text) {
+    // the marker at the start makes Excel read the file as UTF-8
+    const url = URL.createObjectURL(new Blob(["\ufeff", text], { type: "text/csv;charset=utf-8" }));
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = name;
+    this.shadowRoot.append(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 10000);
   }
 
   _diagView(sw) {
@@ -546,6 +624,18 @@ class TplinkSwitchPanel extends HTMLElement {
       }
       const v = el.dataset.v;
       switch (el.dataset.a) {
+        case "sort": {
+          const sort = this._sort[el.dataset.table];
+          sort.dir = sort.key === v ? -sort.dir : 1;
+          sort.key = v;
+          break;
+        }
+        case "csv": {
+          const sw = this._switch;
+          if (sw) this._download(`${sw.title.replace(/[^\w.-]+/g, "_")}-${v}.csv`, this._csv(v));
+          if (outside) this._render();
+          return;
+        }
         case "look-toggle": this._menuOpen = !this._menuOpen; break;
         case "look": this._setLook({ [el.dataset.kind]: v }); break;
         case "tab": this._tab = v; this._editing = false; break;

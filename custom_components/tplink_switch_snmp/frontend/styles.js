@@ -104,6 +104,12 @@ td.num, th.num { text-align: right; }
 .bar .b { width: 70px; height: 6px; border-radius: 3px; background: var(--neutral-soft); overflow: hidden; }
 .bar .b i { display: block; height: 100%; border-radius: 3px; }
 .bar .sub { white-space: nowrap; min-width: 3.4em; text-align: right; }
+.thbtn { all: unset; cursor: pointer; font: inherit; text-transform: inherit; letter-spacing: inherit; color: inherit; white-space: nowrap; }
+.thbtn:hover { color: var(--text); }
+.thbtn:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; border-radius: 4px; }
+th[aria-sort="ascending"] .thbtn::after { content: " ▲"; font-size: .8em; }
+th[aria-sort="descending"] .thbtn::after { content: " ▼"; font-size: .8em; }
+th[aria-sort]:not([aria-sort="none"]) { color: var(--text); }
 .rowbtn { all: unset; cursor: pointer; color: var(--muted); border-radius: 6px; padding: 4px; display: inline-flex; }
 .rowbtn:hover { color: var(--accent); background: var(--accent-soft); }
 .empty { padding: 36px; text-align: center; color: var(--muted); }

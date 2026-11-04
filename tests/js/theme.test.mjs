@@ -81,7 +81,7 @@ test("an explicit mode wins over Home Assistant's, auto follows it", () => {
 });
 
 test("no text is set in a fixed size that ignores the font size choice", () => {
-  // every font-size goes through the factor; only the floor of 10.5 px may stand alone
-  const fixed = [...STYLES.matchAll(/font-size:\s*(?!\s|max\(|calc\()([^;]+);/g)].map((m) => m[0]);
+  // every font-size goes through the factor; relative sizes (em, %) follow their parent's
+  const fixed = [...STYLES.matchAll(/font-size:\s*(?!\s|max\(|calc\(|[\d.]+(?:em|%))([^;]+);/g)].map((m) => m[0]);
   assert.deepEqual(fixed, []);
 });

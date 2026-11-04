@@ -24,7 +24,7 @@ function snapshot() {
     };
   });
   return {
-    switches: [{ entry_id: "e1", title: "TL-SG3424 Keller", host: "192.168.79.15", mac: "64:66:b3:6c:28:64", description: "JetStream 24-Port Gigabit L2 Managed Switch with 4 Combo SFP Slots",
+    switches: [{ entry_id: "e1", title: "TL-SG3424 Keller", host: "192.168.79.15", mac: "64:66:b3:6c:28:64", manufacturer: "TP-Link", model: "JetStream 24-Port Gigabit L2 Managed Switch with 4 Combo SFP Slots", description: "JetStream 24-Port Gigabit L2 Managed Switch with 4 Combo SFP Slots",
       uptime: 158 * 86400 + 4 * 3600, interval: 30, last_update_success: true, ports }],
   };
 }

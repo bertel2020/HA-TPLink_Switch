@@ -24,6 +24,7 @@ from .const import (
     OID_IF_OPER_STATUS,
     OID_IF_OUT_ERRORS,
     OID_SYS_DESCR,
+    OID_SYS_OBJECT_ID,
     OID_SYS_UPTIME,
 )
 from .model import SwitchData, add_rates, build_ports, text
@@ -70,7 +71,7 @@ class SwitchCoordinator(DataUpdateCoordinator[SwitchData]):
 
     async def _async_update_data(self) -> SwitchData:
         try:
-            system = await self.client.get(OID_SYS_UPTIME, OID_SYS_DESCR)
+            system = await self.client.get(OID_SYS_UPTIME, OID_SYS_DESCR, OID_SYS_OBJECT_ID)
             tables = await self.client.walk_many(TABLES)
         except SnmpError as err:
             raise UpdateFailed(f"switch did not answer: {err}") from err
@@ -90,5 +91,6 @@ class SwitchCoordinator(DataUpdateCoordinator[SwitchData]):
         return SwitchData(
             uptime=int(system.get(OID_SYS_UPTIME, 0)) // 100,
             description=text(system.get(OID_SYS_DESCR, b"")),
+            object_id=text(system.get(OID_SYS_OBJECT_ID, "")),
             ports=ports,
         )

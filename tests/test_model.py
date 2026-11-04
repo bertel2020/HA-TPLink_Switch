@@ -64,3 +64,11 @@ def test_counter_reset_gives_no_rate():
 def test_text_and_mac_helpers():
     assert model.text(b"TL-SG3424") == "TL-SG3424"
     assert model.format_mac(b"df\xb3l(d") == "64:66:b3:6c:28:64"
+
+
+def test_manufacturer_from_the_enterprise_number():
+    assert model.manufacturer("1.3.6.1.4.1.11863.1.1.3") == "TP-Link"
+    assert model.manufacturer(".1.3.6.1.4.1.11863.1.1.3") == "TP-Link"
+    assert model.manufacturer("1.3.6.1.4.1.9.1.1") is None  # not a known maker
+    assert model.manufacturer("") is None
+    assert model.manufacturer("1.3.6.1.2.1.1.1") is None  # not an enterprise OID

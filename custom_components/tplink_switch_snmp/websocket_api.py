@@ -11,6 +11,7 @@ import voluptuous as vol
 
 from .const import CONF_PORT_NAMES, DOMAIN, PORT_NAME_MAX
 from .coordinator import SwitchConfigEntry
+from .model import manufacturer
 
 # (platform, key) of the entities whose history the panel draws
 HISTORY_KEYS = (("sensor", "rx_rate"), ("sensor", "tx_rate"))
@@ -25,9 +26,11 @@ def async_register(hass: HomeAssistant) -> None:
 
 def _device_names(hass: HomeAssistant, mac: str) -> dict[str, str | None]:
     """Name and maker of a device that Home Assistant knows by this MAC address."""
-    device = dr.async_get(hass).async_get_device(connections={(dr.CONNECTION_NETWORK_MAC, mac)})
-    if device is None:
+    devices = dr.async_get(hass).async_get_devices(connections={(dr.CONNECTION_NETWORK_MAC, mac)})
+    if not devices:
         return {"name": None, "manufacturer": None}
+    # Several integrations can know the same MAC; take the first one that has a name.
+    device = next((d for d in devices if d.name_by_user or d.name), devices[0])
     return {
         "name": device.name_by_user or device.name,
         "manufacturer": device.manufacturer,
@@ -72,6 +75,8 @@ def _switch(hass: HomeAssistant, entry: SwitchConfigEntry) -> dict[str, Any]:
         "host": entry.data["host"],
         "mac": entry.unique_id,
         "description": data.description,
+        "manufacturer": manufacturer(data.object_id),
+        "model": data.description or None,
         "uptime": data.uptime,
         "interval": int(coordinator.update_interval.total_seconds()),
         "last_update_success": coordinator.last_update_success,

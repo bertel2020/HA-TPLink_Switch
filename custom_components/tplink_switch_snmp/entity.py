@@ -8,7 +8,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import SwitchCoordinator
-from .model import PortData
+from .model import PortData, manufacturer
 
 
 class SwitchEntity(CoordinatorEntity[SwitchCoordinator]):
@@ -23,8 +23,8 @@ class SwitchEntity(CoordinatorEntity[SwitchCoordinator]):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, entry.unique_id)},
             connections={(CONNECTION_NETWORK_MAC, entry.unique_id)},
-            manufacturer="TP-Link",
-            model="TL-SG3424",
+            manufacturer=manufacturer(coordinator.data.object_id),
+            model=coordinator.data.description or None,
             name=entry.title,
             configuration_url=f"http://{entry.data[CONF_HOST]}/",
         )

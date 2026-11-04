@@ -264,7 +264,7 @@ class TplinkSwitchPanel extends HTMLElement {
         <div class="stat" style="display:flex;gap:8px;align-items:center">${picker}<button class="chip" data-a="details" aria-expanded="${this._details}">${esc(this._details ? t("detailsOpen") : t("detailsClosed"))}</button></div>
       </div></div>
       ${this._details ? `<div class="details"><div class="kv">
-        <div><span>${esc(t("vendor"))}</span><span>TP-Link</span></div><div><span>${esc(t("model"))}</span><span>TL-SG3424</span></div>
+        <div><span>${esc(t("vendor"))}</span><span>${esc(sw.manufacturer || t("noData"))}</span></div><div><span>${esc(t("model"))}</span><span>${esc(sw.model || t("noData"))}</span></div>
         <div><span>${esc(t("poll"))}</span><span>${esc(t("pollValue", { s: sw.interval }))}</span></div><div><span>${esc(t("address"))}</span><span class="mono">${esc(sw.host)}</span></div>
         <div><span>${esc(t("macAddress"))}</span><span class="mono">${esc(sw.mac)}</span></div></div></div>` : ""}
     </section>`;

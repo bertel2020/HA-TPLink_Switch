@@ -34,7 +34,20 @@ class SwitchData:
 
     uptime: int  # seconds
     description: str  # sysDescr
+    object_id: str  # sysObjectID
     ports: dict[int, PortData]  # keyed by port number
+
+
+# Enterprise numbers (the number after 1.3.6.1.4.1 in sysObjectID) of known makers.
+ENTERPRISES = {11863: "TP-Link"}
+
+
+def manufacturer(object_id: str) -> str | None:
+    """The maker named by the enterprise number in sysObjectID, if it is a known one."""
+    parts = object_id.strip(".").split(".")
+    if parts[:6] == ["1", "3", "6", "1", "4", "1"] and len(parts) > 6 and parts[6].isdigit():
+        return ENTERPRISES.get(int(parts[6]))
+    return None
 
 
 def text(value: Any) -> str:

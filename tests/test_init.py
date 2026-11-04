@@ -2,13 +2,13 @@
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-from custom_components.tplink_switch_snmp.const import DOMAIN
+from custom_components.tplink_switch_snmp.const import DOMAIN, OID_SYS_OBJECT_ID
 from custom_components.tplink_switch_snmp.snmp import SnmpError
 
-from .conftest import BRIDGE_MAC, MAC_OTHER, MAC_PRINTER
+from .conftest import BRIDGE_MAC, MAC_OTHER, MAC_PRINTER, SYSTEM
 
 
 async def _setup(hass: HomeAssistant, entry: MockConfigEntry) -> None:
@@ -104,3 +104,20 @@ async def test_unload_releases_the_client(hass: HomeAssistant, snmp, entry) -> N
 
     assert entry.state is ConfigEntryState.NOT_LOADED
     snmp.close.assert_called_once()
+
+
+async def test_device_info_comes_from_the_switch(hass: HomeAssistant, snmp, entry) -> None:
+    await _setup(hass, entry)
+
+    device = dr.async_get(hass).async_get_device_by_identifier((DOMAIN, BRIDGE_MAC), entry.entry_id)
+    assert device.manufacturer == "TP-Link"
+    assert device.model == "JetStream 24-Port Gigabit L2 Managed Switch"
+
+
+async def test_unknown_maker_is_left_empty(hass: HomeAssistant, snmp, entry) -> None:
+    system = {**SYSTEM, OID_SYS_OBJECT_ID: "1.3.6.1.4.1.9.1.1"}
+    snmp.get.side_effect = lambda *oids: {o: system[o] for o in oids if o in system}
+    await _setup(hass, entry)
+
+    device = dr.async_get(hass).async_get_device_by_identifier((DOMAIN, BRIDGE_MAC), entry.entry_id)
+    assert device.manufacturer is None

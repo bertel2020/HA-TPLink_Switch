@@ -28,6 +28,7 @@ from .coordinator import SwitchConfigEntry, SwitchCoordinator
 from .panel import async_register_panel, async_remove_panel
 from .snmp import SnmpClient
 from .traps import async_subscribe
+from .vendor import async_load as async_load_vendors
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,6 +48,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SwitchConfigEntry) -> bo
     engine = await hass.async_add_executor_job(SnmpEngine)
     client = SnmpClient(engine, entry.data[CONF_HOST], entry.data[CONF_PORT], entry.data)
     coordinator = SwitchCoordinator(hass, entry, client)
+    await async_load_vendors()
     await coordinator.async_load_history()
     try:
         await coordinator.async_config_entry_first_refresh()

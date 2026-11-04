@@ -1,3 +1,4 @@
 pytest-homeassistant-custom-component==0.13.375
 pysnmp>=7.1.21
+aiooui>=0.1.9
 ruff

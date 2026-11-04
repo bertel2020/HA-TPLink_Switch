@@ -15,6 +15,7 @@ from .const import CONF_PORT_NAMES, DOMAIN, PORT_NAME_MAX
 from .coordinator import SwitchConfigEntry
 from .history import BUCKET, KEEP
 from .model import manufacturer
+from .vendor import vendor_of
 
 
 @callback
@@ -27,15 +28,18 @@ def async_register(hass: HomeAssistant) -> None:
 
 
 def _device_names(hass: HomeAssistant, mac: str) -> dict[str, str | None]:
-    """Name and maker of a device that Home Assistant knows by this MAC address."""
+    """Name and maker of a device that Home Assistant knows by this MAC address.
+
+    Without such a device the maker still comes from the address itself, if it has one.
+    """
     devices = dr.async_get(hass).async_get_devices(connections={(dr.CONNECTION_NETWORK_MAC, mac)})
     if not devices:
-        return {"name": None, "manufacturer": None}
+        return {"name": None, "manufacturer": vendor_of(mac)}
     # Several integrations can know the same MAC; take the first one that has a name.
     device = next((d for d in devices if d.name_by_user or d.name), devices[0])
     return {
         "name": device.name_by_user or device.name,
-        "manufacturer": device.manufacturer,
+        "manufacturer": device.manufacturer or vendor_of(mac),
     }
 
 

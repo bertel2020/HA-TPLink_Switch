@@ -67,7 +67,7 @@ Die Integration legt in der Seitenleiste (nur für Administratoren) den Eintrag 
 
 - **Übersicht:** Frontplatte mit allen Ports nach Link-Geschwindigkeit eingefärbt, dazu Port-Detail mit Verlauf der letzten 24 Stunden, Zeit des letzten Link-Wechsels und Auslastung, die Ports mit der meisten Last und Hinweise zu Fehlern, Ports mit nur 100 Mbit/s und Link-Wechseln in den letzten 24 Stunden.
 - **Ports:** Tabelle mit Filtern, Suche und Auslastung in Prozent.
-- **Geräte:** die gelernten MAC-Adressen pro Port; Namen und Hersteller kommen von Geräten, die Home Assistant über ihre MAC-Adresse kennt (z. B. aus „FRITZ!Box Netzwerk“).
+- **Geräte:** die gelernten MAC-Adressen pro Port; Namen kommen von Geräten, die Home Assistant über ihre MAC-Adresse kennt (z. B. aus „FRITZ!Box Netzwerk“); der Hersteller von dort oder sonst aus der MAC-Adresse (Herstellerliste von Home Assistant, ohne Internet; zufällige Adressen von Handys haben keinen).
 - **Diagnose:** Fehler, verworfene Pakete und Datenvolumen pro Port.
 
 Die **Darstellung** (Palette in der Kopfzeile) bietet drei Farbschemen (Ozean, Wald, Graphit), hell, dunkel oder wie Home Assistant, und drei Schriftgrößen; die Wahl gilt pro Benutzer. Das Panel bekommt nach jeder Abfrage des Switches einen neuen Stand geschickt und fragt nicht selbst nach.

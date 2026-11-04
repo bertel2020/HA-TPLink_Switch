@@ -1,5 +1,7 @@
 """Tests for the websocket commands of the panel."""
 
+from unittest.mock import patch
+
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from pytest_homeassistant_custom_component.common import MockConfigEntry
@@ -73,7 +75,8 @@ async def test_device_names_come_from_the_device_registry(
         manufacturer="Hewlett Packard",
     )
 
-    ports = {p["n"]: p for p in (await _snapshot(await hass_ws_client(hass)))["ports"]}
+    with patch("custom_components.tplink_switch_snmp.websocket_api.vendor_of", return_value=None):
+        ports = {p["n"]: p for p in (await _snapshot(await hass_ws_client(hass)))["ports"]}
     named, unknown = ports[1]["macs"]
 
     assert named == {"mac": MAC_PRINTER, "name": "Drucker HP", "manufacturer": "Hewlett Packard"}

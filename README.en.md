@@ -66,7 +66,7 @@ The integration adds the entry **Switch** to the sidebar (admins only):
 
 - **Overview:** a front panel with every port coloured by link speed, a port detail with the last 24 hours, the time of the last link change and the utilization, the ports with the most traffic and notes on errors, ports that run at 100 Mbit/s only and link changes in the last 24 hours.
 - **Ports:** a table with filters, search and utilization in percent.
-- **Devices:** the learned MAC addresses per port; names and manufacturers come from devices Home Assistant knows by their MAC address (for example from "FRITZ!Box Network").
+- **Devices:** the learned MAC addresses per port; names come from devices Home Assistant knows by their MAC address (for example from "FRITZ!Box Network"); the manufacturer from there or else from the MAC address (Home Assistant's manufacturer list, no internet; the random addresses of phones have none).
 - **Diagnostics:** errors, discarded packets and data volume per port.
 
 The **Appearance** menu (palette in the header) offers three colour schemes (Ocean, Forest, Graphite), light, dark or like Home Assistant, and three font sizes; the choice is kept per user. The panel gets a new state pushed after every poll of the switch and does not ask by itself.

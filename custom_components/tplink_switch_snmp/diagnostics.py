@@ -40,6 +40,9 @@ async def async_get_config_entry_diagnostics(
         "switch": {
             "description": data.description,
             "object_id": data.object_id,
+            "model": data.model,
+            "hw_version": data.hw_version,
+            "sw_version": data.sw_version,
             "uptime": data.uptime,
             "polling_interval": coordinator.update_interval.total_seconds(),
             "last_update_success": coordinator.last_update_success,

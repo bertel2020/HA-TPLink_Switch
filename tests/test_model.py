@@ -190,3 +190,11 @@ def test_mac_ports_lists_every_mac_with_its_port():
     ports = model.build_ports(_tables(), fdb, {"1": 1, "2": 2})
     data = model.SwitchData(uptime=0, description="", object_id="", ports=ports)
     assert data.mac_ports == {"00:04:20:f9:36:02": 1, "00:08:dc:54:95:46": 2}
+
+
+def test_hardware_string_is_split_into_model_and_version():
+    assert model.split_hardware("TL-SG3424 1.0") == ("TL-SG3424", "1.0")
+    assert model.split_hardware("TL-SG3428MP 2.20") == ("TL-SG3428MP", "2.20")
+    assert model.split_hardware("JetStream Switch") == ("JetStream Switch", None)
+    assert model.split_hardware("TL-SG3424") == ("TL-SG3424", None)
+    assert model.split_hardware("") == (None, None)

@@ -382,7 +382,9 @@ class TplinkSwitchPanel extends HTMLElement {
       ${this._details ? `<div class="details"><div class="kv">
         <div><span>${esc(t("vendor"))}</span><span>${esc(sw.manufacturer || t("noData"))}</span></div><div><span>${esc(t("model"))}</span><span>${esc(sw.model || t("noData"))}</span></div>
         <div><span>${esc(t("poll"))}</span><span>${esc(t("pollValue", { s: sw.interval }))}</span></div><div><span>${esc(t("address"))}</span><span class="mono">${esc(sw.host)}</span></div>
-        <div><span>${esc(t("macAddress"))}</span><span class="mono">${esc(sw.mac)}</span></div></div></div>` : ""}
+        <div><span>${esc(t("macAddress"))}</span><span class="mono">${esc(sw.mac)}</span></div>
+        <div><span>${esc(t("hardware"))}</span><span>${esc(sw.hw_version || t("noData"))}</span></div><div><span>${esc(t("firmware"))}</span><span>${esc(sw.sw_version || t("noData"))}</span></div>
+        <div><span>${esc(t("location"))}</span><span>${esc(sw.location || t("noData"))}</span></div><div><span>${esc(t("contact"))}</span><span>${esc(sw.contact || t("noData"))}</span></div></div></div>` : ""}
     </section>`;
   }
 

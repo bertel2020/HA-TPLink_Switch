@@ -24,7 +24,9 @@ class SwitchEntity(CoordinatorEntity[SwitchCoordinator]):
             identifiers={(DOMAIN, entry.unique_id)},
             connections={(CONNECTION_NETWORK_MAC, entry.unique_id)},
             manufacturer=manufacturer(coordinator.data.object_id),
-            model=coordinator.data.description or None,
+            model=coordinator.data.model or coordinator.data.description or None,
+            hw_version=coordinator.data.hw_version,
+            sw_version=coordinator.data.sw_version,
             name=entry.title,
             configuration_url=f"http://{entry.data[CONF_HOST]}/",
         )

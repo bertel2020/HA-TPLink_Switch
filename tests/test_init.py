@@ -111,7 +111,9 @@ async def test_device_info_comes_from_the_switch(hass: HomeAssistant, snmp, entr
 
     device = dr.async_get(hass).async_get_device_by_identifier((DOMAIN, BRIDGE_MAC), entry.entry_id)
     assert device.manufacturer == "TP-Link"
-    assert device.model == "JetStream 24-Port Gigabit L2 Managed Switch"
+    assert device.model == "TL-SG3424"
+    assert device.hw_version == "1.0"
+    assert device.sw_version == "1.11.10 Build 20150713 Rel.53496(n)"
 
 
 async def test_unknown_maker_is_left_empty(hass: HomeAssistant, snmp, entry) -> None:
@@ -161,3 +163,46 @@ async def test_discards_and_utilization_sensors(hass: HomeAssistant, snmp, entry
     tables["rx"]["1"] += 125_000_000
     await entry.runtime_data.async_refresh()
     assert entry.runtime_data.data.ports[1].rx_util is not None
+
+
+async def test_model_falls_back_to_the_description_for_other_makers(
+    hass: HomeAssistant, snmp, entry
+) -> None:
+    system = {**SYSTEM, OID_SYS_OBJECT_ID: "1.3.6.1.4.1.9.1.1"}
+    snmp.get.side_effect = lambda *oids: {o: system[o] for o in oids if o in system}
+    await _setup(hass, entry)
+
+    device = dr.async_get(hass).async_get_device_by_identifier((DOMAIN, BRIDGE_MAC), entry.entry_id)
+    assert device.model == "JetStream 24-Port Gigabit L2 Managed Switch"
+    assert device.sw_version is None
+    snmp.get.assert_any_await("1.3.6.1.2.1.1.6.0")  # the standard location is still asked for
+    asked = [c.args[0] for c in snmp.get.await_args_list if len(c.args) == 1]
+    assert not any(oid.startswith("1.3.6.1.4.1.11863") for oid in asked)
+
+
+async def test_an_unknown_private_value_does_not_stop_the_poll(
+    hass: HomeAssistant, snmp, entry
+) -> None:
+
+    original = snmp.get.side_effect
+
+    def get(*oids):
+        if len(oids) == 1 and oids[0].startswith("1.3.6.1.4.1.11863"):
+            raise SnmpError("noSuchName")  # SNMPv1 refuses a value that does not exist
+        return original(*oids)
+
+    snmp.get.side_effect = get
+    await _setup(hass, entry)
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.runtime_data.data.model is None
+    assert entry.runtime_data.data.location == "Technikraum"
+
+
+async def test_the_info_is_read_only_once(hass: HomeAssistant, snmp, entry) -> None:
+    await _setup(hass, entry)
+    asked = len([c for c in snmp.get.await_args_list if len(c.args) == 1])
+
+    await entry.runtime_data.async_refresh()
+
+    assert len([c for c in snmp.get.await_args_list if len(c.args) == 1]) == asked

@@ -10,10 +10,14 @@ from custom_components.tplink_switch_snmp.const import (
     CONF_COMMUNITY,
     DOMAIN,
     OID_BRIDGE_ADDRESS,
+    OID_SYS_CONTACT,
     OID_SYS_DESCR,
+    OID_SYS_LOCATION,
     OID_SYS_NAME,
     OID_SYS_OBJECT_ID,
     OID_SYS_UPTIME,
+    OID_TPLINK_FIRMWARE,
+    OID_TPLINK_HARDWARE,
 )
 
 BRIDGE_MAC = "64:66:b3:6c:28:64"
@@ -24,6 +28,10 @@ SYSTEM = {
     OID_SYS_NAME: b"TL-SG3424",
     OID_SYS_DESCR: b"JetStream 24-Port Gigabit L2 Managed Switch",
     OID_SYS_OBJECT_ID: "1.3.6.1.4.1.11863.1.1.3",
+    OID_SYS_LOCATION: b"Technikraum",
+    OID_SYS_CONTACT: b"Roberto",
+    OID_TPLINK_HARDWARE: b"TL-SG3424 1.0",
+    OID_TPLINK_FIRMWARE: b"1.11.10 Build 20150713 Rel.53496(n)",
     OID_SYS_UPTIME: 158 * 86400 * 100,  # timeticks: hundredths of a second
     OID_BRIDGE_ADDRESS: bytes.fromhex("6466b36c2864"),
 }

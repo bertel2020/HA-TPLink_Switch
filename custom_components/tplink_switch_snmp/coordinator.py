@@ -37,13 +37,26 @@ from .const import (
     OID_IF_OUT_DISCARDS,
     OID_IF_OUT_ERRORS,
     OID_IF_OUT_OCTETS,
+    OID_SYS_CONTACT,
     OID_SYS_DESCR,
+    OID_SYS_LOCATION,
     OID_SYS_OBJECT_ID,
     OID_SYS_UPTIME,
+    OID_TPLINK_FIRMWARE,
+    OID_TPLINK_HARDWARE,
     VERSION_1,
 )
 from .history import RateHistory
-from .model import PortData, SwitchData, UptimeTracker, add_rates, build_ports, text
+from .model import (
+    PortData,
+    SwitchData,
+    UptimeTracker,
+    add_rates,
+    build_ports,
+    manufacturer,
+    split_hardware,
+    text,
+)
 from .snmp import SnmpClient, SnmpError
 
 _LOGGER = logging.getLogger(__name__)
@@ -96,6 +109,7 @@ class SwitchCoordinator(DataUpdateCoordinator[SwitchData]):
         self._v1 = entry.data.get(CONF_VERSION, DEFAULT_VERSION) == VERSION_1
         self.trap_port = 0  # the configured trap port, set by the setup
         self.history = RateHistory()
+        self._info: dict[str, str | None] | None = None
         self._store: Store[dict] = Store(hass, 1, f"{DOMAIN}.{entry.entry_id}.history")
         self._last_poll: float | None = None
         self._uptime = UptimeTracker()
@@ -111,6 +125,24 @@ class SwitchCoordinator(DataUpdateCoordinator[SwitchData]):
     async def async_remove_history(self) -> None:
         """Delete the stored rates when the switch is removed."""
         await self._store.async_remove()
+
+    async def _read_info(self, object_id: str) -> dict[str, str | None]:
+        """Location, contact, model and versions. They do not change, so they are read once.
+
+        Each value is asked for on its own: with SNMPv1 one unknown value fails the whole
+        request, and a switch of another make does not have TP-Link's own values.
+        """
+        wanted = {"location": OID_SYS_LOCATION, "contact": OID_SYS_CONTACT}
+        if manufacturer(object_id) == "TP-Link":
+            wanted |= {"hardware": OID_TPLINK_HARDWARE, "firmware": OID_TPLINK_FIRMWARE}
+        info: dict[str, str | None] = {}
+        for key, oid in wanted.items():
+            try:
+                value = (await self.client.get(oid)).get(oid)
+            except SnmpError:
+                value = None
+            info[key] = text(value).strip() or None if value is not None else None
+        return info
 
     async def _async_update_data(self) -> SwitchData:
         try:
@@ -144,11 +176,20 @@ class SwitchCoordinator(DataUpdateCoordinator[SwitchData]):
         )
         self._store.async_delay_save(self.history.as_dict, HISTORY_SAVE_DELAY)
 
+        if self._info is None:
+            self._info = await self._read_info(text(system.get(OID_SYS_OBJECT_ID, "")))
+        model, hw_version = split_hardware(self._info.get("hardware") or "")
+
         data = SwitchData(
             uptime=self._uptime.seconds(ticks),
             description=text(system.get(OID_SYS_DESCR, b"")),
             object_id=text(system.get(OID_SYS_OBJECT_ID, "")),
             ports=ports,
+            model=model,
+            hw_version=hw_version,
+            sw_version=self._info.get("firmware"),
+            location=self._info.get("location"),
+            contact=self._info.get("contact"),
         )
         if self.data:
             self._fire_move_events(data, self.data)

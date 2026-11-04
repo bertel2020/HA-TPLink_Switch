@@ -31,7 +31,13 @@ async def test_snapshot_describes_the_switch(
     assert switch["host"] == "192.168.79.15"
     assert switch["mac"] == BRIDGE_MAC
     assert switch["manufacturer"] == "TP-Link"
-    assert switch["model"] == "JetStream 24-Port Gigabit L2 Managed Switch"
+    assert switch["model"] == "TL-SG3424"
+    assert (switch["hw_version"], switch["location"], switch["contact"]) == (
+        "1.0",
+        "Technikraum",
+        "Roberto",
+    )
+    assert switch["sw_version"].startswith("1.11.10")
     assert switch["uptime"] == 158 * 86400
     assert switch["interval"] == 30
     assert switch["last_update_success"] is True

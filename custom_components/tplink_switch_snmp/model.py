@@ -43,6 +43,11 @@ class SwitchData:
     description: str  # sysDescr
     object_id: str  # sysObjectID
     ports: dict[int, PortData]  # keyed by port number
+    model: str | None = None
+    hw_version: str | None = None
+    sw_version: str | None = None
+    location: str | None = None
+    contact: str | None = None
 
     @property
     def mac_ports(self) -> dict[str, int]:
@@ -90,6 +95,20 @@ class UptimeTracker:
                 self._wraps = 0  # the counter fell from somewhere low: a reboot
         self._last = ticks
         return (self._wraps * TICKS_WRAP + ticks) // 100
+
+
+_VERSION = re.compile(r"^v?\d+(\.\d+)*$")
+
+
+def split_hardware(value: str) -> tuple[str | None, str | None]:
+    """Model and hardware version from a string like "TL-SG3424 1.0"."""
+    value = value.strip()
+    if not value:
+        return None, None
+    head, _, tail = value.rpartition(" ")
+    if head and _VERSION.match(tail):
+        return head, tail.lstrip("v")
+    return value, None
 
 
 def format_mac(raw: bytes | str) -> str:

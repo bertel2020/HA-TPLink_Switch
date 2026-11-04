@@ -2,6 +2,18 @@
 
 Alle nennenswerten Änderungen an dieser Integration werden hier festgehalten.
 
+## 0.5.0 – 2026-11-04
+
+### Neu
+
+- Seitenpanel, **Darstellung** (Palette in der Kopfzeile): drei Farbschemen wie im EnOcean-Panel, **Ozean** (wie bisher), **Wald** und **Graphit**, jeweils hell und dunkel (hell oder dunkel folgt auf Wunsch Home Assistant, Standard), dazu drei Schriftgrößen (Klein 12,6 px, Normal 14 px, Groß 16 px; die kleinsten Schriften bleiben bei mindestens 10,5 px). Die Wahl gilt pro Home-Assistant-Benutzer und wird zusätzlich im Browser gemerkt.
+- Seitenpanel, **Verlauf ohne Recorder**: Die Integration führt einen eigenen Puffer der Datenraten (24 Stunden in 5-Minuten-Mittelwerten pro Port) und sichert ihn im `.storage`, auch beim Herunterfahren; ein Neustart lässt keine Lücke. Der Verlauf braucht weder den Recorder noch die Sensoren „Empfang“ und „Senden“, beginnt mit dem Start der Integration und wird mit dem Switch gelöscht. Neuer Websocket-Befehl `tplink_switch_snmp/history`.
+
+### Geändert
+
+- Das Panel fragt nicht mehr alle 15 Sekunden nach: Die Integration schickt nach jeder Abfrage des Switches einen Stand an das offene Panel (neuer Websocket-Befehl `tplink_switch_snmp/subscribe`). Nur wenn das Abonnement ausfällt, fragt das Panel selten nach. Ein längeres Abfrageintervall bedeutet dadurch auch weniger Verkehr im Panel.
+- `recorder` ist keine Abhängigkeit mehr, und der Snapshot enthält keine Entitäts-IDs der Datenraten mehr (`entities`).
+
 ## 0.4.0 – 2026-11-04
 
 ### Neu

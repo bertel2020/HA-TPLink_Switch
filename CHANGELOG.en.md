@@ -2,6 +2,18 @@
 
 All notable changes to this integration are recorded here.
 
+## 0.5.0 – 2026-11-04
+
+### New
+
+- Sidebar panel, **Appearance** (palette in the header): three colour schemes as in the EnOcean panel, **Ocean** (as before), **Forest** and **Graphite**, each light and dark (light or dark follows Home Assistant if you want, the default), plus three font sizes (Small 12.6 px, Normal 14 px, Large 16 px; the smallest texts stay at 10.5 px or more). The choice is kept per Home Assistant user and also remembered in the browser.
+- Sidebar panel, **history without the recorder**: the integration keeps a buffer of the data rates of its own (24 hours in five-minute averages per port) and saves it in `.storage`, also at shutdown; a restart leaves no gap. The history needs neither the recorder nor the "Receive" and "Transmit" sensors, starts when the integration starts and is deleted with the switch. New websocket command `tplink_switch_snmp/history`.
+
+### Changed
+
+- The panel no longer asks every 15 seconds: after each poll of the switch the integration sends the state to the open panel (new websocket command `tplink_switch_snmp/subscribe`). Only if the subscription is lost does the panel ask now and then. A longer polling interval therefore also means less traffic in the panel.
+- `recorder` is no longer a dependency, and the snapshot no longer contains the entity IDs of the data rates (`entities`).
+
 ## 0.4.0 – 2026-11-04
 
 ### New

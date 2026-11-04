@@ -51,6 +51,8 @@ The integration adds the entry **Switch** to the sidebar (admins only):
 - **Devices:** the learned MAC addresses per port; names and manufacturers come from devices Home Assistant knows by their MAC address (for example from "FRITZ!Box Network").
 - **Diagnostics:** errors, discarded packets and data volume per port.
 
+The **Appearance** menu (palette in the header) offers three colour schemes (Ocean, Forest, Graphite), light, dark or like Home Assistant, and three font sizes; the choice is kept per user. The panel gets a new state pushed after every poll of the switch and does not ask by itself.
+
 Ports can be renamed in the panel (the pencil next to the port name); the name is stored with the integration. The history comes from a buffer of the integration's own (24 hours in five-minute values, saved in `.storage`), so it needs neither the recorder nor the sensors; it starts when the integration starts and is deleted with the switch.
 
 Without Home Assistant, the panel can be viewed with sample data: start `python3 -m http.server 8765` in the repository folder and open `/scripts/panel-preview/index.html` (`?dark=1`, `?lang=en`, `?narrow=1`).

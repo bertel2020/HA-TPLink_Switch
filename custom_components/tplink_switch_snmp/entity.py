@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 from homeassistant.const import CONF_HOST
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -40,6 +42,11 @@ class PortEntity(SwitchEntity):
         self._number = number
         self._attr_unique_id = f"{self._mac}_port{number}_{key}"
         self._attr_translation_placeholders = {"port": str(number)}
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """The port number: the dashboard card tells the ports apart by it."""
+        return {"port": self._number}
 
     @property
     def port(self) -> PortData | None:

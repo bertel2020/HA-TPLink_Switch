@@ -1,0 +1,38 @@
+<!doctype html>
+<!-- Preview of the dashboard card without Home Assistant: serve the repository root, then open
+     /scripts/panel-preview/card.html (add ?dark=1 or ?lang=en). -->
+<html lang="de">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Card preview</title>
+<style>
+  body { margin: 0; padding: 24px; font-family: Roboto, system-ui, sans-serif; background: var(--bg); color: var(--fg); max-width: 640px; }
+  :root { --bg: #f4f6f9; --fg: #1b1f24; --card-background-color: #fff; --secondary-background-color: #f5f7f9; --primary-color: #03a9f4; --text-primary-color: #fff;
+    --secondary-text-color: #5b6270; --divider-color: #e1e5ea; --success-color: #2e9b57; --warning-color: #d98a1e; --error-color: #c0392b; --disabled-text-color: #bbb; }
+  :root.dark { --bg: #111; --fg: #e6e9ed; --card-background-color: #1c1c1c; --secondary-background-color: #242424; --secondary-text-color: #9aa4b1; --divider-color: #333; --disabled-text-color: #555; }
+  ha-card { display: block; background: var(--card-background-color); border-radius: 12px; border: 1px solid var(--divider-color); padding-bottom: 4px; }
+  ha-card[header]::before { content: attr(header); display: block; padding: 16px; font-size: 20px; }
+</style></head>
+<body>
+<div id="log" style="font-size:12px;color:var(--secondary-text-color);margin-bottom:8px"></div>
+<script type="module">
+  const params = new URLSearchParams(location.search);
+  if (params.has("dark")) document.documentElement.classList.add("dark");
+  await import(`/custom_components/tplink_switch_snmp/frontend/tplink-switch-card.js?v=${Date.now()}`);
+  const P = { 1: ["Uplink", 1000, 0.29, 2.55, ["Gateway"]], 2: ["Drucker", 100, 0.01, 0.01, ["Drucker HP"]], 5: ["NAS", 1000, 0, 0.01, ["NAS Synology"]],
+    11: ["Kamera", 100, 0.01, 0.02, []], 12: ["Access Point", 1000, 0.22, 0.31, ["Access Point Flur", "iPhone Roberto"]], 16: ["TV", 100, 2.41, 0.07, ["Smart-TV"]],
+    17: ["Server", 1000, 0.11, 0.12, ["Server Keller"]], 24: ["Dachboden", 1000, 0.25, 0.27, []] };
+  const entities = {}, states = {};
+  const add = (id, key, value, attributes) => { entities[id] = { entity_id: id, platform: "tplink_switch_snmp", device_id: "d1", translation_key: key }; states[id] = { state: String(value), attributes }; };
+  for (let n = 1; n <= 24; n++) {
+    const s = P[n];
+    add(`binary_sensor.p${n}_link`, "link", s ? "on" : "off", { port: n });
+    add(`sensor.p${n}_speed`, "speed", s ? s[1] : 0, { port: n });
+    if (s) { add(`sensor.p${n}_rx`, "rx_rate", s[2], { port: n }); add(`sensor.p${n}_tx`, "tx_rate", s[3], { port: n }); }
+    (s?.[4] || []).forEach((name, i) => add(`sensor.dev${n}_${i}_port`, "device_port", n, { mac: `02:00:00:00:${n}:${i}`, device_name: name, port_name: s[0] }));
+  }
+  const card = document.createElement("tplink-switch-card");
+  card.setConfig({});
+  card.hass = { language: params.get("lang") || "de", entities, states, devices: { d1: { name: "TL-SG3424 Keller" } } };
+  card.addEventListener("hass-more-info", (e) => { document.getElementById("log").textContent = `more-info: ${e.detail.entityId}`; });
+  document.body.append(card);
+  window.card = card;
+</script></body></html>

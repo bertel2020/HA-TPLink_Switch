@@ -71,9 +71,23 @@ The integration adds the entry **Switch** to the sidebar (admins only):
 
 The **Appearance** menu (palette in the header) offers three colour schemes (Ocean, Forest, Graphite), light, dark or like Home Assistant, and three font sizes; the choice is kept per user. The panel gets a new state pushed after every poll of the switch and does not ask by itself.
 
-Ports can be renamed in the panel (the pencil next to the port name); the name is stored with the integration. The history comes from a buffer of the integration's own (24 hours in five-minute values, saved in `.storage`), so it needs neither the recorder nor the sensors; it starts when the integration starts and is deleted with the switch.
+Ports can be renamed in the panel (the pencil next to the port name); the name is stored with the integration. The history comes from a buffer of the integration's own (24 hours in five-minute values and 7 days in hourly values, saved in `.storage`), so it needs neither the recorder nor the sensors; it starts when the integration starts and is deleted with the switch.
 
 Without Home Assistant, the panel can be viewed with sample data: start `python3 -m http.server 8765` in the repository folder and open `/scripts/panel-preview/index.html` (`?dark=1`, `?lang=en`, `?narrow=1`).
+
+## Dashboard card
+
+The integration brings the card **TP-Link Switch**: the front panel of the switch, coloured by link speed, and below it, for every active port, the devices that Home Assistant knows, with the data rate. A click on a port or a device opens its entity. Unlike the panel, every user sees it.
+
+```yaml
+type: custom:tplink-switch-card
+title: Basement switch    # optional
+device_id: abc123         # optional, only with more than one switch
+show_devices: true        # devices per port (default: on)
+show_rates: true          # data rate per port (default: on)
+```
+
+The card reads the integration's entities; the devices per port are the **Port of …** sensors. A preview without Home Assistant: `/scripts/panel-preview/card.html`.
 
 ## Entities
 

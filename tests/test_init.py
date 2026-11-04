@@ -232,3 +232,12 @@ async def test_v1_reads_the_32_bit_packet_counters(hass: HomeAssistant, snmp, en
     asked = snmp.walk_many.await_args.args[0]
     assert asked["rx_uc"].endswith("2.2.1.11")  # ifInUcastPkts
     assert asked["rx_bc"].endswith("31.1.1.1.3")  # ifInBroadcastPkts, 32 bit
+
+
+async def test_port_entities_carry_their_port_number(hass: HomeAssistant, snmp, entry) -> None:
+    await _setup(hass, entry)
+
+    assert hass.states.get(_entity(hass, "binary_sensor", "port2_link")).attributes["port"] == 2
+    assert hass.states.get(_entity(hass, "sensor", "port1_speed")).attributes["port"] == 1
+    macs = hass.states.get(_entity(hass, "sensor", "port1_macs"))
+    assert macs.attributes["port"] == 1 and macs.attributes["mac_addresses"]

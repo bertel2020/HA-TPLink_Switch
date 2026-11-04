@@ -72,9 +72,23 @@ Die Integration legt in der Seitenleiste (nur für Administratoren) den Eintrag 
 
 Die **Darstellung** (Palette in der Kopfzeile) bietet drei Farbschemen (Ozean, Wald, Graphit), hell, dunkel oder wie Home Assistant, und drei Schriftgrößen; die Wahl gilt pro Benutzer. Das Panel bekommt nach jeder Abfrage des Switches einen neuen Stand geschickt und fragt nicht selbst nach.
 
-Ports lassen sich im Panel umbenennen (Stift neben dem Port-Namen); der Name wird an der Integration gespeichert. Der Verlauf kommt aus einem eigenen Puffer der Integration (24 Stunden in 5-Minuten-Werten, im `.storage` gesichert), er braucht also weder den Recorder noch die Sensoren; er beginnt mit dem Start der Integration und wird mit dem Switch gelöscht.
+Ports lassen sich im Panel umbenennen (Stift neben dem Port-Namen); der Name wird an der Integration gespeichert. Der Verlauf kommt aus einem eigenen Puffer der Integration (24 Stunden in 5-Minuten-Werten und 7 Tage in Stundenwerten, im `.storage` gesichert), er braucht also weder den Recorder noch die Sensoren; er beginnt mit dem Start der Integration und wird mit dem Switch gelöscht.
 
 Ohne Home Assistant lässt sich das Panel mit Beispieldaten ansehen: `python3 -m http.server 8765` im Repo-Ordner starten und `/scripts/panel-preview/index.html` öffnen (`?dark=1`, `?lang=en`, `?narrow=1`).
+
+## Dashboard-Karte
+
+Die Integration bringt die Karte **TP-Link Switch** mit: die Frontplatte des Switches, nach Link-Geschwindigkeit eingefärbt, und darunter pro aktivem Port die Geräte, die Home Assistant kennt, samt Datenrate. Ein Klick auf einen Port oder ein Gerät öffnet die zugehörige Entität. Anders als das Panel sieht sie jeder Benutzer.
+
+```yaml
+type: custom:tplink-switch-card
+title: Switch Keller      # optional
+device_id: abc123         # optional, nur bei mehreren Switches
+show_devices: true        # Geräte pro Port (Standard: an)
+show_rates: true          # Datenrate pro Port (Standard: an)
+```
+
+Die Karte liest die Entitäten der Integration; die Geräte pro Port sind die Sensoren **Port von …**. Eine Vorschau ohne Home Assistant: `/scripts/panel-preview/card.html`.
 
 ## Entitäten
 

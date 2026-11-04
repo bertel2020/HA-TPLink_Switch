@@ -262,10 +262,11 @@ class PortSensor(PortEntity, SensorEntity):
         return self.entity_description.value_fn(self.port) if self.port else None
 
     @property
-    def extra_state_attributes(self) -> dict[str, Any] | None:
+    def extra_state_attributes(self) -> dict[str, Any]:
+        attributes = super().extra_state_attributes
         if self.entity_description.key == "macs" and self.port:
-            return {"mac_addresses": self.port.macs}
-        return None
+            attributes["mac_addresses"] = self.port.macs
+        return attributes
 
 
 class DevicePort(SwitchEntity, SensorEntity):
@@ -281,6 +282,7 @@ class DevicePort(SwitchEntity, SensorEntity):
     def __init__(self, coordinator: SwitchCoordinator, mac: str, name: str) -> None:
         super().__init__(coordinator)
         self._device_mac = mac
+        self._device_name = name
         self._attr_unique_id = f"{self._mac}_device_{mac}_port"
         self._attr_translation_placeholders = {"device": name}
 
@@ -294,5 +296,6 @@ class DevicePort(SwitchEntity, SensorEntity):
         names = self.coordinator.config_entry.options.get(CONF_PORT_NAMES, {})
         return {
             "mac": self._device_mac,
+            "device_name": self._device_name,
             "port_name": names.get(str(number), "") if number is not None else "",
         }

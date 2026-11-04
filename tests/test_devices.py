@@ -64,6 +64,7 @@ async def test_port_name_is_an_attribute(hass: HomeAssistant, snmp, entry) -> No
     attributes = hass.states.get(_sensor(hass, MAC_PRINTER)).attributes
     assert attributes["port_name"] == "Büro"
     assert attributes["mac"] == MAC_PRINTER
+    assert attributes["device_name"] == "Drucker"
 
 
 async def test_state_is_unknown_when_the_device_is_gone(

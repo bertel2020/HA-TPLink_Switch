@@ -94,6 +94,9 @@
       },
       "tx_utilization": {
         "name": "Port {port} Auslastung Senden"
+      },
+      "link_changed": {
+        "name": "Port {port} Link geändert"
       }
     }
   },

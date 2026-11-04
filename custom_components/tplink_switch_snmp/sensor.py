@@ -135,6 +135,14 @@ PORT_SENSORS: tuple[PortSensorDescription, ...] = (
         value_fn=lambda p: p.tx_util,
     ),
     PortSensorDescription(
+        key="link_changed",
+        translation_key="link_changed",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda p: p.link_changed_at,
+    ),
+    PortSensorDescription(
         key="macs",
         translation_key="macs",
         state_class=SensorStateClass.MEASUREMENT,

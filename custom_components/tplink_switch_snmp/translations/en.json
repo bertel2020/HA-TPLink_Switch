@@ -94,6 +94,9 @@
       },
       "tx_utilization": {
         "name": "Port {port} transmit utilization"
+      },
+      "link_changed": {
+        "name": "Port {port} link changed"
       }
     }
   },

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from datetime import datetime
 import re
 from typing import Any
 
@@ -30,6 +31,8 @@ class PortData:
     tx_rate: float | None = None
     rx_util: float | None = None  # percent of the link speed
     tx_util: float | None = None
+    last_change: int = 0  # ifLastChange: sysUpTime ticks of the last link change
+    link_changed_at: datetime | None = None
 
 
 @dataclass
@@ -154,6 +157,7 @@ def build_ports(
             tx_bytes=int(tables["tx"].get(suffix, 0)),
             rx_errors=int(tables["rx_err"].get(suffix, 0)),
             tx_errors=int(tables["tx_err"].get(suffix, 0)),
+            last_change=int(tables.get("last_change", {}).get(suffix, 0)),
             rx_discards=int(tables.get("rx_disc", {}).get(suffix, 0)),
             tx_discards=int(tables.get("tx_disc", {}).get(suffix, 0)),
             macs=sorted(macs_by_if.get(if_index, ())),

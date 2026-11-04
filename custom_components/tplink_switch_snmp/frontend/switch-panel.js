@@ -148,6 +148,23 @@ class TplinkSwitchPanel extends HTMLElement {
     return value == null ? "" : `${this._num(value, 1)} %`;
   }
 
+  // Time of the last link change; null if it is the link-up at the switch's own start.
+  _changedAt(sw, p) {
+    if (!p.link_changed_at) return null;
+    const at = Date.parse(p.link_changed_at);
+    const boot = Date.now() - sw.uptime * 1000;
+    return at > boot + 300000 ? at : null;
+  }
+
+  _ago(at) {
+    const seconds = Math.round((at - Date.now()) / 1000);
+    const rtf = new Intl.RelativeTimeFormat(this._lang, { numeric: "auto" });
+    for (const [unit, size] of [["day", 86400], ["hour", 3600], ["minute", 60]]) {
+      if (Math.abs(seconds) >= size) return rtf.format(Math.round(seconds / size), unit);
+    }
+    return rtf.format(seconds, "second");
+  }
+
   _errors(p) {
     return (p.rx_errors || 0) + (p.tx_errors || 0);
   }
@@ -297,11 +314,14 @@ class TplinkSwitchPanel extends HTMLElement {
     const max = top.length ? this._total(top[0]) : 1;
     const slow = sw.ports.filter((p) => p.up && p.speed > 0 && p.speed < 1000);
     const errs = sw.ports.filter((p) => this._errors(p));
+    const day = Date.now() - 86400000;
+    const flips = sw.ports.filter((p) => (this._changedAt(sw, p) ?? 0) > day);
     const note = (cls, ic, title, text) => `<div class="issue ${cls}">${icon(ic)}<div><b>${esc(title)}</b><br>${esc(text)}</div></div>`;
     const issues = [
       errs.length ? note("warn", "warn", t("errorPorts", { n: errs.length }), t("errorPortsText", { ports: errs.map((p) => `${t("port")} ${p.n}`).join(", ") })) : "",
       slow.length ? note("warn", "warn", t("slowPorts", { n: slow.length }), t("slowPortsText", { ports: slow.map((p) => `${t("port")} ${p.n}`).join(", ") })) : "",
-      !errs.length && !slow.length ? note("ok", "ok", t("allFine"), t("allFineText")) : "",
+      flips.length ? note("warn", "warn", t("linkChanges", { n: flips.length }), t("linkChangesText", { ports: flips.map((p) => `${t("port")} ${p.n}`).join(", ") })) : "",
+      !errs.length && !slow.length && !flips.length ? note("ok", "ok", t("allFine"), t("allFineText")) : "",
     ].join("");
     return `<section class="card"><div class="card-h"><h2>${esc(t("faceplate"))}</h2>${live}<span class="grow"></span><span class="sub">${esc(t("clickPort"))}</span></div>
       <div class="face">${this._plate(sw)}<div class="legend">
@@ -332,6 +352,7 @@ class TplinkSwitchPanel extends HTMLElement {
     return `<section class="card"><div class="pd">
       <div>${title}<div class="sub" style="margin:4px 0 10px">${esc(t("history"))}</div>
         ${p.up ? this._chart(sw, p) : `<div class="nodata">${esc(t("noLink"))}</div>`}
+        ${this._changedAt(sw, p) ? `<div class="sub" style="margin-top:6px">${esc(t("linkChangedAgo", { when: this._ago(this._changedAt(sw, p)) }))}</div>` : ""}
         <div class="lg"><span><i style="background:var(--rx)"></i>${esc(t("receive"))} ${this._num(p.rx_rate)} Mbit/s${p.rx_util != null ? ` (${esc(this._util(p.rx_util))})` : ""}</span><span><i style="background:var(--tx)"></i>${esc(t("send"))} ${this._num(p.tx_rate)} Mbit/s${p.tx_util != null ? ` (${esc(this._util(p.tx_util))})` : ""}</span></div></div>
       <div><div class="sub" style="margin-bottom:6px">${esc(p.macs.length ? t("devicesAtPort") + " (" + p.macs.length + ")" : t("noDevices"))}</div>${macList}</div>
     </div></section>`;

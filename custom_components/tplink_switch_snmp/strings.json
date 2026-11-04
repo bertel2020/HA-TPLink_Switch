@@ -82,6 +82,18 @@
       },
       "macs": {
         "name": "Port {port} MAC-Adressen"
+      },
+      "rx_discards": {
+        "name": "Port {port} Empfang verworfen"
+      },
+      "tx_discards": {
+        "name": "Port {port} Senden verworfen"
+      },
+      "rx_utilization": {
+        "name": "Port {port} Auslastung Empfang"
+      },
+      "tx_utilization": {
+        "name": "Port {port} Auslastung Senden"
       }
     }
   },

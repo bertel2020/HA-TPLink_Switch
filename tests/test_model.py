@@ -159,3 +159,27 @@ def test_64_bit_counter_drop_gives_no_rate():
     new = model.build_ports(tables, {}, {})
     model.add_rates(new, old, 1.0, counter_bits=64)
     assert new[1].rx_rate is None
+
+
+def test_discards_are_read_and_default_to_zero():
+    tables = _tables()
+    tables["rx_disc"] = {"1": 7}
+    ports = model.build_ports(tables, {}, {})
+    assert (ports[1].rx_discards, ports[1].tx_discards) == (7, 0)
+    assert model.build_ports(_tables(), {}, {})[1].rx_discards == 0  # a switch without the columns
+
+
+def test_utilization_is_the_share_of_the_link_speed():
+    old = model.build_ports(_tables(), {}, {})
+    tables = _tables()
+    tables["rx"]["1"] += 12_500_000  # 100 Mbit in one second on a 1000 Mbit/s link
+    new = model.build_ports(tables, {}, {})
+    model.add_rates(new, old, 1.0)
+    assert new[1].rx_util == 10.0
+    assert new[1].tx_util == 0.0
+
+
+def test_utilization_needs_a_link_and_a_rate():
+    assert model.utilization(None, 1000) is None
+    assert model.utilization(5.0, 0) is None
+    assert model.utilization(2000.0, 1000) == 100.0  # never above 100

@@ -108,6 +108,7 @@ td.num, th.num { text-align: right; }
 .bar { display: flex; align-items: center; gap: 8px; justify-content: flex-end; }
 .bar .b { width: 70px; height: 6px; border-radius: 3px; background: var(--neutral-soft); overflow: hidden; }
 .bar .b i { display: block; height: 100%; border-radius: 3px; }
+.bar .sub { white-space: nowrap; min-width: 3.4em; text-align: right; }
 .rowbtn { all: unset; cursor: pointer; color: var(--muted); border-radius: 6px; padding: 4px; display: inline-flex; }
 .rowbtn:hover { color: var(--accent); background: var(--accent-soft); }
 .empty { padding: 36px; text-align: center; color: var(--muted); }

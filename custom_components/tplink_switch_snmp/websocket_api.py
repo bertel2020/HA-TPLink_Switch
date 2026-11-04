@@ -65,6 +65,10 @@ def _switch(hass: HomeAssistant, entry: SwitchConfigEntry) -> dict[str, Any]:
                 "tx_bytes": port.tx_bytes,
                 "rx_errors": port.rx_errors,
                 "tx_errors": port.tx_errors,
+                "rx_discards": port.rx_discards,
+                "tx_discards": port.tx_discards,
+                "rx_util": port.rx_util,
+                "tx_util": port.tx_util,
                 "macs": [{"mac": mac, **_device_names(hass, mac)} for mac in port.macs],
                 "entities": entities,
             }

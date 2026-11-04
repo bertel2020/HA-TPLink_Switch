@@ -82,6 +82,18 @@
       },
       "macs": {
         "name": "Port {port} MAC addresses"
+      },
+      "rx_discards": {
+        "name": "Port {port} receive discarded"
+      },
+      "tx_discards": {
+        "name": "Port {port} transmit discarded"
+      },
+      "rx_utilization": {
+        "name": "Port {port} receive utilization"
+      },
+      "tx_utilization": {
+        "name": "Port {port} transmit utilization"
       }
     }
   },

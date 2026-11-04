@@ -45,6 +45,9 @@ async def test_snapshot_port_values(hass: HomeAssistant, hass_ws_client, snmp, e
     assert ports[1]["up"] is True and ports[1]["speed"] == 1000
     assert ports[2]["up"] is False and ports[2]["speed"] == 0
     assert ports[1]["tx_errors"] == 3
+    assert ports[1]["rx_discards"] == 7
+    assert ports[1]["rx_util"] is None  # the first poll has no rate yet
+    assert ports[2]["tx_util"] is None
     assert [m["mac"] for m in ports[1]["macs"]] == [MAC_PRINTER, MAC_OTHER]
     # The rate sensors are the ones the panel draws the history from.
     assert ports[1]["entities"]["rx_rate"].startswith("sensor.")

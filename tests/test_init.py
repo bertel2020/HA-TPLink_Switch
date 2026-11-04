@@ -147,3 +147,17 @@ async def test_v1_reads_the_32_bit_counters(hass: HomeAssistant, snmp, entry) ->
 
     asked = snmp.walk_many.await_args.args[0]
     assert asked["rx"].endswith("2.2.1.10")  # ifInOctets, not the 64 bit ifHCInOctets
+
+
+async def test_discards_and_utilization_sensors(hass: HomeAssistant, snmp, entry, tables) -> None:
+    await _setup(hass, entry)
+    registry = er.async_get(hass)
+    for key in ("port1_rx_discards", "port1_rx_utilization"):
+        entity_id = registry.async_get_entity_id("sensor", DOMAIN, f"{BRIDGE_MAC}_{key}")
+        assert registry.async_get(entity_id).disabled_by is er.RegistryEntryDisabler.INTEGRATION
+
+    data = entry.runtime_data.data
+    assert data.ports[1].rx_discards == 7
+    tables["rx"]["1"] += 125_000_000
+    await entry.runtime_data.async_refresh()
+    assert entry.runtime_data.data.ports[1].rx_util is not None

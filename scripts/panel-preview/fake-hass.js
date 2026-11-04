@@ -18,7 +18,8 @@ function snapshot() {
     return {
       n, name: names[n] ?? (s ? s[0] : ""), if_name: `port ${n}: Gigabit Copper`, up, speed: up ? s[1] : 0,
       rx_rate: up ? s[2] : 0, tx_rate: up ? s[3] : 0, rx_bytes: up ? s[2] * 4e11 + 1e9 : 0, tx_bytes: up ? s[3] * 4e11 + 1e9 : 0,
-      rx_errors: up ? s[4] : 0, tx_errors: n === 6 ? 3 : 0,
+      rx_errors: up ? s[4] : 0, tx_errors: n === 6 ? 3 : 0, rx_discards: up && n === 16 ? 40 : 0, tx_discards: 0,
+      rx_util: up ? Math.round((s[2] / s[1]) * 1000) / 10 : null, tx_util: up ? Math.round((s[3] / s[1]) * 1000) / 10 : null,
       macs: up ? Array.from({ length: s[5] }, (_, i) => ({ mac: mac(n, i + 1), name: i === 0 ? NAMES[n] || null : null, manufacturer: i === 0 && NAMES[n] ? "Beispiel GmbH" : null })) : [],
       entities: up ? { rx_rate: `sensor.rx${n}`, tx_rate: `sensor.tx${n}` } : {},
     };

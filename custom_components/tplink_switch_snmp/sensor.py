@@ -13,6 +13,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
+    PERCENTAGE,
     EntityCategory,
     UnitOfDataRate,
     UnitOfInformation,
@@ -98,6 +99,40 @@ PORT_SENSORS: tuple[PortSensorDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_fn=lambda p: p.tx_errors,
+    ),
+    PortSensorDescription(
+        key="rx_discards",
+        translation_key="rx_discards",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda p: p.rx_discards,
+    ),
+    PortSensorDescription(
+        key="tx_discards",
+        translation_key="tx_discards",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda p: p.tx_discards,
+    ),
+    PortSensorDescription(
+        key="rx_utilization",
+        translation_key="rx_utilization",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
+        entity_registry_enabled_default=False,
+        value_fn=lambda p: p.rx_util,
+    ),
+    PortSensorDescription(
+        key="tx_utilization",
+        translation_key="tx_utilization",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
+        entity_registry_enabled_default=False,
+        value_fn=lambda p: p.tx_util,
     ),
     PortSensorDescription(
         key="macs",

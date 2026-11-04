@@ -144,6 +144,10 @@ class TplinkSwitchPanel extends HTMLElement {
     return p.speed >= 1000 ? t("l1000") : p.speed >= 100 ? t("l100") : t("l10");
   }
 
+  _util(value) {
+    return value == null ? "" : `${this._num(value, 1)} %`;
+  }
+
   _errors(p) {
     return (p.rx_errors || 0) + (p.tx_errors || 0);
   }
@@ -328,7 +332,7 @@ class TplinkSwitchPanel extends HTMLElement {
     return `<section class="card"><div class="pd">
       <div>${title}<div class="sub" style="margin:4px 0 10px">${esc(t("history"))}</div>
         ${p.up ? this._chart(sw, p) : `<div class="nodata">${esc(t("noLink"))}</div>`}
-        <div class="lg"><span><i style="background:var(--rx)"></i>${esc(t("receive"))} ${this._num(p.rx_rate)} Mbit/s</span><span><i style="background:var(--tx)"></i>${esc(t("send"))} ${this._num(p.tx_rate)} Mbit/s</span></div></div>
+        <div class="lg"><span><i style="background:var(--rx)"></i>${esc(t("receive"))} ${this._num(p.rx_rate)} Mbit/s${p.rx_util != null ? ` (${esc(this._util(p.rx_util))})` : ""}</span><span><i style="background:var(--tx)"></i>${esc(t("send"))} ${this._num(p.tx_rate)} Mbit/s${p.tx_util != null ? ` (${esc(this._util(p.tx_util))})` : ""}</span></div></div>
       <div><div class="sub" style="margin-bottom:6px">${esc(p.macs.length ? t("devicesAtPort") + " (" + p.macs.length + ")" : t("noDevices"))}</div>${macList}</div>
     </div></section>`;
   }
@@ -352,7 +356,7 @@ class TplinkSwitchPanel extends HTMLElement {
     const test = { all: () => true, up: (p) => p.up, down: (p) => !p.up, slow: (p) => p.up && p.speed > 0 && p.speed < 1000, err: (p) => this._errors(p) > 0 }[this._filter];
     const rows = sw.ports.filter(test).filter((p) => !q || `port ${p.n} ${p.name} ${p.macs.map((m) => `${m.name || ""} ${m.mac}`).join(" ")}`.toLowerCase().includes(q));
     const peak = Math.max(1, ...sw.ports.map((p) => Math.max(p.rx_rate || 0, p.tx_rate || 0)));
-    const bar = (p, v, color) => `<span class="bar"><span class="b"><i style="width:${Math.min(100, ((v || 0) / peak) * 100)}%;background:${color}"></i></span><span class="mono">${p.up ? this._num(v) : "–"}</span></span>`;
+    const bar = (p, v, color, util) => `<span class="bar" title="${esc(t("utilization"))}: ${esc(this._util(util) || t("noData"))}"><span class="b"><i style="width:${Math.min(100, ((v || 0) / peak) * 100)}%;background:${color}"></i></span><span class="mono">${p.up ? this._num(v) : "–"}</span>${p.up && util != null ? `<span class="sub">${esc(this._util(util))}</span>` : ""}</span>`;
     const shadow = this.shadowRoot;
     shadow.getElementById("ptb").innerHTML = rows
       .map((p) => {
@@ -360,7 +364,7 @@ class TplinkSwitchPanel extends HTMLElement {
         return `<tr class="row ${p.up ? "" : "down"}"><td><span class="pn">${esc(t("port"))} ${p.n}<small>${esc(p.name || (p.up ? "" : t("free")))}</small></span></td>
         <td>${p.up ? `<span class="tag ok">${esc(t("linked"))}</span>` : `<span class="tag">${esc(t("noLink"))}</span>`}</td>
         <td class="num">${p.up ? `<span class="tag ${p.speed < 1000 ? "warn" : ""} mono">${p.speed} Mbit/s</span>` : "–"}</td>
-        <td class="num">${bar(p, p.rx_rate, "var(--rx)")}</td><td class="num">${bar(p, p.tx_rate, "var(--tx)")}</td>
+        <td class="num">${bar(p, p.rx_rate, "var(--rx)", p.rx_util)}</td><td class="num">${bar(p, p.tx_rate, "var(--tx)", p.tx_util)}</td>
         <td class="num">${this._errors(p) ? `<span class="tag bad">${this._errors(p)}</span>` : '<span class="muted">0</span>'}</td>
         <td>${p.macs.length ? `<span class="tag acc">${esc(p.macs.length === 1 ? t("oneDevice") : t("nDevices", { n: p.macs.length }))}</span> <span class="sub">${names}${p.macs.length > 2 ? " …" : ""}</span>` : '<span class="muted">–</span>'}</td>
         <td><button class="rowbtn" data-a="goto" data-v="${p.n}" title="${esc(t("showOnOverview"))}" aria-label="${esc(t("showOnOverview"))}">${icon("next")}</button></td></tr>`;
@@ -399,8 +403,8 @@ class TplinkSwitchPanel extends HTMLElement {
     const t = this._t;
     const rows = sw.ports.filter((p) => p.up || this._errors(p));
     return `<section class="card"><div class="card-h"><h2>${esc(t("errorCounters"))}</h2><span class="grow"></span><span class="sub">${esc(t("sinceStart"))}</span></div>
-      <div class="tablewrap"><table><thead><tr><th>${esc(t("port"))}</th><th class="num">${esc(t("rxErrors"))}</th><th class="num">${esc(t("txErrors"))}</th><th class="num">${esc(t("rxTotal"))}</th><th class="num">${esc(t("txTotal"))}</th><th>${esc(t("assessment"))}</th></tr></thead><tbody>
-      ${rows.map((p) => `<tr class="row"><td><span class="pn">${esc(t("port"))} ${p.n}<small>${esc(p.name)}</small></span></td><td class="num mono">${p.rx_errors}</td><td class="num mono">${p.tx_errors}</td><td class="num mono">${esc(this._bytes(p.rx_bytes))}</td><td class="num mono">${esc(this._bytes(p.tx_bytes))}</td>
+      <div class="tablewrap"><table><thead><tr><th>${esc(t("port"))}</th><th class="num">${esc(t("rxErrors"))}</th><th class="num">${esc(t("txErrors"))}</th><th class="num">${esc(t("rxDiscards"))}</th><th class="num">${esc(t("txDiscards"))}</th><th class="num">${esc(t("rxTotal"))}</th><th class="num">${esc(t("txTotal"))}</th><th>${esc(t("assessment"))}</th></tr></thead><tbody>
+      ${rows.map((p) => `<tr class="row"><td><span class="pn">${esc(t("port"))} ${p.n}<small>${esc(p.name)}</small></span></td><td class="num mono">${p.rx_errors}</td><td class="num mono">${p.tx_errors}</td><td class="num mono">${p.rx_discards}</td><td class="num mono">${p.tx_discards}</td><td class="num mono">${esc(this._bytes(p.rx_bytes))}</td><td class="num mono">${esc(this._bytes(p.tx_bytes))}</td>
         <td>${this._errors(p) > 5 ? `<span class="tag warn">${esc(t("check"))}</span>` : `<span class="tag">${esc(t("fine"))}</span>`}</td></tr>`).join("")}
       </tbody></table></div></section>`;
   }

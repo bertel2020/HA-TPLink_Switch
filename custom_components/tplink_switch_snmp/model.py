@@ -24,8 +24,12 @@ class PortData:
     rx_errors: int
     tx_errors: int
     macs: list[str] = field(default_factory=list)
+    rx_discards: int = 0
+    tx_discards: int = 0
     rx_rate: float | None = None  # Mbit/s
     tx_rate: float | None = None
+    rx_util: float | None = None  # percent of the link speed
+    tx_util: float | None = None
 
 
 @dataclass
@@ -150,6 +154,8 @@ def build_ports(
             tx_bytes=int(tables["tx"].get(suffix, 0)),
             rx_errors=int(tables["rx_err"].get(suffix, 0)),
             tx_errors=int(tables["tx_err"].get(suffix, 0)),
+            rx_discards=int(tables.get("rx_disc", {}).get(suffix, 0)),
+            tx_discards=int(tables.get("tx_disc", {}).get(suffix, 0)),
             macs=sorted(macs_by_if.get(if_index, ())),
         )
     return ports
@@ -162,6 +168,13 @@ def _delta(new: int, old: int, bits: int) -> int | None:
     # A 32 bit counter wraps every 34 seconds at 1 Gbit/s, so a drop is a wrap there.
     # A 64 bit counter never does: a drop means the switch was reset.
     return new + 2**32 - old if bits == 32 else None
+
+
+def utilization(rate: float | None, speed: int) -> float | None:
+    """The share of the link speed in percent; None without a rate or a link."""
+    if rate is None or speed <= 0:
+        return None
+    return round(min(rate / speed * 100, 100.0), 1)
 
 
 def add_rates(
@@ -183,3 +196,5 @@ def add_rates(
             port.rx_rate = round(rx * 8 / seconds / 1e6, 3)
         if tx is not None:
             port.tx_rate = round(tx * 8 / seconds / 1e6, 3)
+        port.rx_util = utilization(port.rx_rate, port.speed)
+        port.tx_util = utilization(port.tx_rate, port.speed)

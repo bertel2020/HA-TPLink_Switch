@@ -6,6 +6,7 @@ All notable changes to this integration are recorded here.
 
 ### New
 
+- **Panel:** Hovering a port shows a card with link and speed, receive and transmit with utilization, errors, last link change and the devices at the port. It also shows on keyboard focus and stays put when the data refreshes.
 - **Choose the entities:** In the options you decide which groups of entities are created (link, rates, speed, data totals, errors, packets, utilization, link changes, MAC addresses, uptime, port of devices) and for which ports. Deselected entities are removed from the registry. Without a choice everything stays as before.
 
 ## 0.7.0 – 2026-11-04

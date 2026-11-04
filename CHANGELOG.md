@@ -6,6 +6,7 @@ Alle nennenswerten Änderungen an dieser Integration werden hier festgehalten.
 
 ### Neu
 
+- **Panel:** Beim Überfahren eines Ports erscheint eine Karte mit Link und Geschwindigkeit, Empfang und Senden samt Auslastung, Fehlern, letztem Link-Wechsel und den Geräten am Port. Sie erscheint auch bei Tastatur-Fokus und bleibt beim Aktualisieren stehen.
 - **Entitäten wählbar:** In den Optionen legst du fest, welche Gruppen von Entitäten angelegt werden (Link, Datenraten, Geschwindigkeit, Datenmenge, Fehler, Pakete, Auslastung, Link-Wechsel, MAC-Adressen, Laufzeit, Port von Geräten) und für welche Ports. Abgewählte Entitäten werden aus der Registry entfernt. Ohne Auswahl bleibt alles wie bisher.
 
 ## 0.7.0 – 2026-11-04

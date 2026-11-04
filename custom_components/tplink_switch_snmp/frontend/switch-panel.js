@@ -86,6 +86,7 @@ class TplinkSwitchPanel extends HTMLElement {
     this._lookKey = null;
     this._menuOpen = false;
     this._lastData = 0;
+    this._tipPort = null;
   }
 
   set hass(hass) {
@@ -360,10 +361,11 @@ class TplinkSwitchPanel extends HTMLElement {
     const t = this._t;
     const sw = this._switch;
     if (sw && !sw.ports.some((p) => p.n === this._sel)) this._sel = (sw.ports.find((p) => p.up) || sw.ports[0])?.n ?? null;
-    root.innerHTML = `<style>${STYLES}</style>${this._header()}<main class="app">${
+    root.innerHTML = `<style>${STYLES}</style>${this._header()}<div class="tip" id="tip" role="tooltip" hidden></div><main class="app">${
       this._error && !this._data ? `<div class="card error">${esc(t("loadError", { e: this._error }))}</div>` : !sw ? `<div class="card empty">${esc(t("noSwitch"))}</div>` : this._switchCard(sw) + this._view(sw)
     }</main>`;
     this._bind();
+    this._showTip();
     if (this._tab === "overview" && sw) {
       const port = sw.ports.find((p) => p.n === this._sel);
       if (port && port.up) this._loadHistory(sw, port);
@@ -375,6 +377,59 @@ class TplinkSwitchPanel extends HTMLElement {
         if (focus.start != null && el.setSelectionRange) el.setSelectionRange(focus.start, focus.end);
       }
     }
+  }
+
+  // ---- tooltip of a port ---------------------------------------------------------------------
+
+  // What is known about a port, shown when the pointer or the keyboard focus is on its tile.
+  _tipHtml(sw, p) {
+    const t = this._t;
+    const rate = (label, value, util, color) =>
+      `<div class="tip-rate"><i style="background:${color}"></i><span>${esc(label)}</span><b class="mono">${p.up ? this._num(value) : "–"} Mbit/s</b><span class="sub">${p.up && util != null ? esc(this._util(util)) : ""}</span></div>`;
+    const tags = [
+      `<span class="tag ${p.up ? "ok" : ""}">${esc(p.up ? this._speedText(p) : t("noLink"))}</span>`,
+      p.admin_up === false ? `<span class="tag bad">${esc(t("switchedOff"))}</span>` : "",
+      p.up && p.speed > 0 && p.speed < 1000 ? `<span class="tag warn">${esc(t("only100"))}</span>` : "",
+      this._errors(p) ? `<span class="tag bad">${esc(t.count("errorsN", this._errors(p)))}</span>` : "",
+    ].join("");
+    const when = this._changedAt(sw, p);
+    const shown = p.macs.slice(0, 4);
+    const devices = shown.length
+      ? `<div class="tip-devs">${shown.map((m) => `<div><span>${m.name ? esc(m.name) : `<span class="muted">${esc(t("unknown"))}</span>`}</span><span class="mono muted">${esc(m.mac)}</span></div>`).join("")}${p.macs.length > shown.length ? `<div class="muted">${esc(t("moreN", { n: p.macs.length - shown.length }))}</div>` : ""}</div>`
+      : `<div class="sub">${esc(t("noDevices"))}</div>`;
+    return `<div class="tip-h"><b>${esc(t("port"))} ${p.n}</b>${p.name ? `<span class="muted"> · ${esc(p.name)}</span>` : ""}</div>
+      <div class="tip-tags">${tags}</div>
+      ${p.up ? rate(t("receive"), p.rx_rate, p.rx_util, "var(--rx)") + rate(t("send"), p.tx_rate, p.tx_util, "var(--tx)") : ""}
+      ${when ? `<div class="sub">${esc(t("linkChangedAgo", { when: this._ago(when) }))}</div>` : ""}
+      <div class="tip-sep"></div>${devices}`;
+  }
+
+  // Fills the tooltip for the port under the pointer and puts it above the tile, or below it
+  // when there is no room; it is called again after every draw because that replaces the content.
+  _showTip() {
+    const tip = this.shadowRoot.getElementById("tip");
+    const sw = this._switch;
+    const tile = this._tipPort != null ? this.shadowRoot.querySelector(`.port[data-v="${this._tipPort}"]`) : null;
+    const port = sw?.ports.find((p) => p.n === this._tipPort);
+    if (!tip || !tile || !port) {
+      if (tip) tip.hidden = true;
+      return;
+    }
+    tip.innerHTML = this._tipHtml(sw, port);
+    tip.hidden = false;
+    const r = tile.getBoundingClientRect();
+    const w = tip.offsetWidth;
+    const h = tip.offsetHeight;
+    const left = Math.min(Math.max(8, r.left + r.width / 2 - w / 2), window.innerWidth - w - 8);
+    const top = r.top - h - 8 >= 8 ? r.top - h - 8 : r.bottom + 8;
+    tip.style.left = `${left}px`;
+    tip.style.top = `${top}px`;
+  }
+
+  _setTip(number) {
+    if (this._tipPort === number) return;
+    this._tipPort = number;
+    this._showTip();
   }
 
   _header() {
@@ -434,7 +489,7 @@ class TplinkSwitchPanel extends HTMLElement {
     const t = this._t;
     const jack = (p) => {
       const speed = p.up ? (p.speed >= 1000 ? "1G" : p.speed >= 100 ? "100M" : "10M") : "";
-      return `<button class="port ${this._linkClass(p)} ${this._errors(p) ? "err" : ""} ${p.n === this._sel ? "sel" : ""}" data-a="port" data-v="${p.n}" aria-label="${esc(`${t("port")} ${p.n}, ${this._speedText(p)}`)}" title="${esc(this._portLabel(p))}"><span class="n">${p.n}</span><span class="jack"></span><span class="v">${speed}</span></button>`;
+      return `<button class="port ${this._linkClass(p)} ${this._errors(p) ? "err" : ""} ${p.n === this._sel ? "sel" : ""}" data-a="port" data-v="${p.n}" aria-label="${esc(`${t("port")} ${p.n}, ${this._speedText(p)}`)}"><span class="n">${p.n}</span><span class="jack"></span><span class="v">${speed}</span></button>`;
     };
     return `<div class="plate" style="--cols:${cols}"><div class="plate-row">${odd.map(jack).join("")}</div><div class="plate-row">${even.map(jack).join("")}</div></div>`;
   }
@@ -721,6 +776,11 @@ class TplinkSwitchPanel extends HTMLElement {
       }
       this._render();
     });
+    const tileOf = (event) => event.target.closest?.(".port[data-v]");
+    root.addEventListener("mouseover", (event) => this._setTip(tileOf(event) ? Number(tileOf(event).dataset.v) : null));
+    root.addEventListener("mouseleave", () => this._setTip(null));
+    root.addEventListener("focusin", (event) => this._setTip(tileOf(event) ? Number(tileOf(event).dataset.v) : null));
+    root.addEventListener("focusout", () => this._setTip(null));
     root.addEventListener("change", (event) => {
       if (event.target.dataset?.a === "switch") {
         this._entry = event.target.value;

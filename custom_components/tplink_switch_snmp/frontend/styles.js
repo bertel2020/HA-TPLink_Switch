@@ -68,6 +68,15 @@ nav { display: flex; gap: 2px; flex-wrap: wrap; }
 .plate-row { display: grid; grid-template-columns: repeat(var(--cols, 12), minmax(46px, 1fr)); gap: 8px; min-width: 640px; }
 .port { all: unset; box-sizing: border-box; cursor: pointer; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); padding: 5px 4px 6px; text-align: center; display: grid; gap: 3px; position: relative; }
 .port:hover { border-color: var(--accent); }
+.tip { position: fixed; z-index: 10; width: max-content; max-width: min(320px, calc(100vw - 16px)); padding: 10px 12px; border-radius: 10px; background: var(--surface); color: var(--text); border: 1px solid var(--line); box-shadow: 0 6px 24px rgba(16,24,40,.22); display: grid; gap: 6px; pointer-events: none; font-size: max(10.5px, calc(13px * var(--fs))); }
+.tip[hidden] { display: none; }
+.tip-h { font-size: max(10.5px, calc(15px * var(--fs))); }
+.tip-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+.tip-rate { display: grid; grid-template-columns: 10px 1fr auto auto; gap: 8px; align-items: center; }
+.tip-rate i { width: 10px; height: 10px; border-radius: 3px; }
+.tip-sep { border-top: 1px solid var(--line-2); }
+.tip-devs { display: grid; gap: 3px; }
+.tip-devs > div { display: flex; justify-content: space-between; gap: 12px; }
 .port .n { font-size: max(10.5px, calc(11px * var(--fs))); color: var(--muted); }
 .port .jack { height: 18px; border-radius: 4px; border: 2px solid var(--gdown); background: color-mix(in srgb, var(--gdown) 25%, transparent); }
 .port.s1000 .jack { border-color: var(--g1000); background: color-mix(in srgb, var(--g1000) 28%, transparent); }

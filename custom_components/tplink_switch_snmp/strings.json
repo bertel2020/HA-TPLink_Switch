@@ -9,29 +9,60 @@
           "community": "Community",
           "port": "Port"
         }
+      },
+      "reconfigure": {
+        "title": "Switch neu konfigurieren",
+        "description": "Neue Adresse, Community oder neuer Port für {title}. Es muss derselbe Switch antworten.",
+        "data": {
+          "host": "Host",
+          "community": "Community",
+          "port": "Port"
+        }
       }
     },
     "error": {
       "cannot_connect": "Der Switch antwortet nicht. Prüfe Adresse, Community und ob SNMP am Switch eingeschaltet und gespeichert ist."
     },
     "abort": {
-      "already_configured": "Dieser Switch ist bereits eingerichtet."
+      "already_configured": "Dieser Switch ist bereits eingerichtet.",
+      "reconfigure_successful": "Die Änderungen wurden übernommen.",
+      "wrong_device": "Unter dieser Adresse antwortet ein anderer Switch."
     }
   },
   "entity": {
     "binary_sensor": {
-      "link": { "name": "Port {port} Link" }
+      "link": {
+        "name": "Port {port} Link"
+      }
     },
     "sensor": {
-      "uptime": { "name": "Laufzeit" },
-      "rx_rate": { "name": "Port {port} Empfang" },
-      "tx_rate": { "name": "Port {port} Senden" },
-      "speed": { "name": "Port {port} Geschwindigkeit" },
-      "rx_total": { "name": "Port {port} Empfangen gesamt" },
-      "tx_total": { "name": "Port {port} Gesendet gesamt" },
-      "rx_errors": { "name": "Port {port} Empfangsfehler" },
-      "tx_errors": { "name": "Port {port} Sendefehler" },
-      "macs": { "name": "Port {port} MAC-Adressen" }
+      "uptime": {
+        "name": "Laufzeit"
+      },
+      "rx_rate": {
+        "name": "Port {port} Empfang"
+      },
+      "tx_rate": {
+        "name": "Port {port} Senden"
+      },
+      "speed": {
+        "name": "Port {port} Geschwindigkeit"
+      },
+      "rx_total": {
+        "name": "Port {port} Empfangen gesamt"
+      },
+      "tx_total": {
+        "name": "Port {port} Gesendet gesamt"
+      },
+      "rx_errors": {
+        "name": "Port {port} Empfangsfehler"
+      },
+      "tx_errors": {
+        "name": "Port {port} Sendefehler"
+      },
+      "macs": {
+        "name": "Port {port} MAC-Adressen"
+      }
     }
   }
 }

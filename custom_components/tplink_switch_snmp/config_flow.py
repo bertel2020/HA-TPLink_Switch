@@ -37,6 +37,16 @@ async def _probe(hass: HomeAssistant, data: dict[str, Any]) -> tuple[str, str]:
     return text(name), format_mac(mac)
 
 
+def _schema() -> vol.Schema:
+    return vol.Schema(
+        {
+            vol.Required(CONF_HOST): str,
+            vol.Required(CONF_COMMUNITY, default=DEFAULT_COMMUNITY): str,
+            vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
+        }
+    )
+
+
 class SwitchConfigFlow(ConfigFlow, domain=DOMAIN):
     """Ask for host and community and check that the switch answers."""
 
@@ -60,15 +70,32 @@ class SwitchConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
                 return self.async_create_entry(title=name, data=user_input)
 
-        schema = vol.Schema(
-            {
-                vol.Required(CONF_HOST): str,
-                vol.Required(CONF_COMMUNITY, default=DEFAULT_COMMUNITY): str,
-                vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
-            }
-        )
         return self.async_show_form(
             step_id="user",
-            data_schema=self.add_suggested_values_to_schema(schema, user_input),
+            data_schema=self.add_suggested_values_to_schema(_schema(), user_input),
             errors=errors,
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Change address, community or port of a switch that is already set up."""
+        entry = self._get_reconfigure_entry()
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            try:
+                _, mac = await _probe(self.hass, user_input)
+            except SnmpError:
+                errors["base"] = "cannot_connect"
+            else:
+                # The new address must answer with the same switch, not another one.
+                await self.async_set_unique_id(mac)
+                self._abort_if_unique_id_mismatch(reason="wrong_device")
+                return self.async_update_reload_and_abort(entry, data_updates=user_input)
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(_schema(), user_input or entry.data),
+            errors=errors,
+            description_placeholders={"title": entry.title},
         )

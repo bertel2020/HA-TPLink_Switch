@@ -3,3 +3,4 @@ pysnmp>=7.1.21
 aiooui>=0.1.9
 ruff
 mypy
+pytest-cov

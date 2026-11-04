@@ -30,7 +30,7 @@ jobs:
       - name: Check types
         run: mypy
       - name: Test
-        run: pytest
+        run: pytest --cov=custom_components/tplink_switch_snmp --cov-report=term-missing --cov-fail-under=98
       - name: Test the panel's look
         run: node --test tests/js/*.test.mjs
       - name: Check the panel scripts

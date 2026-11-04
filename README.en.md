@@ -152,6 +152,10 @@ A trap counts only if it comes from the switch's address, resolved when the inte
 
 *Devices & services → TP-Link Switch (SNMP) → ⋮ → Download diagnostics.* The file holds the version, counters, interval and the state of the ports, but no address, no credentials, no MAC addresses and no port names.
 
+## Development
+
+With Python 3.14: `pip install -r requirements-dev.txt`, then `ruff check .`, `mypy`, `pytest --cov=custom_components/tplink_switch_snmp` (coverage is 100 %, the CI demands at least 98 %) and `node --test tests/js/*.test.mjs`. The tests run against a fake switch (`tests/conftest.py`) and Home Assistant's test plugin.
+
 ## Limits
 
 - Without the option "Allow writing" it only reads; nothing is changed at the switch.

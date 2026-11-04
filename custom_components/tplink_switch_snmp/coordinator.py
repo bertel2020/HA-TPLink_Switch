@@ -139,10 +139,6 @@ class SwitchCoordinator(DataUpdateCoordinator[SwitchData]):
             await self._store.async_load(), dt_util.utcnow().timestamp()
         )
 
-    async def async_remove_history(self) -> None:
-        """Delete the stored rates when the switch is removed."""
-        await self._store.async_remove()
-
     async def _read_info(self, object_id: str) -> dict[str, str | None]:
         """Location, contact, model and versions. They do not change, so they are read once.
 

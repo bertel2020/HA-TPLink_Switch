@@ -153,6 +153,10 @@ Ein Trap gilt nur, wenn er von der Adresse des Switches kommt, die beim Start de
 
 *Geräte & Dienste → TP-Link Switch (SNMP) → ⋮ → Diagnose herunterladen.* Die Datei enthält Version, Zähler, Intervall und den Zustand der Ports, aber keine Adresse, keine Zugangsdaten, keine MAC-Adressen und keine Port-Namen.
 
+## Entwicklung
+
+Mit Python 3.14: `pip install -r requirements-dev.txt`, dann `ruff check .`, `mypy`, `pytest --cov=custom_components/tplink_switch_snmp` (die Abdeckung liegt bei 100 %, die CI verlangt mindestens 98 %) und `node --test tests/js/*.test.mjs`. Die Tests laufen gegen einen gefälschten Switch (`tests/conftest.py`) und das Test-Plugin von Home Assistant.
+
 ## Grenzen
 
 - Ohne die Option „Schreiben erlauben“ wird nur gelesen, nichts am Switch geändert.

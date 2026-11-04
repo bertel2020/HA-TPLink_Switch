@@ -35,6 +35,9 @@ Die Datenraten werden aus den 64-Bit-Zählern des Switches berechnet (Abfrage al
 
 ## Grenzen
 
-- Es wird nur gelesen (SNMP v1/v2c), nichts am Switch geändert.
-- Ports werden an ihrem Namen `port N: …` erkannt, wie ihn die JetStream-Firmware liefert. Switches mit anderer Benennung zeigen keine Ports.
+- Es wird nur gelesen, nichts am Switch geändert. Die Integration spricht **SNMP v2c**; v1 und v3 werden nicht unterstützt. Die Community geht im Klartext übers Netz.
+- Als Ports gelten die Ports der Bridge-Tabelle des Switches (die Nummer ist die Bridge-Port-Nummer), unabhängig von ihrer Benennung. VLAN-, Loopback- und Management-Schnittstellen sind keine Ports. Getestet ist das nur mit einem TL-SG3424; andere JetStream-Modelle sind nicht geprüft.
+- Hersteller und Modell stehen nicht eindeutig im Switch: Der Hersteller kommt aus der Enterprise-Nummer, als Modell dient die Gerätebeschreibung des Switches.
+- Die Laufzeit läuft über die 497 Tage hinaus, nach denen der Zähler des Switches überläuft. Startet Home Assistant danach neu, beginnt sie mit dem Wert des Zählers.
+- Adresse, Community oder Port ändern: *Geräte & Dienste → TP-Link Switch (SNMP) → ⋮ → Neu konfigurieren*. Es muss derselbe Switch antworten.
 - LLDP-Nachbarn stellt dieser Switch per SNMP nicht bereit.

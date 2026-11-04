@@ -2,6 +2,23 @@
 
 Alle nennenswerten Änderungen an dieser Integration werden hier festgehalten.
 
+## 0.3.0 – 2026-11-04
+
+### Neu
+
+- **Neu konfigurieren:** Adresse, Community und Port eines eingerichteten Switches lassen sich ändern, ohne ihn zu löschen. Antwortet unter der neuen Adresse ein anderer Switch, bricht der Dialog ab.
+
+### Geändert
+
+- Hersteller und Modell des Geräts kommen aus dem Switch (Enterprise-Nummer und Gerätebeschreibung) und sind nicht mehr fest auf „TL-SG3424“ gesetzt. Das Panel zeigt sie in den Details.
+- Als Ports gelten die Ports der Bridge-Tabelle des Switches, nicht mehr die Schnittstellen, deren Name mit „port“ beginnt. Damit werden auch Modelle mit anderer Benennung erkannt, und die VLAN-Schnittstelle zählt nie als Port. Beim TL-SG3424 bleiben Port-Nummern und Entitäts-IDs gleich.
+
+### Behoben
+
+- Die Laufzeit läuft weiter, wenn der Zähler des Switches nach 497 Tagen überläuft, und beginnt nur nach einem echten Neustart von vorn.
+- Die Namen von Geräten im Panel nutzen die aktuelle Abfrage der Geräte-Registry von Home Assistant, die ältere ist seit 2026.10 veraltet.
+- Das README nannte SNMP v1/v2c; unterstützt wird nur v2c.
+
 ## 0.2.0 – 2026-11-04
 
 ### Neu

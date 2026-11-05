@@ -7,7 +7,7 @@ from datetime import datetime
 import re
 from typing import Any
 
-from .const import ADMIN_DOWN, ADMIN_UP, ERROR_DETAILS, PORT_MODES, STORM_LIMITS
+from .const import ADMIN_DOWN, ADMIN_UP, ERROR_DETAILS, PORT_MODES, STORM_LIMITS, STP_STATES
 
 PORT_NAME = re.compile(r"^port\s*(\d+)", re.IGNORECASE)
 OPER_UP = 1
@@ -54,6 +54,7 @@ class PortData:
     security_learned: int | None = None  # ... and how many it has learned (None: not on)
     storm: dict[str, int] = field(default_factory=dict)  # storm control limits in kbit/s
     error_details: dict[str, int] = field(default_factory=dict)  # RMON: CRC, collisions ...
+    stp_state: str | None = None  # spanning tree: "forwarding", "blocking", ...
 
 
 @dataclass
@@ -69,6 +70,8 @@ class SwitchData:
     sw_version: str | None = None
     location: str | None = None
     contact: str | None = None
+    stp_changes: int | None = None  # how often the spanning tree topology has changed
+    stp_root_port: int | None = None  # the port that leads to the root bridge
 
     @property
     def mac_ports(self) -> dict[str, int]:
@@ -290,6 +293,36 @@ def add_error_details(ports: dict[int, PortData], extras: dict[str, dict[str, An
             value = extras.get(column, {}).get(row)
             if isinstance(value, int):
                 port.error_details[kind] = value
+
+
+def add_stp(
+    ports: dict[int, PortData],
+    extras: dict[str, dict[str, Any]],
+    base_port_to_if: dict[str, Any],
+) -> tuple[int | None, int | None]:
+    """Fill in the spanning tree state of the ports.
+
+    Returns how often the topology has changed and the port that leads to the root bridge;
+    each is None if the switch does not say.
+    """
+    by_if = {port.if_index: port for port in ports.values()}
+
+    def port_of(base_port: Any) -> PortData | None:
+        if_index = base_port_to_if.get(str(base_port), base_port)
+        return by_if.get(int(if_index)) if str(if_index).isdigit() else None
+
+    for base_port, value in extras.get("stp_state", {}).items():
+        port = port_of(base_port)
+        if port is not None and isinstance(value, int) and value in STP_STATES:
+            port.stp_state = STP_STATES[value]
+
+    changes = extras.get("stp_changes", {}).get("0")
+    root = extras.get("stp_root_port", {}).get("0")
+    root_port = port_of(root) if isinstance(root, int) and root > 0 else None
+    return (
+        changes if isinstance(changes, int) else None,
+        root_port.number if root_port else None,
+    )
 
 
 STORM_KINDS = {"storm_bc": "broadcast", "storm_mc": "multicast", "storm_ul": "unicast"}

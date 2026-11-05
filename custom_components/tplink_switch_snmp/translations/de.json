@@ -153,6 +153,9 @@
       },
       "collisions": {
         "name": "Port {port} Kollisionen"
+      },
+      "stp_changes": {
+        "name": "STP-Topologieänderungen"
       }
     },
     "switch": {
@@ -203,7 +206,8 @@
         "uptime": "Laufzeit des Switches",
         "devices": "Port von bekannten Geräten",
         "loop": "Schleife erkannt (Schleifenerkennung des Switches)",
-        "error_details": "Fehler im Detail (CRC, Kollisionen, zu kurze und zu lange Pakete)"
+        "error_details": "Fehler im Detail (CRC, Kollisionen, zu kurze und zu lange Pakete)",
+        "stp": "Spanning Tree: Zahl der Topologieänderungen"
       }
     }
   },

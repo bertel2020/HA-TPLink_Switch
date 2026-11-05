@@ -55,6 +55,8 @@ def async_remove_unwanted(hass: HomeAssistant, entry: SwitchConfigEntry) -> None
     for reg in er.async_entries_for_config_entry(registry, entry.entry_id):
         if reg.unique_id.endswith("_uptime"):
             unwanted = "uptime" not in groups
+        elif reg.unique_id.endswith("_stp_changes"):
+            unwanted = "stp" not in groups
         elif reg.translation_key == "device_port":
             unwanted = "devices" not in groups
         elif match := _PORT_ID.search(reg.unique_id):

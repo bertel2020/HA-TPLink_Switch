@@ -153,6 +153,9 @@
       },
       "collisions": {
         "name": "Port {port} Collisions"
+      },
+      "stp_changes": {
+        "name": "STP topology changes"
       }
     },
     "switch": {
@@ -203,7 +206,8 @@
         "uptime": "Uptime of the switch",
         "devices": "Port of known devices",
         "loop": "Loop found (the switch's loop detection)",
-        "error_details": "Error details (CRC, collisions, undersize and oversize packets)"
+        "error_details": "Error details (CRC, collisions, undersize and oversize packets)",
+        "stp": "Spanning tree: number of topology changes"
       }
     }
   },

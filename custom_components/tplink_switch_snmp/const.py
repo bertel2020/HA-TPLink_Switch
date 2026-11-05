@@ -115,6 +115,21 @@ ERROR_DETAILS = {
     "jabbers": "rmon_jabber",
     "collisions": "rmon_coll",
 }
+# Spanning tree (standard BRIDGE-MIB, dot1dStp): topology changes, the root port, the port states
+OID_STP = "1.3.6.1.2.1.17.2"
+STP_TABLES = {
+    "stp_changes": f"{OID_STP}.4",  # dot1dStpTopChanges
+    "stp_root_port": f"{OID_STP}.7",  # dot1dStpRootPort
+    "stp_state": f"{OID_STP}.15.1.3",  # dot1dStpPortState
+}
+STP_STATES = {
+    1: "disabled",
+    2: "blocking",
+    3: "listening",
+    4: "learning",
+    5: "forwarding",
+    6: "broken",
+}
 OID_SYS_NAME = "1.3.6.1.2.1.1.5.0"
 OID_BRIDGE_ADDRESS = "1.3.6.1.2.1.17.1.1.0"
 
@@ -187,5 +202,5 @@ PORT_ENTITY_GROUPS: dict[str, tuple[str, ...]] = {
     "error_details": tuple(ERROR_DETAILS),
 }
 # groups of entities that belong to the switch and not to a port
-SWITCH_ENTITY_GROUPS = ("uptime", "devices")
+SWITCH_ENTITY_GROUPS = ("uptime", "devices", "stp")
 ENTITY_GROUPS = (*PORT_ENTITY_GROUPS, *SWITCH_ENTITY_GROUPS)

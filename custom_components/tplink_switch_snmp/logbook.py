@@ -26,6 +26,7 @@ ALARM_TEXTS = {
     "loop": "loop detection reports a change",
     "broadcast_storm": "broadcast storm control limit exceeded",
     "multicast_storm": "multicast storm control limit exceeded",
+    "stp_topology_change": "spanning tree topology changed",
 }
 
 

@@ -85,6 +85,7 @@ def _switch(hass: HomeAssistant, entry: SwitchConfigEntry) -> dict[str, Any]:
                 "security_learned": port.security_learned,
                 "storm": port.storm,
                 "error_details": port.error_details,
+                "stp_state": port.stp_state,
                 "loop": port.loop,
                 "loop_blocked": port.loop_blocked,
                 "rx_util": port.rx_util,
@@ -105,6 +106,8 @@ def _switch(hass: HomeAssistant, entry: SwitchConfigEntry) -> dict[str, Any]:
         "location": data.location,
         "contact": data.contact,
         "uptime": data.uptime,
+        "stp_changes": data.stp_changes,
+        "stp_root_port": data.stp_root_port,
         "interval": int(coordinator.update_interval.total_seconds())
         if coordinator.update_interval
         else 0,

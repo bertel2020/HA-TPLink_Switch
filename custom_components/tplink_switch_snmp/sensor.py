@@ -246,6 +246,8 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
     groups = selected_groups(entry)
     entities: list[SensorEntity] = [SwitchUptime(coordinator)] if "uptime" in groups else []
+    if "stp" in groups and coordinator.data.stp_changes is not None:
+        entities.append(SwitchStpChanges(coordinator))
     entities.extend(
         PortSensor(coordinator, number, description)
         for number in coordinator.data.ports
@@ -312,6 +314,23 @@ class SwitchUptime(SwitchEntity, SensorEntity):
     @property
     def native_value(self) -> int:
         return self.coordinator.data.uptime
+
+
+class SwitchStpChanges(SwitchEntity, SensorEntity):
+    """How often the spanning tree topology has changed: a restless network shows here."""
+
+    _attr_translation_key = "stp_changes"
+    _attr_state_class = SensorStateClass.TOTAL_INCREASING
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_entity_registry_enabled_default = False
+
+    def __init__(self, coordinator: SwitchCoordinator) -> None:
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{self._mac}_stp_changes"
+
+    @property
+    def native_value(self) -> int | None:
+        return self.coordinator.data.stp_changes
 
 
 class PortSensor(PortEntity, SensorEntity):

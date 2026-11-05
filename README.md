@@ -112,11 +112,11 @@ Pro Port:
 | **Pakete/s Empfang/Senden**, **Broadcast/Multicast Empfang** | aus | aus den Paketzählern |
 | **Port N aktiv** (switch) | nur mit Schreiben | schaltet den Port ein oder aus |
 
-Am Gerät: **Laufzeit**. Für jedes Gerät, das Home Assistant über seine MAC-Adresse kennt und das am Switch gelernt wurde, kommt ein Sensor **Port von …** dazu: Er zeigt die Port-Nummer, im Attribut `port_name` den Namen des Ports. Der Sensor gehört zum Switch, nicht zum Gerät der anderen Integration, denn ein Gerät gehört in Home Assistant genau einer Integration.
+Am Gerät: **Laufzeit** und, wenn der Switch Spanning Tree meldet, **STP-Topologieänderungen** (standardmäßig aus). Für jedes Gerät, das Home Assistant über seine MAC-Adresse kennt und das am Switch gelernt wurde, kommt ein Sensor **Port von …** dazu: Er zeigt die Port-Nummer, im Attribut `port_name` den Namen des Ports. Der Sensor gehört zum Switch, nicht zum Gerät der anderen Integration, denn ein Gerät gehört in Home Assistant genau einer Integration.
 
 ### Welche Entitäten angelegt werden
 
-Unter **Konfigurieren** wählst du, welche Gruppen von Entitäten es gibt (Link, Datenraten, Geschwindigkeit, Datenmenge, Fehler, Pakete, Auslastung, Link-Wechsel, MAC-Adressen, Schleife, Fehler im Detail, Laufzeit, Port von Geräten) und für welche Ports (leer = alle). Was du abwählst, wird nicht angelegt und aus der Entitäten-Liste entfernt; dabei werden auch deren Verlaufsdaten in Home Assistant nicht mehr fortgeschrieben. Das Panel ist nicht betroffen, es liest direkt vom Switch.
+Unter **Konfigurieren** wählst du, welche Gruppen von Entitäten es gibt (Link, Datenraten, Geschwindigkeit, Datenmenge, Fehler, Pakete, Auslastung, Link-Wechsel, MAC-Adressen, Schleife, Fehler im Detail, STP, Laufzeit, Port von Geräten) und für welche Ports (leer = alle). Was du abwählst, wird nicht angelegt und aus der Entitäten-Liste entfernt; dabei werden auch deren Verlaufsdaten in Home Assistant nicht mehr fortgeschrieben. Das Panel ist nicht betroffen, es liest direkt vom Switch.
 
 ## Ereignisse und Logbuch
 
@@ -124,7 +124,7 @@ Beide Ereignisse erscheinen im Logbuch und lassen sich in Automationen als Ausl�
 
 - `tplink_switch_snmp_link_changed`: Ein Link hat gewechselt. Daten: `port`, `port_name`, `up`, `speed`, `flap` (der Link fiel zwischen zwei Abfragen aus und kam wieder), `switch`, `entry_id`, `entity_id`. Nach einem Neustart des Switches gibt es keine Ereignisse.
 - `tplink_switch_snmp_device_moved`: Ein Gerät, das Home Assistant kennt, taucht an einem anderen Port auf. Daten: `mac`, `name`, `device_id`, `from_port`, `from_port_name`, `to_port`, `to_port_name`, `switch`, `entry_id`.
-- `tplink_switch_snmp_alarm`: Der Switch meldet per Trap einen Alarm (nur mit eingeschaltetem Trap-Empfang). Daten: `alarm` (`cpu_load` und `memory_load` über 80 %, `loop`, `broadcast_storm`, `multicast_storm`), `switch`, `entry_id`.
+- `tplink_switch_snmp_alarm`: Der Switch meldet per Trap einen Alarm (nur mit eingeschaltetem Trap-Empfang). Daten: `alarm` (`cpu_load` und `memory_load` über 80 %, `loop`, `broadcast_storm`, `multicast_storm`; außerdem `stp_topology_change`, wenn sich die Spanning-Tree-Topologie ändert, auch ohne Traps), `switch`, `entry_id`.
 
 ```yaml
 triggers:

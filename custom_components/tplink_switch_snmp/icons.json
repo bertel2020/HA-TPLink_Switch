@@ -89,6 +89,9 @@
       },
       "collisions": {
         "default": "mdi:car-multiple"
+      },
+      "stp_changes": {
+        "default": "mdi:graph-outline"
       }
     },
     "switch": {

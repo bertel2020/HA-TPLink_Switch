@@ -59,6 +59,7 @@ from .const import (
     OID_TPLINK_HARDWARE,
     PROTECTED_MAC_COUNT,
     RMON_TABLES,
+    STP_TABLES,
     TRAP_ALARMS,
     VERSION_1,
 )
@@ -73,6 +74,7 @@ from .model import (
     add_rates,
     add_security,
     add_storm,
+    add_stp,
     build_ports,
     manufacturer,
     split_hardware,
@@ -205,6 +207,9 @@ class SwitchCoordinator(DataUpdateCoordinator[SwitchData]):
         elapsed = now - self._last_poll if self._last_poll is not None else 0
         add_rates(ports, previous, elapsed, 32 if self._v1 else 64)
         add_error_details(ports, await self._read_extras(RMON_TABLES))
+        stp_changes, stp_root_port = add_stp(
+            ports, await self._read_extras(STP_TABLES), tables["base_port"]
+        )
         if manufacturer(text(system.get(OID_SYS_OBJECT_ID, ""))) == "TP-Link":
             extras = await self._read_extras(EXTRA_TABLES)
             add_loops(ports, extras)
@@ -240,9 +245,17 @@ class SwitchCoordinator(DataUpdateCoordinator[SwitchData]):
             sw_version=self._info.get("firmware"),
             location=self._info.get("location"),
             contact=self._info.get("contact"),
+            stp_changes=stp_changes,
+            stp_root_port=stp_root_port,
         )
         if self.data:
             self._fire_move_events(data, self.data)
+            if (
+                data.stp_changes is not None
+                and self.data.stp_changes is not None
+                and data.stp_changes > self.data.stp_changes
+            ):
+                self._fire_alarm_event("stp_topology_change")
         return data
 
     def _stamp_link_changes(self, ports: dict[int, PortData], ticks: int) -> None:
@@ -283,14 +296,17 @@ class SwitchCoordinator(DataUpdateCoordinator[SwitchData]):
     def fire_alarm(self, trap: str | None) -> None:
         """Fire an event if the trap is one of the alarms the switch reports on its own."""
         alarm = TRAP_ALARMS.get(trap or "")
-        if alarm is None:
-            return
+        if alarm is not None:
+            self._fire_alarm_event(alarm)
+
+    def _fire_alarm_event(self, alarm: str, **details: Any) -> None:
         self.hass.bus.async_fire(
             EVENT_ALARM,
             {
                 "entry_id": self.config_entry.entry_id,
                 "switch": self.config_entry.title,
                 "alarm": alarm,
+                **details,
             },
         )
 

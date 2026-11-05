@@ -6,6 +6,8 @@ All notable changes to this integration are recorded here.
 
 ### New
 
+- **The panel shows its menu and tabs at once:** The panel draws the top bar and tabs as soon as it opens and says "Loading data …" until the switch answers. If the first load fails, it tries again after 3 seconds instead of staying empty until a reload.
+
 - **Loop detection:** for every port where the switch's loop detection is on there is a binary sensor **Port N loop** (problem; attribute `blocked` when the switch has blocked the port). The panel shows a note and a tag on the port's card. The values come from TP-Link's MIB for the TL-SG3424 and are not yet checked against real hardware; if the table is missing, the sensors are simply not created. New group "Loop found" in the options (if you saved the selection before, pick it there).
 - **Port settings in the panel:** the panel reads from TP-Link's table how a port is set (auto negotiation or fixed to 10/100/1000 Mbit/s with duplex), the flow control and the trunk. A port with a fixed setting gets a tag on its card and a note on the overview, because the other end then has to be set the same way. A trunk is tagged too. This often explains ports that run at 100 Mbit/s only. This is not yet checked against real hardware either.
 - **Port security:** if a port has the switch's port security on and has learned as many MAC addresses as it may, the panel tags it and shows a note on the overview: one more device does not get onto the network at that port. Not yet checked against real hardware.

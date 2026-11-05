@@ -107,7 +107,11 @@ class TplinkSwitchPanel extends HTMLElement {
       this._t = translator(lang);
       if (this._data) this._render();
     }
-    if (first) this._load();
+    if (first) {
+      // menu and tabs stand at once; the data follow
+      this._render();
+      this._load();
+    }
     if (this.isConnected) this._subscribe();
   }
 
@@ -166,6 +170,8 @@ class TplinkSwitchPanel extends HTMLElement {
       this._lastData = Date.now();
     } catch (err) {
       this._error = err?.message || String(err);
+      // right after the start the connection may not be ready: try again soon
+      if (!this._data) setTimeout(() => this._load(), 3000);
     } finally {
       this._loading = false;
     }
@@ -362,7 +368,7 @@ class TplinkSwitchPanel extends HTMLElement {
     const sw = this._switch;
     if (sw && !sw.ports.some((p) => p.n === this._sel)) this._sel = (sw.ports.find((p) => p.up) || sw.ports[0])?.n ?? null;
     root.innerHTML = `<style>${STYLES}</style>${this._header()}<div class="tip" id="tip" role="tooltip" hidden></div><main class="app">${
-      this._error && !this._data ? `<div class="card error">${esc(t("loadError", { e: this._error }))}</div>` : !sw ? `<div class="card empty">${esc(t("noSwitch"))}</div>` : this._switchCard(sw) + this._view(sw)
+      this._error && !this._data ? `<div class="card error">${esc(t("loadError", { e: this._error }))}</div>` : !this._data ? `<div class="card empty">${esc(t("loading"))}</div>` : !sw ? `<div class="card empty">${esc(t("noSwitch"))}</div>` : this._switchCard(sw) + this._view(sw)
     }</main>`;
     this._bind();
     this._showTip();

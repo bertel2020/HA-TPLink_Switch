@@ -107,6 +107,7 @@ Per port:
 | **Receive / transmit errors** | off | |
 | **CRC errors, collisions, undersize/oversize packets, fragments, jabbers** | off | only at ports the switch reports RMON values for |
 | **Illegal ARP packets** | off | only at ports the switch reports ARP detection values for |
+| **PVID** | off | only at ports the switch reports VLAN values for; attributes `untagged` and `tagged` |
 | **Receive / transmit discarded** | off | discarded packets |
 | **Link changed** (timestamp) | off | time of the last link change |
 | **Packets/s receive/transmit**, **broadcast/multicast receive** | off | from the packet counters |
@@ -116,7 +117,7 @@ On the device: **Uptime** and, if the switch reports spanning tree, **STP topolo
 
 ### Which entities are created
 
-Under **Configure** you choose which groups of entities exist (link, rates, speed, data totals, errors, packets, utilization, link changes, MAC addresses, loop, error details, ARP, STP, uptime, port of devices) and for which ports (empty = all). What you deselect is not created and is removed from the entity list; its history in Home Assistant is no longer updated. The panel is not affected, it reads from the switch directly.
+Under **Configure** you choose which groups of entities exist (link, rates, speed, data totals, errors, packets, utilization, link changes, MAC addresses, loop, error details, ARP, STP, VLAN, uptime, port of devices) and for which ports (empty = all). What you deselect is not created and is removed from the entity list; its history in Home Assistant is no longer updated. The panel is not affected, it reads from the switch directly.
 
 ## Events and logbook
 

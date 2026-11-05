@@ -108,6 +108,7 @@ Pro Port:
 | **Empfangsfehler/Sendefehler** | aus | |
 | **CRC-Fehler, Kollisionen, zu kurze/lange Pakete, Fragmente, Jabber** | aus | nur an Ports, für die der Switch RMON-Werte meldet |
 | **Unzulässige ARP-Pakete** | aus | nur an Ports, für die der Switch Werte der ARP-Erkennung meldet |
+| **PVID** | aus | nur an Ports, für die der Switch VLAN-Werte meldet; Attribute `untagged` und `tagged` |
 | **Empfang/Senden verworfen** | aus | verworfene Pakete |
 | **Link geändert** (Zeitstempel) | aus | Zeitpunkt des letzten Link-Wechsels |
 | **Pakete/s Empfang/Senden**, **Broadcast/Multicast Empfang** | aus | aus den Paketzählern |
@@ -117,7 +118,7 @@ Am Gerät: **Laufzeit** und, wenn der Switch Spanning Tree meldet, **STP-Topolog
 
 ### Welche Entitäten angelegt werden
 
-Unter **Konfigurieren** wählst du, welche Gruppen von Entitäten es gibt (Link, Datenraten, Geschwindigkeit, Datenmenge, Fehler, Pakete, Auslastung, Link-Wechsel, MAC-Adressen, Schleife, Fehler im Detail, ARP, STP, Laufzeit, Port von Geräten) und für welche Ports (leer = alle). Was du abwählst, wird nicht angelegt und aus der Entitäten-Liste entfernt; dabei werden auch deren Verlaufsdaten in Home Assistant nicht mehr fortgeschrieben. Das Panel ist nicht betroffen, es liest direkt vom Switch.
+Unter **Konfigurieren** wählst du, welche Gruppen von Entitäten es gibt (Link, Datenraten, Geschwindigkeit, Datenmenge, Fehler, Pakete, Auslastung, Link-Wechsel, MAC-Adressen, Schleife, Fehler im Detail, ARP, STP, VLAN, Laufzeit, Port von Geräten) und für welche Ports (leer = alle). Was du abwählst, wird nicht angelegt und aus der Entitäten-Liste entfernt; dabei werden auch deren Verlaufsdaten in Home Assistant nicht mehr fortgeschrieben. Das Panel ist nicht betroffen, es liest direkt vom Switch.
 
 ## Ereignisse und Logbuch
 

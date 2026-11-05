@@ -86,6 +86,9 @@ def _switch(hass: HomeAssistant, entry: SwitchConfigEntry) -> dict[str, Any]:
                 "storm": port.storm,
                 "error_details": port.error_details,
                 "stp_state": port.stp_state,
+                "pvid": port.pvid,
+                "vlans_untagged": port.vlans_untagged,
+                "vlans_tagged": port.vlans_tagged,
                 "arp_illegal": port.arp_illegal,
                 "arp_trusted": port.arp_trusted,
                 "loop": port.loop,
@@ -110,6 +113,7 @@ def _switch(hass: HomeAssistant, entry: SwitchConfigEntry) -> dict[str, Any]:
         "uptime": data.uptime,
         "stp_changes": data.stp_changes,
         "stp_root_port": data.stp_root_port,
+        "vlans": {str(vlan): name for vlan, name in data.vlans.items()},
         "interval": int(coordinator.update_interval.total_seconds())
         if coordinator.update_interval
         else 0,

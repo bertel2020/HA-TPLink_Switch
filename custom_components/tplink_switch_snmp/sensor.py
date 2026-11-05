@@ -160,6 +160,13 @@ PORT_SENSORS: tuple[PortSensorDescription, ...] = (
         value_fn=lambda p: p.arp_illegal,
     ),
     PortSensorDescription(
+        key="pvid",
+        translation_key="pvid",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda p: p.pvid,
+    ),
+    PortSensorDescription(
         key="rx_discards",
         translation_key="rx_discards",
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -251,6 +258,8 @@ def _reported(key: str, port: PortData) -> bool:
         return key in port.error_details
     if key == "arp_illegal":
         return port.arp_illegal is not None
+    if key == "pvid":
+        return port.pvid is not None
     return True
 
 
@@ -371,6 +380,9 @@ class PortSensor(PortEntity, SensorEntity):
         attributes = super().extra_state_attributes
         if self.entity_description.key == "macs" and self.port:
             attributes["mac_addresses"] = self.port.macs
+        if self.entity_description.key == "pvid" and self.port:
+            attributes["untagged"] = self.port.vlans_untagged
+            attributes["tagged"] = self.port.vlans_tagged
         return attributes
 
 

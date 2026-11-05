@@ -62,6 +62,7 @@ from .const import (
     STP_TABLES,
     TRAP_ALARMS,
     VERSION_1,
+    VLAN_TABLES,
 )
 from .history import RateHistory
 from .model import (
@@ -76,6 +77,7 @@ from .model import (
     add_security,
     add_storm,
     add_stp,
+    add_vlans,
     build_ports,
     manufacturer,
     split_hardware,
@@ -211,6 +213,7 @@ class SwitchCoordinator(DataUpdateCoordinator[SwitchData]):
         stp_changes, stp_root_port = add_stp(
             ports, await self._read_extras(STP_TABLES), tables["base_port"]
         )
+        vlans = add_vlans(ports, await self._read_extras(VLAN_TABLES), tables["base_port"])
         if manufacturer(text(system.get(OID_SYS_OBJECT_ID, ""))) == "TP-Link":
             extras = await self._read_extras(EXTRA_TABLES)
             add_loops(ports, extras)
@@ -249,6 +252,7 @@ class SwitchCoordinator(DataUpdateCoordinator[SwitchData]):
             contact=self._info.get("contact"),
             stp_changes=stp_changes,
             stp_root_port=stp_root_port,
+            vlans=vlans,
         )
         if self.data:
             self._fire_move_events(data, self.data)

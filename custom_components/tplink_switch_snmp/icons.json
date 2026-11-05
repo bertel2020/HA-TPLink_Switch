@@ -95,6 +95,9 @@
       },
       "arp_illegal": {
         "default": "mdi:shield-alert-outline"
+      },
+      "pvid": {
+        "default": "mdi:lan"
       }
     },
     "switch": {

@@ -57,6 +57,9 @@ class PortData:
     stp_state: str | None = None  # spanning tree: "forwarding", "blocking", ...
     arp_illegal: int | None = None  # illegal ARP packets seen (the switch's ARP protection)
     arp_trusted: bool | None = None  # the port is trusted by the ARP protection
+    pvid: int | None = None  # the VLAN that untagged frames at this port belong to
+    vlans_untagged: list[int] = field(default_factory=list)  # VLANs sent without a tag
+    vlans_tagged: list[int] = field(default_factory=list)  # VLANs sent with a tag
 
 
 @dataclass
@@ -74,6 +77,7 @@ class SwitchData:
     contact: str | None = None
     stp_changes: int | None = None  # how often the spanning tree topology has changed
     stp_root_port: int | None = None  # the port that leads to the root bridge
+    vlans: dict[int, str] = field(default_factory=dict)  # VLAN ID -> name
 
     @property
     def mac_ports(self) -> dict[str, int]:
@@ -338,6 +342,49 @@ def add_arp(ports: dict[int, PortData], extras: dict[str, dict[str, Any]]) -> No
             port.arp_illegal = illegal
             state = extras.get("arp_state", {}).get(str(number))
             port.arp_trusted = state == 1 if isinstance(state, int) else None
+
+
+def bitmap_ports(bits: Any) -> set[int]:
+    """The bridge ports set in a PortList: the first bit of the first byte is port 1."""
+    if not isinstance(bits, bytes):
+        return set()
+    return {
+        index * 8 + bit + 1
+        for index, byte in enumerate(bits)
+        for bit in range(8)
+        if byte & (0x80 >> bit)
+    }
+
+
+def add_vlans(
+    ports: dict[int, PortData],
+    extras: dict[str, dict[str, Any]],
+    base_port_to_if: dict[str, Any],
+) -> dict[int, str]:
+    """Fill in the PVID and the VLAN membership of the ports; returns the VLAN names."""
+    by_if = {port.if_index: port for port in ports.values()}
+
+    def port_of(base_port: int | str) -> PortData | None:
+        if_index = base_port_to_if.get(str(base_port), base_port)
+        return by_if.get(int(if_index)) if str(if_index).isdigit() else None
+
+    for base_port, pvid in extras.get("vlan_pvid", {}).items():
+        port = port_of(base_port)
+        if port is not None and isinstance(pvid, int):
+            port.pvid = pvid
+
+    names: dict[int, str] = {}
+    for key, name in extras.get("vlan_name", {}).items():
+        if not key.isdigit():
+            continue
+        vlan = int(key)
+        names[vlan] = text(name)
+        untagged = bitmap_ports(extras.get("vlan_untagged", {}).get(key))
+        for member in bitmap_ports(extras.get("vlan_egress", {}).get(key)):
+            port = port_of(member)
+            if port is not None:
+                (port.vlans_untagged if member in untagged else port.vlans_tagged).append(vlan)
+    return names
 
 
 STORM_KINDS = {"storm_bc": "broadcast", "storm_mc": "multicast", "storm_ul": "unicast"}

@@ -159,6 +159,9 @@
       },
       "arp_illegal": {
         "name": "Port {port} Illegal ARP packets"
+      },
+      "pvid": {
+        "name": "Port {port} PVID"
       }
     },
     "switch": {
@@ -211,7 +214,8 @@
         "loop": "Loop found (the switch's loop detection)",
         "error_details": "Error details (CRC, collisions, undersize and oversize packets)",
         "stp": "Spanning tree: number of topology changes",
-        "arp": "Illegal ARP packets (the switch's ARP protection)"
+        "arp": "Illegal ARP packets (the switch's ARP protection)",
+        "vlan": "VLAN: PVID and membership per port"
       }
     }
   },

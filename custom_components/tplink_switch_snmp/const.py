@@ -134,6 +134,14 @@ STP_STATES = {
     5: "forwarding",
     6: "broken",
 }
+# VLANs (standard Q-BRIDGE-MIB): the names, who is a member and who sends untagged, the PVID
+OID_VLAN = "1.3.6.1.2.1.17.7.1.4"
+VLAN_TABLES = {
+    "vlan_name": f"{OID_VLAN}.3.1.1",  # dot1qVlanStaticName, by VLAN ID
+    "vlan_egress": f"{OID_VLAN}.3.1.2",  # dot1qVlanStaticEgressPorts: a bit per bridge port
+    "vlan_untagged": f"{OID_VLAN}.3.1.4",  # dot1qVlanStaticUntaggedPorts
+    "vlan_pvid": f"{OID_VLAN}.5.1.1",  # dot1qPvid, by bridge port
+}
 OID_SYS_NAME = "1.3.6.1.2.1.1.5.0"
 OID_BRIDGE_ADDRESS = "1.3.6.1.2.1.17.1.1.0"
 
@@ -205,6 +213,7 @@ PORT_ENTITY_GROUPS: dict[str, tuple[str, ...]] = {
     "loop": ("loop",),
     "error_details": tuple(ERROR_DETAILS),
     "arp": ("arp_illegal",),
+    "vlan": ("pvid",),
 }
 # groups of entities that belong to the switch and not to a port
 SWITCH_ENTITY_GROUPS = ("uptime", "devices", "stp")

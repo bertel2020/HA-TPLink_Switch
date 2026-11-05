@@ -528,6 +528,13 @@ class TplinkSwitchPanel extends HTMLElement {
     const lines = [];
     const detail = this._detailText(p);
     if (detail) lines.push(detail);
+    if (p.pvid != null) {
+      const list = (v) => v.join(", ");
+      const parts = [`PVID ${p.pvid}`];
+      if (p.vlans_untagged?.length) parts.push(`${t("vlanUntagged")} ${list(p.vlans_untagged)}`);
+      if (p.vlans_tagged?.length) parts.push(`${t("vlanTagged")} ${list(p.vlans_tagged)}`);
+      lines.push(`VLAN: ${parts.join(" · ")}`);
+    }
     if (p.flow_control) lines.push(t("flowOn"));
     if (p.arp_illegal > 0) lines.push(t("arpIllegal", { n: p.arp_illegal }));
     if (p.security_max != null) lines.push(t("secCount", { n: p.security_learned ?? "–", max: p.security_max }));

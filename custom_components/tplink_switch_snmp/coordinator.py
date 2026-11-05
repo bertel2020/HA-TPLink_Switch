@@ -50,6 +50,8 @@ from .const import (
     OID_IF_OUT_ERRORS,
     OID_IF_OUT_OCTETS,
     OID_IF_PACKETS,
+    OID_REBOOT,
+    OID_SAVE_CONFIG,
     OID_SYS_CONTACT,
     OID_SYS_DESCR,
     OID_SYS_LOCATION,
@@ -387,6 +389,27 @@ class SwitchCoordinator(DataUpdateCoordinator[SwitchData]):
     async def async_set_port_alias(self, number: int, name: str) -> None:
         """Give a port a name at the switch (ifAlias)."""
         await self._write(OID_IF_ALIAS, name, number)
+
+    async def _act(self, oid: str, action: str) -> None:
+        """Write 1 to a TP-Link object that does something when it is set."""
+        if not self.can_write:
+            raise ServiceValidationError(translation_domain=DOMAIN, translation_key="write_off")
+        try:
+            await self.client.set(oid, 1)
+        except SnmpError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="action_failed",
+                translation_placeholders={"action": action, "error": str(err)},
+            ) from err
+
+    async def async_save_config(self) -> None:
+        """Write the running configuration of the switch to its flash."""
+        await self._act(OID_SAVE_CONFIG, "save")
+
+    async def async_reboot(self) -> None:
+        """Restart the switch. It does not answer for a while, so there is no refresh."""
+        await self._act(OID_REBOOT, "reboot")
 
     @property
     def _issue_id(self) -> str:

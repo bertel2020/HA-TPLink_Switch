@@ -142,6 +142,7 @@ triggers:
 Standardmäßig liest die Integration nur. In den Optionen lässt sich **Schreiben am Switch erlauben** einschalten; dann gibt es:
 
 - einen Schalter **Port N aktiv** pro Port (`ifAdminStatus`): Aus bedeutet kein Link, egal was angesteckt ist.
+- bei einem TP-Link-Switch die Buttons **Konfiguration speichern** (schreibt die laufende Konfiguration in den Flash, sonst geht sie beim Neustart verloren) und **Neustart** (standardmäßig aus, denn er trennt alle Geräte für etwa eine Minute).
 - im Panel in der Port-Ansicht der Knopf **Port ausschalten / einschalten** (mit Rückfrage; bei geschützten Ports gesperrt).
 - im Panel beim Umbenennen eines Ports das Kästchen **Auch am Switch speichern** (`ifAlias`). Die Namen, die am Switch schon an den Ports stehen, zeigt die Integration ohnehin als Vorgabe; ein Name aus dem Panel hat Vorrang.
 

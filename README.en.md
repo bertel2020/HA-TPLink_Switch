@@ -141,6 +141,7 @@ triggers:
 By default the integration only reads. In the options you can switch on **Allow writing to the switch**; then there are:
 
 - a switch **Port N enabled** per port (`ifAdminStatus`): off means no link, whatever is plugged in.
+- for a TP-Link switch the buttons **Save configuration** (writes the running configuration to the flash, otherwise it is lost on a restart) and **Restart** (off by default, because it cuts every device off for about a minute).
 - in the panel, in the port detail, the button **Turn port off / on** (with a question; locked for protected ports).
 - in the panel, when renaming a port, the box **Also save at the switch** (`ifAlias`). The names that already stand at the ports on the switch are shown as the default anyway; a name from the panel takes precedence.
 

@@ -168,6 +168,14 @@
       "port_enabled": {
         "name": "Port {port} aktiv"
       }
+    },
+    "button": {
+      "save_config": {
+        "name": "Konfiguration speichern"
+      },
+      "reboot": {
+        "name": "Neustart"
+      }
     }
   },
   "selector": {
@@ -256,6 +264,9 @@
     },
     "write_failed": {
       "message": "Port {port} ließ sich am Switch nicht ändern: {error}"
+    },
+    "action_failed": {
+      "message": "Der Switch konnte die Aktion „{action}“ nicht ausführen: {error}"
     }
   },
   "issues": {

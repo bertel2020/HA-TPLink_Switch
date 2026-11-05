@@ -168,6 +168,14 @@
       "port_enabled": {
         "name": "Port {port} enabled"
       }
+    },
+    "button": {
+      "save_config": {
+        "name": "Save configuration"
+      },
+      "reboot": {
+        "name": "Restart"
+      }
     }
   },
   "selector": {
@@ -256,6 +264,9 @@
     },
     "write_failed": {
       "message": "Port {port} could not be changed at the switch: {error}"
+    },
+    "action_failed": {
+      "message": "The switch could not do “{action}”: {error}"
     }
   },
   "issues": {

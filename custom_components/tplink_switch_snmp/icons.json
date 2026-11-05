@@ -107,6 +107,11 @@
           "on": "mdi:power-plug"
         }
       }
+    },
+    "button": {
+      "save_config": {
+        "default": "mdi:content-save-outline"
+      }
     }
   }
 }

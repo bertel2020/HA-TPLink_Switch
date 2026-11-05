@@ -73,6 +73,8 @@ STORM_LIMITS = {
 }
 OID_STORM = f"{OID_TPLINK}.6.2.2.1.1"  # stormControlEntry: 2 broadcast, 3 multicast, 4 unicast
 OID_ARP = f"{OID_TPLINK}.8.2.1"  # arpDetection: the switch's ARP protection
+OID_SAVE_CONFIG = f"{OID_TPLINK}.11.1.0"  # save: 1 writes the running configuration to flash
+OID_REBOOT = f"{OID_TPLINK}.1.3.1.0"  # systemToolReBoot: 1 restarts the switch
 EXTRA_TABLES = {
     "loop_on": OID_LOOP_ENABLED,
     "loop": OID_LOOP_LOOPED,

@@ -87,6 +87,7 @@ def _switch(hass: HomeAssistant, entry: SwitchConfigEntry) -> dict[str, Any]:
                 "error_details": port.error_details,
                 "stp_state": port.stp_state,
                 "dhcp_trusted": port.dhcp_trusted,
+                "qos_priority": port.qos_priority,
                 "igmp": port.igmp,
                 "igmp_snooping": port.igmp_snooping,
                 "mirror": port.mirror,
@@ -122,6 +123,7 @@ def _switch(hass: HomeAssistant, entry: SwitchConfigEntry) -> dict[str, Any]:
         "vlans": {str(vlan): name for vlan, name in data.vlans.items()},
         "features": data.features,
         "mirror": data.mirror,
+        "qos_mode": data.qos_mode,
         "interval": int(coordinator.update_interval.total_seconds())
         if coordinator.update_interval
         else 0,

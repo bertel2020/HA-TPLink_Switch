@@ -79,6 +79,7 @@ from .model import (
     add_isolation,
     add_loops,
     add_mirror,
+    add_qos,
     add_rates,
     add_security,
     add_storm,
@@ -221,6 +222,7 @@ class SwitchCoordinator(DataUpdateCoordinator[SwitchData]):
         )
         vlans = add_vlans(ports, await self._read_extras(VLAN_TABLES), tables["base_port"])
         features: dict[str, bool] = {}
+        qos_mode: str | None = None
         mirror: list[dict[str, Any]] = []
         if manufacturer(text(system.get(OID_SYS_OBJECT_ID, ""))) == "TP-Link":
             extras = await self._read_extras(EXTRA_TABLES)
@@ -228,6 +230,7 @@ class SwitchCoordinator(DataUpdateCoordinator[SwitchData]):
             mirror = add_mirror(ports, extras)
             add_isolation(ports, extras)
             add_igmp(ports, extras)
+            qos_mode = add_qos(ports, extras)
             add_loops(ports, extras)
             add_config(ports, extras)
             add_security(ports, extras)
@@ -267,6 +270,7 @@ class SwitchCoordinator(DataUpdateCoordinator[SwitchData]):
             vlans=vlans,
             features=features,
             mirror=mirror,
+            qos_mode=qos_mode,
         )
         if self.data:
             self._fire_move_events(data, self.data)

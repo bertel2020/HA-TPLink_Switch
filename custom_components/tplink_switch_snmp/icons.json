@@ -30,6 +30,9 @@
       },
       "feature_igmp": {
         "default": "mdi:multicast"
+      },
+      "feature_dscp": {
+        "default": "mdi:tag-arrow-up-outline"
       }
     },
     "sensor": {
@@ -128,6 +131,12 @@
       },
       "igmp_errors": {
         "default": "mdi:alert-network-outline"
+      },
+      "qos_priority": {
+        "default": "mdi:priority-high"
+      },
+      "qos_mode": {
+        "default": "mdi:format-list-numbered"
       }
     },
     "switch": {

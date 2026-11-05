@@ -83,11 +83,14 @@ IGMP_COUNTERS = {
     "igmp_leaves": ("igmp_leaves",),
     "igmp_errors": ("igmp_errors",),
 }
+# qosSchedulerConfig: how the queues are served
+QOS_MODES = {0: "sp", 1: "wrr", 2: "sp_wrr", 3: "equal"}
 # Functions of the switch that are on or off as a whole: name -> (entity group, EXTRA_TABLES key).
 # None of these MIBs has counters, only the settings, so they show as on/off sensors.
 FEATURES: dict[str, tuple[str, str]] = {
     "mirror": ("mirror", "mirror_state"),  # port mirroring: on if any group is
     "igmp": ("igmp", "feat_igmp"),  # igmpSnoopingEnable
+    "dscp": ("qos", "feat_dscp"),  # qosDSCPEnable: the priority follows the DSCP field
     "dos": ("security", "feat_dos"),  # dosDefendGlobalConfig: DoS defence
     "dhcp": ("security", "feat_dhcp"),  # dhcpSnoopingEnable
     "dot1x": ("security", "feat_8021x"),  # sw8021xGlobalEnable
@@ -118,6 +121,9 @@ EXTRA_TABLES = {
     "igmp_report_v3": f"{OID_IGMP_STATS}.5",
     "igmp_leaves": f"{OID_IGMP_STATS}.6",
     "igmp_errors": f"{OID_IGMP_STATS}.7",
+    "feat_dscp": f"{OID_TPLINK}.6.1.4.1",
+    "qos_mode": f"{OID_TPLINK}.6.1.2.1",  # qosSchedulerConfig
+    "qos_priority": f"{OID_TPLINK}.6.1.1.1.1.2",  # qosBasicConfigPri: the CoS of each port
     "feat_dos": f"{OID_TPLINK}.8.4.1.1",
     "feat_dhcp": f"{OID_TPLINK}.8.1.1.1",
     "feat_8021x": f"{OID_TPLINK}.8.5.1.1",
@@ -254,6 +260,7 @@ PORT_ENTITY_GROUPS: dict[str, tuple[str, ...]] = {
     "arp": ("arp_illegal",),
     "vlan": ("pvid",),
     "igmp": tuple(IGMP_COUNTERS),
+    "qos": ("qos_priority",),
 }
 # groups of entities that belong to the switch and not to a port
 SWITCH_ENTITY_GROUPS = ("uptime", "devices", "stp", "security", "mirror")

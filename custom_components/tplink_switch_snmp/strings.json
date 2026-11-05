@@ -91,6 +91,9 @@
       },
       "feature_igmp": {
         "name": "IGMP-Snooping"
+      },
+      "feature_dscp": {
+        "name": "DSCP-Priorisierung"
       }
     },
     "sensor": {
@@ -189,6 +192,18 @@
       },
       "igmp_errors": {
         "name": "Port {port} IGMP-Fehlerpakete"
+      },
+      "qos_priority": {
+        "name": "Port {port} QoS-Priorität"
+      },
+      "qos_mode": {
+        "name": "QoS-Scheduler",
+        "state": {
+          "sp": "Strikte Priorität",
+          "wrr": "Gewichtet (WRR)",
+          "sp_wrr": "SP + WRR",
+          "equal": "Gleichmäßig"
+        }
       }
     },
     "switch": {
@@ -253,7 +268,8 @@
         "vlan": "VLAN: PVID und Mitgliedschaft je Port",
         "security": "Sicherheit: DoS-Schutz, DHCP-Snooping, 802.1X (an oder aus)",
         "mirror": "Port-Spiegelung (an oder aus) und Port-Isolation im Panel",
-        "igmp": "IGMP-Snooping: Pakete je Port und Status"
+        "igmp": "IGMP-Snooping: Pakete je Port und Status",
+        "qos": "QoS: Priorität je Port, Scheduler und DSCP"
       }
     }
   },

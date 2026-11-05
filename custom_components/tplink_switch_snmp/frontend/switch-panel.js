@@ -539,6 +539,7 @@ class TplinkSwitchPanel extends HTMLElement {
     }
     const igmp = Object.entries(p.igmp || {}).filter(([, n]) => n > 0).map(([kind, n]) => `${t("igmp_" + kind)} ${n}`);
     if (igmp.length) lines.push(`IGMP: ${igmp.join(" · ")}`);
+    if (p.qos_priority) lines.push(t("qosPriority", { n: p.qos_priority }));
     if (p.flow_control) lines.push(t("flowOn"));
     if (p.dhcp_trusted) lines.push(t("dhcpTrusted"));
     if (p.arp_illegal > 0) lines.push(t("arpIllegal", { n: p.arp_illegal }));

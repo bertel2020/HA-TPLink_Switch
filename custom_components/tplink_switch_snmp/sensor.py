@@ -23,7 +23,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import ERROR_DETAILS, IGMP_COUNTERS
+from .const import ERROR_DETAILS, IGMP_COUNTERS, QOS_MODES
 from .coordinator import SwitchConfigEntry, SwitchCoordinator
 from .entity import PortEntity, SwitchEntity
 from .model import PortData
@@ -192,6 +192,13 @@ PORT_SENSORS: tuple[PortSensorDescription, ...] = (
         value_fn=lambda p: p.igmp.get("errors"),
     ),
     PortSensorDescription(
+        key="qos_priority",
+        translation_key="qos_priority",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda p: p.qos_priority,
+    ),
+    PortSensorDescription(
         key="pvid",
         translation_key="pvid",
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -292,6 +299,8 @@ def _reported(key: str, port: PortData) -> bool:
         return port.arp_illegal is not None
     if key == "pvid":
         return port.pvid is not None
+    if key == "qos_priority":
+        return port.qos_priority is not None
     if key in IGMP_COUNTERS:
         return key.removeprefix("igmp_") in port.igmp
     return True
@@ -308,6 +317,8 @@ async def async_setup_entry(
     entities: list[SensorEntity] = [SwitchUptime(coordinator)] if "uptime" in groups else []
     if "stp" in groups and coordinator.data.stp_changes is not None:
         entities.append(SwitchStpChanges(coordinator))
+    if "qos" in groups and coordinator.data.qos_mode is not None:
+        entities.append(SwitchQosMode(coordinator))
     entities.extend(
         PortSensor(coordinator, number, description)
         for number in coordinator.data.ports
@@ -387,6 +398,24 @@ class SwitchStpChanges(SwitchEntity, SensorEntity):
     @property
     def native_value(self) -> int | None:
         return self.coordinator.data.stp_changes
+
+
+class SwitchQosMode(SwitchEntity, SensorEntity):
+    """How the switch serves its priority queues (strict priority, weighted round robin ...)."""
+
+    _attr_translation_key = "qos_mode"
+    _attr_device_class = SensorDeviceClass.ENUM
+    _attr_options = list(QOS_MODES.values())
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_entity_registry_enabled_default = False
+
+    def __init__(self, coordinator: SwitchCoordinator) -> None:
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{self._mac}_qos_mode"
+
+    @property
+    def native_value(self) -> str | None:
+        return self.coordinator.data.qos_mode
 
 
 class PortSensor(PortEntity, SensorEntity):

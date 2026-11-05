@@ -14,6 +14,7 @@ from .const import (
     FEATURES,
     IGMP_COUNTERS,
     PORT_MODES,
+    QOS_MODES,
     STORM_LIMITS,
     STP_STATES,
 )
@@ -68,6 +69,7 @@ class PortData:
     arp_illegal: int | None = None  # illegal ARP packets seen (the switch's ARP protection)
     arp_trusted: bool | None = None  # the port is trusted by the ARP protection
     dhcp_trusted: bool | None = None  # DHCP snooping is on and the port is a trusted one
+    qos_priority: int | None = None  # the CoS that frames of this port get (0 to 7)
     igmp: dict[str, int] = field(default_factory=dict)  # IGMP snooping packets seen
     igmp_snooping: bool | None = None  # IGMP snooping is on at this port
     mirror: str | None = None  # port mirroring: "monitor" (gets the copies) or "source"
@@ -96,6 +98,7 @@ class SwitchData:
     vlans: dict[int, str] = field(default_factory=dict)  # VLAN ID -> name
     features: dict[str, bool] = field(default_factory=dict)  # FEATURES name -> switched on
     mirror: list[dict[str, Any]] = field(default_factory=list)  # the mirror groups that are on
+    qos_mode: str | None = None  # how the queues are served: "sp", "wrr", "sp_wrr", "equal"
 
     @property
     def mac_ports(self) -> dict[str, int]:
@@ -419,6 +422,16 @@ def add_igmp(ports: dict[int, PortData], extras: dict[str, dict[str, Any]]) -> N
                 port.igmp[key.removeprefix("igmp_")] = sum(values)
         enabled = extras.get("igmp_port_on", {}).get(suffix)
         port.igmp_snooping = enabled == 1 if isinstance(enabled, int) else None
+
+
+def add_qos(ports: dict[int, PortData], extras: dict[str, dict[str, Any]]) -> str | None:
+    """Fill in the QoS priority of the ports; returns how the queues are served."""
+    for number, port in ports.items():
+        priority = extras.get("qos_priority", {}).get(str(number))
+        if isinstance(priority, int):
+            port.qos_priority = priority
+    mode = extras.get("qos_mode", {}).get("0")
+    return QOS_MODES.get(mode) if isinstance(mode, int) else None
 
 
 def port_list(value: Any) -> set[int]:

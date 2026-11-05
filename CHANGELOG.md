@@ -23,6 +23,7 @@ Alle nennenswerten Änderungen an dieser Integration werden hier festgehalten.
 - **Konfiguration im Panel:** Der neue Reiter **Konfiguration** zeigt, was der Switch eingestellt hat. Er beginnt mit der Tabelle der **VLANs** (ID, Name, Ports ohne und mit Tag, Ports mit dieser PVID).
 - **Funktionen im Panel:** Der Reiter **Konfiguration** zeigt, welche Funktionen der Switch eingeschaltet hat (IGMP-Snooping, DSCP-Priorisierung, DoS-Schutz, DHCP-Snooping, 802.1X, Port-Spiegelung mit ihren Gruppen).
 - **QoS im Panel:** Der Reiter **Konfiguration** nennt, wie der Switch seine Warteschlangen bedient (strikte Priorität, gewichtet, gemischt, gleichmäßig).
+- **Spanning Tree im Panel:** Der Reiter **Konfiguration** nennt die Zahl der Topologie-Änderungen seit dem Start des Switches und den Port, über den der Weg zur Root-Bridge führt.
 - **Geprüft am Switch (TL-SG3424):** Die Tabellen für Schleife, Port-Einstellung, Port-Security, Spiegelung, Isolation, IGMP, QoS, Storm-Control, ARP, DHCP, VLAN, RMON und STP antworten mit den erwarteten Typen. Der Switch schreibt `N/A` für einen Port ohne Trunk; das wird nicht mehr als Trunk angezeigt.
 - **Zu lange Pakete sind keine Fehler:** Der Switch zählt über RMON jedes wohlgeformte Paket über 1518 Byte als „zu lang“ (am TL-SG3424 über eine Milliarde an einem Port). Die Port-Karte zeigt diesen Zähler deshalb nicht mehr als Fehler; der Diagnose-Sensor bleibt.
 

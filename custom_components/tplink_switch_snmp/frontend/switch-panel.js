@@ -819,7 +819,12 @@ class TplinkSwitchPanel extends HTMLElement {
       const extra = name === "mirror" && on && groups.length ? ` <span class="muted">${esc(groups.map(mirror).join("; "))}</span>` : "";
       return `<div><span>${esc(t("feature_" + name))}</span><span><span class="tag ${on ? "ok" : ""}">${esc(t(on ? "on" : "off"))}</span>${extra}</span></div>`;
     };
-    const more = [sw.qos_mode ? info(t("qosScheduler"), t("qos_" + sw.qos_mode)) : ""].join("");
+    const root = sw.stp_root_port ? sw.ports.find((p) => p.n === sw.stp_root_port) : null;
+    const more = [
+      sw.qos_mode ? info(t("qosScheduler"), t("qos_" + sw.qos_mode)) : "",
+      sw.stp_changes != null ? info(t("stpChanges"), sw.stp_changes) : "",
+      sw.stp_root_port ? info(t("stpRoot"), `${t("port")} ${sw.stp_root_port}${root?.name ? " · " + root.name : ""}`) : "",
+    ].join("");
     if (!names.length && !more) return "";
     return `<section class="card"><div class="card-h"><h2>${esc(t("functions"))}</h2></div><div class="details"><div class="kv">${names.map(row).join("")}${more}</div></div></section>`;
   }

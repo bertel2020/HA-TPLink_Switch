@@ -70,6 +70,7 @@ The integration adds the entry **Switch** to the sidebar (admins only):
 - **Ports:** a table with filters, search and utilization in percent.
 - **Devices:** the learned MAC addresses per port; names come from devices Home Assistant knows by their MAC address (for example from "FRITZ!Box Network"); the manufacturer from there or else from the MAC address (Home Assistant's manufacturer list, no internet; the random addresses of phones have none).
 - **Diagnostics:** errors, discarded packets and data volume per port.
+- **Configuration:** what is set at the switch: the VLANs with their ports.
 
 The **Appearance** menu (palette in the header) offers three colour schemes (Ocean, Forest, Graphite), light, dark or like Home Assistant, and three font sizes; the choice is kept per user. The panel gets a new state pushed after every poll of the switch and does not ask by itself.
 

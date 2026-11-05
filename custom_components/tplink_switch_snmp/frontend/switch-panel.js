@@ -446,7 +446,7 @@ class TplinkSwitchPanel extends HTMLElement {
     return `<header class="topbar"><div class="topbar-in">
       <button class="menu" data-a="menu" aria-label="${esc(t("menu"))}">${icon("menu")}</button>
       <div class="brand"><div class="logo">${icon("lan")}</div>${esc(t("title"))}</div>
-      <nav role="tablist">${tab("overview", t("overview"))}${tab("ports", t("ports"))}${tab("devices", t("devices"))}${tab("diag", t("diag"))}</nav>
+      <nav role="tablist">${tab("overview", t("overview"))}${tab("ports", t("ports"))}${tab("devices", t("devices"))}${tab("diag", t("diag"))}${tab("config", t("config"))}</nav>
       <span class="lookwrap">
         <button class="icon-btn" id="lookBtn" data-a="look-toggle" title="${esc(t("lookTitle"))}" aria-label="${esc(t("lookTitle"))}" aria-haspopup="true" aria-expanded="${this._menuOpen}">${icon("palette")}</button>
         ${this._menuOpen ? this._lookMenu() : ""}
@@ -487,7 +487,7 @@ class TplinkSwitchPanel extends HTMLElement {
   }
 
   _view(sw) {
-    return { overview: () => this._overview(sw), ports: () => this._portsView(sw), devices: () => this._devicesView(sw), diag: () => this._diagView(sw) }[this._tab]();
+    return { overview: () => this._overview(sw), ports: () => this._portsView(sw), devices: () => this._devicesView(sw), diag: () => this._diagView(sw), config: () => this._configView(sw) }[this._tab]();
   }
 
   _plate(sw) {
@@ -797,6 +797,25 @@ class TplinkSwitchPanel extends HTMLElement {
       <div class="tablewrap"><table><thead><tr><th>${esc(t("port"))}</th><th class="num">${esc(t("rxErrors"))}</th><th class="num">${esc(t("txErrors"))}</th><th class="num">${esc(t("pps"))}</th><th class="num">${esc(t("bcast"))}</th><th class="num">${esc(t("mcast"))}</th><th class="num">${esc(t("rxDiscards"))}</th><th class="num">${esc(t("txDiscards"))}</th><th class="num">${esc(t("rxTotal"))}</th><th class="num">${esc(t("txTotal"))}</th><th>${esc(t("assessment"))}</th></tr></thead><tbody>
       ${rows.map((p) => `<tr class="row"><td><span class="pn">${esc(t("port"))} ${p.n}<small>${esc(p.name)}</small></span></td><td class="num mono">${p.rx_errors}</td><td class="num mono">${p.tx_errors}</td><td class="num mono">${this._num(p.rx_pps, 1)}</td><td class="num mono">${this._num(p.rx_bcast_pps, 1)}</td><td class="num mono">${this._num(p.rx_mcast_pps, 1)}</td><td class="num mono">${p.rx_discards}</td><td class="num mono">${p.tx_discards}</td><td class="num mono">${esc(this._bytes(p.rx_bytes))}</td><td class="num mono">${esc(this._bytes(p.tx_bytes))}</td>
         <td>${this._errors(p) > 5 ? `<span class="tag warn">${esc(t(this._assess(p)))}</span>` : `<span class="tag">${esc(t("fine"))}</span>`}</td></tr>`).join("")}
+      </tbody></table></div></section>`;
+  }
+
+  // ---- configuration of the switch -----------------------------------------------------------
+
+  _configView(sw) {
+    return this._vlanCard(sw);
+  }
+
+  // The VLANs of the switch with the ports that belong to them; a port is untagged or tagged in a VLAN.
+  _vlanCard(sw) {
+    const t = this._t;
+    const ids = Object.keys(sw.vlans || {}).map(Number).sort((a, b) => a - b);
+    if (!ids.length) return "";
+    const members = (id, key) => sw.ports.filter((p) => (p[key] || []).includes(id)).map((p) => p.n);
+    const list = (ports) => (ports.length ? esc(ports.join(", ")) : `<span class="muted">–</span>`);
+    return `<section class="card"><div class="card-h"><h2>${esc(t("vlans"))}</h2><span class="grow"></span><span class="sub">${esc(t.count("vlanCount", ids.length))}</span></div>
+      <div class="tablewrap"><table><thead><tr><th class="num">${esc(t("vlanId"))}</th><th>${esc(t("vlanName"))}</th><th>${esc(t("vlanUntagged"))}</th><th>${esc(t("vlanTagged"))}</th><th>PVID</th></tr></thead><tbody>
+      ${ids.map((id) => `<tr class="row"><td class="num mono">${id}</td><td>${esc(sw.vlans[id] || "")}</td><td class="mono">${list(members(id, "vlans_untagged"))}</td><td class="mono">${list(members(id, "vlans_tagged"))}</td><td class="mono">${list(sw.ports.filter((p) => p.pvid === id).map((p) => p.n))}</td></tr>`).join("")}
       </tbody></table></div></section>`;
   }
 

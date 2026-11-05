@@ -109,6 +109,7 @@ Per port:
 | **Illegal ARP packets** | off | only at ports the switch reports ARP detection values for |
 | **PVID** | off | only at ports the switch reports VLAN values for; attributes `untagged` and `tagged` |
 | **DoS defence, DHCP snooping, 802.1X** (binary sensors) | off | show whether the function is on at the switch; only what the switch reports |
+| **Port mirroring** (binary sensor) | off | on if a mirror group is running; attribute `groups` with the monitor port and the sources |
 | **Receive / transmit discarded** | off | discarded packets |
 | **Link changed** (timestamp) | off | time of the last link change |
 | **Packets/s receive/transmit**, **broadcast/multicast receive** | off | from the packet counters |
@@ -118,7 +119,7 @@ On the device: **Uptime** and, if the switch reports spanning tree, **STP topolo
 
 ### Which entities are created
 
-Under **Configure** you choose which groups of entities exist (link, rates, speed, data totals, errors, packets, utilization, link changes, MAC addresses, loop, error details, ARP, STP, VLAN, security, uptime, port of devices) and for which ports (empty = all). What you deselect is not created and is removed from the entity list; its history in Home Assistant is no longer updated. The panel is not affected, it reads from the switch directly.
+Under **Configure** you choose which groups of entities exist (link, rates, speed, data totals, errors, packets, utilization, link changes, MAC addresses, loop, error details, ARP, STP, VLAN, security, port mirroring, uptime, port of devices) and for which ports (empty = all). What you deselect is not created and is removed from the entity list; its history in Home Assistant is no longer updated. The panel is not affected, it reads from the switch directly.
 
 ## Events and logbook
 

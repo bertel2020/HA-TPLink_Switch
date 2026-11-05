@@ -17,6 +17,7 @@ from .const import (
     STP_STATES,
 )
 
+PORT_LIST_MAX = 128  # no switch has more ports than this
 PORT_NAME = re.compile(r"^port\s*(\d+)", re.IGNORECASE)
 OPER_UP = 1
 
@@ -66,6 +67,9 @@ class PortData:
     arp_illegal: int | None = None  # illegal ARP packets seen (the switch's ARP protection)
     arp_trusted: bool | None = None  # the port is trusted by the ARP protection
     dhcp_trusted: bool | None = None  # DHCP snooping is on and the port is a trusted one
+    mirror: str | None = None  # port mirroring: "monitor" (gets the copies) or "source"
+    isolated: bool | None = None  # the port cannot reach all the other ports (port isolation)
+    isolation_forward: list[int] | None = None  # the ports it can reach, if the switch says
     pvid: int | None = None  # the VLAN that untagged frames at this port belong to
     vlans_untagged: list[int] = field(default_factory=list)  # VLANs sent without a tag
     vlans_tagged: list[int] = field(default_factory=list)  # VLANs sent with a tag
@@ -88,6 +92,7 @@ class SwitchData:
     stp_root_port: int | None = None  # the port that leads to the root bridge
     vlans: dict[int, str] = field(default_factory=dict)  # VLAN ID -> name
     features: dict[str, bool] = field(default_factory=dict)  # FEATURES name -> switched on
+    mirror: list[dict[str, Any]] = field(default_factory=list)  # the mirror groups that are on
 
     @property
     def mac_ports(self) -> dict[str, int]:
@@ -397,6 +402,53 @@ def add_vlans(
     return names
 
 
+def port_list(value: Any) -> set[int]:
+    """The ports of a list like "1-5,9-11,16" (or "1/0/1-1/0/3": the last number counts)."""
+    ports: set[int] = set()
+    for part in text(value).split(","):
+        ends = [int(numbers[-1]) for end in part.split("-") if (numbers := re.findall(r"\d+", end))]
+        if len(ends) == 2 and 0 < ends[0] <= ends[1] <= PORT_LIST_MAX:
+            ports.update(range(ends[0], ends[1] + 1))
+        elif len(ends) == 1:
+            ports.add(ends[0])
+    return ports
+
+
+def add_mirror(
+    ports: dict[int, PortData], extras: dict[str, dict[str, Any]]
+) -> list[dict[str, Any]]:
+    """Mark the ports of port mirroring; returns the mirror groups that are on."""
+    groups = []
+    for group, state in extras.get("mirror_state", {}).items():
+        if state != 1:
+            continue
+        monitor = extras.get("mirror_monitor", {}).get(group)
+        monitor_port = (
+            monitor if isinstance(monitor, int) else min(port_list(monitor), default=None)
+        )
+        sources = {
+            "ingress": sorted(port_list(extras.get("mirror_in", {}).get(group, b""))),
+            "egress": sorted(port_list(extras.get("mirror_out", {}).get(group, b""))),
+        }
+        groups.append({"group": group, "monitor": monitor_port, **sources})
+        if monitor_port in ports:
+            ports[monitor_port].mirror = "monitor"
+        for number in {*sources["ingress"], *sources["egress"]} & ports.keys():
+            ports[number].mirror = ports[number].mirror or "source"
+    return groups
+
+
+def add_isolation(ports: dict[int, PortData], extras: dict[str, dict[str, Any]]) -> None:
+    """Fill in which ports a port can reach; an empty list is taken as "not set"."""
+    for number, port in ports.items():
+        raw = extras.get("isolation", {}).get(str(number))
+        forward = port_list(raw) if raw is not None else set()
+        if not forward:
+            continue
+        port.isolation_forward = sorted(forward)
+        port.isolated = not (ports.keys() - {number}) <= forward
+
+
 def add_features(ports: dict[int, PortData], extras: dict[str, dict[str, Any]]) -> dict[str, bool]:
     """Which of the functions of the switch are on; the ports of DHCP snooping get their trust."""
     features = {
@@ -404,6 +456,8 @@ def add_features(ports: dict[int, PortData], extras: dict[str, dict[str, Any]]) 
         for name, (_, table) in FEATURES.items()
         if isinstance(value := extras.get(table, {}).get("0"), int)
     }
+    if extras.get("mirror_state"):
+        features["mirror"] = any(state == 1 for state in extras["mirror_state"].values())
     if features.get("dhcp"):
         for number, port in ports.items():
             trust = extras.get("dhcp_trust", {}).get(str(number))

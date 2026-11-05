@@ -24,6 +24,9 @@
       },
       "feature_dot1x": {
         "default": "mdi:account-lock-outline"
+      },
+      "feature_mirror": {
+        "default": "mdi:content-copy"
       }
     },
     "sensor": {

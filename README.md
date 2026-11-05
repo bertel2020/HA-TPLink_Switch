@@ -110,6 +110,7 @@ Pro Port:
 | **Unzulässige ARP-Pakete** | aus | nur an Ports, für die der Switch Werte der ARP-Erkennung meldet |
 | **PVID** | aus | nur an Ports, für die der Switch VLAN-Werte meldet; Attribute `untagged` und `tagged` |
 | **DoS-Schutz, DHCP-Snooping, 802.1X** (Binärsensoren) | aus | zeigen, ob die Funktion am Switch eingeschaltet ist; nur was der Switch meldet |
+| **Port-Spiegelung** (Binärsensor) | aus | an, wenn eine Spiegel-Gruppe läuft; Attribut `groups` mit Monitor-Port und Quellen |
 | **Empfang/Senden verworfen** | aus | verworfene Pakete |
 | **Link geändert** (Zeitstempel) | aus | Zeitpunkt des letzten Link-Wechsels |
 | **Pakete/s Empfang/Senden**, **Broadcast/Multicast Empfang** | aus | aus den Paketzählern |
@@ -119,7 +120,7 @@ Am Gerät: **Laufzeit** und, wenn der Switch Spanning Tree meldet, **STP-Topolog
 
 ### Welche Entitäten angelegt werden
 
-Unter **Konfigurieren** wählst du, welche Gruppen von Entitäten es gibt (Link, Datenraten, Geschwindigkeit, Datenmenge, Fehler, Pakete, Auslastung, Link-Wechsel, MAC-Adressen, Schleife, Fehler im Detail, ARP, STP, VLAN, Sicherheit, Laufzeit, Port von Geräten) und für welche Ports (leer = alle). Was du abwählst, wird nicht angelegt und aus der Entitäten-Liste entfernt; dabei werden auch deren Verlaufsdaten in Home Assistant nicht mehr fortgeschrieben. Das Panel ist nicht betroffen, es liest direkt vom Switch.
+Unter **Konfigurieren** wählst du, welche Gruppen von Entitäten es gibt (Link, Datenraten, Geschwindigkeit, Datenmenge, Fehler, Pakete, Auslastung, Link-Wechsel, MAC-Adressen, Schleife, Fehler im Detail, ARP, STP, VLAN, Sicherheit, Port-Spiegelung, Laufzeit, Port von Geräten) und für welche Ports (leer = alle). Was du abwählst, wird nicht angelegt und aus der Entitäten-Liste entfernt; dabei werden auch deren Verlaufsdaten in Home Assistant nicht mehr fortgeschrieben. Das Panel ist nicht betroffen, es liest direkt vom Switch.
 
 ## Ereignisse und Logbuch
 

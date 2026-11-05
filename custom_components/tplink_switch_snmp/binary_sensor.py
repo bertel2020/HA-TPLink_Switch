@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
@@ -60,6 +62,13 @@ class SwitchFeature(SwitchEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool | None:
         return self.coordinator.data.features.get(self._name)
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any] | None:
+        """For port mirroring: the groups that are on, with the monitor port and the sources."""
+        if self._name == "mirror":
+            return {"groups": self.coordinator.data.mirror}
+        return None
 
 
 class PortLink(PortEntity, BinarySensorEntity):

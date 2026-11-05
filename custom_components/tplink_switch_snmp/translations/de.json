@@ -85,6 +85,9 @@
       },
       "feature_dot1x": {
         "name": "802.1X"
+      },
+      "feature_mirror": {
+        "name": "Port-Spiegelung"
       }
     },
     "sensor": {
@@ -233,7 +236,8 @@
         "stp": "Spanning Tree: Zahl der Topologieänderungen",
         "arp": "Unzulässige ARP-Pakete (ARP-Schutz des Switches)",
         "vlan": "VLAN: PVID und Mitgliedschaft je Port",
-        "security": "Sicherheit: DoS-Schutz, DHCP-Snooping, 802.1X (an oder aus)"
+        "security": "Sicherheit: DoS-Schutz, DHCP-Snooping, 802.1X (an oder aus)",
+        "mirror": "Port-Spiegelung (an oder aus) und Port-Isolation im Panel"
       }
     }
   },

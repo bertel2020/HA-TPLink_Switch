@@ -78,6 +78,7 @@ OID_REBOOT = f"{OID_TPLINK}.1.3.1.0"  # systemToolReBoot: 1 restarts the switch
 # Functions of the switch that are on or off as a whole: name -> (entity group, EXTRA_TABLES key).
 # None of these MIBs has counters, only the settings, so they show as on/off sensors.
 FEATURES: dict[str, tuple[str, str]] = {
+    "mirror": ("mirror", "mirror_state"),  # port mirroring: on if any group is
     "dos": ("security", "feat_dos"),  # dosDefendGlobalConfig: DoS defence
     "dhcp": ("security", "feat_dhcp"),  # dhcpSnoopingEnable
     "dot1x": ("security", "feat_8021x"),  # sw8021xGlobalEnable
@@ -95,6 +96,11 @@ EXTRA_TABLES = {
     "storm_bc": f"{OID_STORM}.2",
     "storm_mc": f"{OID_STORM}.3",
     "storm_ul": f"{OID_STORM}.4",
+    "mirror_state": f"{OID_TPLINK}.2.1.2.1.1.2",  # l2PortMirrorState, by mirror group
+    "mirror_monitor": f"{OID_TPLINK}.2.1.2.1.1.4",  # l2PortMirrorMonitorPort
+    "mirror_in": f"{OID_TPLINK}.2.1.2.1.1.5",  # l2PortMirrorIngressPort: a port list
+    "mirror_out": f"{OID_TPLINK}.2.1.2.1.1.6",  # l2PortMirrorEgressPort: a port list
+    "isolation": f"{OID_TPLINK}.2.1.4.1.1.2",  # portIsolationForList: the ports a port may reach
     "feat_dos": f"{OID_TPLINK}.8.4.1.1",
     "feat_dhcp": f"{OID_TPLINK}.8.1.1.1",
     "feat_8021x": f"{OID_TPLINK}.8.5.1.1",
@@ -232,5 +238,5 @@ PORT_ENTITY_GROUPS: dict[str, tuple[str, ...]] = {
     "vlan": ("pvid",),
 }
 # groups of entities that belong to the switch and not to a port
-SWITCH_ENTITY_GROUPS = ("uptime", "devices", "stp", "security")
+SWITCH_ENTITY_GROUPS = ("uptime", "devices", "stp", "security", "mirror")
 ENTITY_GROUPS = (*PORT_ENTITY_GROUPS, *SWITCH_ENTITY_GROUPS)

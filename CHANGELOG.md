@@ -26,6 +26,7 @@ Alle nennenswerten Änderungen an dieser Integration werden hier festgehalten.
 - **Spanning Tree im Panel:** Der Reiter **Konfiguration** nennt die Zahl der Topologie-Änderungen seit dem Start des Switches und den Port, über den der Weg zur Root-Bridge führt.
 - **Isolation und IGMP in der Port-Karte:** Die Karte beim Überfahren eines Ports nennt bei einem isolierten Port, welche Ports er erreicht, und ob IGMP-Snooping am Port eingeschaltet ist.
 - **Aktionen im Panel:** Mit erlaubtem Schreiben hat der Reiter **Konfiguration** bei einem TP-Link-Switch die Knöpfe **Konfiguration speichern** und **Switch neu starten** (mit Rückfrage), dieselben Aktionen wie die Buttons.
+- **Weitere Werte im Panel:** Die Port-Karte nennt, ob der ARP-Schutz den Port als vertrauenswürdig führt; die Diagnose-Tabelle zeigt neben den empfangenen auch die gesendeten Pakete pro Sekunde.
 - **Geprüft am Switch (TL-SG3424):** Die Tabellen für Schleife, Port-Einstellung, Port-Security, Spiegelung, Isolation, IGMP, QoS, Storm-Control, ARP, DHCP, VLAN, RMON und STP antworten mit den erwarteten Typen. Der Switch schreibt `N/A` für einen Port ohne Trunk; das wird nicht mehr als Trunk angezeigt.
 - **Zu lange Pakete sind keine Fehler:** Der Switch zählt über RMON jedes wohlgeformte Paket über 1518 Byte als „zu lang“ (am TL-SG3424 über eine Milliarde an einem Port). Die Port-Karte zeigt diesen Zähler deshalb nicht mehr als Fehler; der Diagnose-Sensor bleibt.
 

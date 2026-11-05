@@ -71,6 +71,24 @@
       },
       "rx_multicast": {
         "default": "mdi:access-point-network"
+      },
+      "crc_errors": {
+        "default": "mdi:alert-octagon-outline"
+      },
+      "undersize_packets": {
+        "default": "mdi:arrow-collapse-horizontal"
+      },
+      "oversize_packets": {
+        "default": "mdi:arrow-expand-horizontal"
+      },
+      "fragments": {
+        "default": "mdi:puzzle-outline"
+      },
+      "jabbers": {
+        "default": "mdi:message-alert-outline"
+      },
+      "collisions": {
+        "default": "mdi:car-multiple"
       }
     },
     "switch": {

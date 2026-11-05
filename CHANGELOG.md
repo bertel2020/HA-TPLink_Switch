@@ -11,6 +11,7 @@ Alle nennenswerten Änderungen an dieser Integration werden hier festgehalten.
 - **MAC-Sicherheit:** Hat ein Port die Port-Security des Switches eingeschaltet und so viele MAC-Adressen gelernt, wie er darf, markiert das Panel ihn und zeigt einen Hinweis auf der Übersicht: Ein weiteres Gerät kommt an diesem Port nicht ins Netz. Noch nicht an echter Hardware geprüft.
 - **Storm-Control und Einstellungen in der Port-Karte:** Die Karte beim Überfahren eines Ports zeigt zusätzlich die Storm-Control-Grenzen (Broadcast, Multicast, Unicast), die Flusssteuerung und die gelernten gegenüber den erlaubten MAC-Adressen, soweit der Switch sie meldet.
 - **Alarme des Switches:** Mit eingeschaltetem Trap-Empfang löst ein Trap für CPU- oder Speicherlast über 80 %, eine Schleife oder ein Storm-Control-Limit das Ereignis `tplink_switch_snmp_alarm` aus (mit Text im Logbuch). Die Abfrage danach läuft wie bisher sofort.
+- **Fehler im Detail:** Der Switch zählt über RMON (`etherStats`) CRC-Fehler, Kollisionen, zu kurze und zu lange Pakete, Fragmente und Jabber je Port. Sie gibt es als Diagnose-Sensoren (standardmäßig aus, nur an Ports, für die der Switch Werte meldet; neue Gruppe „Fehler im Detail“) und in der Port-Karte. Die Diagnose-Tabelle sagt dann genauer, was zu prüfen ist: Kollisionen deuten auf eine Duplex-Abweichung, CRC-Fehler und Fragmente auf das Kabel. Noch nicht an echter Hardware geprüft.
 
 ## 0.8.0 – 2026-11-04
 

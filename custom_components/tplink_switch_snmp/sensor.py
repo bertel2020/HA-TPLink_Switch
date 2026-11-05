@@ -23,6 +23,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import ERROR_DETAILS
 from .coordinator import SwitchConfigEntry, SwitchCoordinator
 from .entity import PortEntity, SwitchEntity
 from .model import PortData
@@ -101,6 +102,54 @@ PORT_SENSORS: tuple[PortSensorDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_fn=lambda p: p.tx_errors,
+    ),
+    PortSensorDescription(
+        key="crc_errors",
+        translation_key="crc_errors",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda p: p.error_details.get("crc_errors"),
+    ),
+    PortSensorDescription(
+        key="undersize_packets",
+        translation_key="undersize_packets",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda p: p.error_details.get("undersize_packets"),
+    ),
+    PortSensorDescription(
+        key="oversize_packets",
+        translation_key="oversize_packets",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda p: p.error_details.get("oversize_packets"),
+    ),
+    PortSensorDescription(
+        key="fragments",
+        translation_key="fragments",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda p: p.error_details.get("fragments"),
+    ),
+    PortSensorDescription(
+        key="jabbers",
+        translation_key="jabbers",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda p: p.error_details.get("jabbers"),
+    ),
+    PortSensorDescription(
+        key="collisions",
+        translation_key="collisions",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda p: p.error_details.get("collisions"),
     ),
     PortSensorDescription(
         key="rx_discards",
@@ -202,6 +251,11 @@ async def async_setup_entry(
         for number in coordinator.data.ports
         for description in PORT_SENSORS
         if wants(entry, number, description.key)
+        # the error details exist only where the switch reports them
+        and (
+            description.key not in ERROR_DETAILS
+            or description.key in coordinator.data.ports[number].error_details
+        )
     )
     async_add_entities(entities)
 

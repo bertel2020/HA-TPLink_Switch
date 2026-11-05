@@ -7,7 +7,7 @@ from datetime import datetime
 import re
 from typing import Any
 
-from .const import ADMIN_DOWN, ADMIN_UP, PORT_MODES, STORM_LIMITS
+from .const import ADMIN_DOWN, ADMIN_UP, ERROR_DETAILS, PORT_MODES, STORM_LIMITS
 
 PORT_NAME = re.compile(r"^port\s*(\d+)", re.IGNORECASE)
 OPER_UP = 1
@@ -53,6 +53,7 @@ class PortData:
     security_max: int | None = None  # port security: most MAC addresses the port may learn
     security_learned: int | None = None  # ... and how many it has learned (None: not on)
     storm: dict[str, int] = field(default_factory=dict)  # storm control limits in kbit/s
+    error_details: dict[str, int] = field(default_factory=dict)  # RMON: CRC, collisions ...
 
 
 @dataclass
@@ -273,6 +274,22 @@ def add_security(ports: dict[int, PortData], extras: dict[str, dict[str, Any]]) 
         if extras.get("sec_on", {}).get(suffix) == 1 and isinstance(maximum, int):
             port.security_max = maximum
             port.security_learned = learned if isinstance(learned, int) else None
+
+
+def add_error_details(ports: dict[int, PortData], extras: dict[str, dict[str, Any]]) -> None:
+    """Fill in the RMON counters of each port that has a row in the statistics table."""
+    by_if = {port.if_index: port for port in ports.values()}
+    for row, source in extras.get("rmon_source", {}).items():
+        # etherStatsDataSource is an OID that ends in the ifIndex; without it the row is the port
+        last = text(source).rsplit(".", 1)[-1]
+        if_index = int(last) if last.isdigit() else int(row) if row.isdigit() else None
+        port = by_if.get(if_index) if if_index is not None else None
+        if port is None:
+            continue
+        for kind, column in ERROR_DETAILS.items():
+            value = extras.get(column, {}).get(row)
+            if isinstance(value, int):
+                port.error_details[kind] = value
 
 
 STORM_KINDS = {"storm_bc": "broadcast", "storm_mc": "multicast", "storm_ul": "unicast"}

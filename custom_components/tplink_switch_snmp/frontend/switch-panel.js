@@ -499,6 +499,23 @@ class TplinkSwitchPanel extends HTMLElement {
     return `<div class="plate" style="--cols:${cols}"><div class="plate-row">${odd.map(jack).join("")}</div><div class="plate-row">${even.map(jack).join("")}</div></div>`;
   }
 
+  // the RMON counters that are not zero, as "CRC 5 · Kollisionen 2"
+  _detailText(p) {
+    const t = this._t;
+    return Object.entries(p.error_details || {})
+      .filter(([, n]) => n > 0)
+      .map(([kind, n]) => `${t("err_" + kind)} ${n}`)
+      .join(" · ");
+  }
+
+  // what the numbers point to: collisions mean a duplex mismatch, the rest a bad cable
+  _assess(p) {
+    const d = p.error_details || {};
+    if ((d.collisions || 0) > 0) return "checkDuplex";
+    if ((d.crc_errors || 0) + (d.fragments || 0) + (d.jabbers || 0) > 0) return "checkCable";
+    return "check";
+  }
+
   // "128 kbit/s" or "10 Mbit/s"
   _kbit(k) {
     return k >= 1000 ? `${k / 1000} Mbit/s` : `${k} kbit/s`;
@@ -508,6 +525,8 @@ class TplinkSwitchPanel extends HTMLElement {
   _settings(p) {
     const t = this._t;
     const lines = [];
+    const detail = this._detailText(p);
+    if (detail) lines.push(detail);
     if (p.flow_control) lines.push(t("flowOn"));
     if (p.security_max != null) lines.push(t("secCount", { n: p.security_learned ?? "–", max: p.security_max }));
     const storm = Object.entries(p.storm || {}).map(([kind, k]) => `${t("storm_" + kind)} ${this._kbit(k)}`);
@@ -750,7 +769,7 @@ class TplinkSwitchPanel extends HTMLElement {
     return `<section class="card"><div class="card-h"><h2>${esc(t("errorCounters"))}</h2><span class="grow"></span><span class="sub">${esc(t("sinceStart"))}</span></div>
       <div class="tablewrap"><table><thead><tr><th>${esc(t("port"))}</th><th class="num">${esc(t("rxErrors"))}</th><th class="num">${esc(t("txErrors"))}</th><th class="num">${esc(t("pps"))}</th><th class="num">${esc(t("bcast"))}</th><th class="num">${esc(t("mcast"))}</th><th class="num">${esc(t("rxDiscards"))}</th><th class="num">${esc(t("txDiscards"))}</th><th class="num">${esc(t("rxTotal"))}</th><th class="num">${esc(t("txTotal"))}</th><th>${esc(t("assessment"))}</th></tr></thead><tbody>
       ${rows.map((p) => `<tr class="row"><td><span class="pn">${esc(t("port"))} ${p.n}<small>${esc(p.name)}</small></span></td><td class="num mono">${p.rx_errors}</td><td class="num mono">${p.tx_errors}</td><td class="num mono">${this._num(p.rx_pps, 1)}</td><td class="num mono">${this._num(p.rx_bcast_pps, 1)}</td><td class="num mono">${this._num(p.rx_mcast_pps, 1)}</td><td class="num mono">${p.rx_discards}</td><td class="num mono">${p.tx_discards}</td><td class="num mono">${esc(this._bytes(p.rx_bytes))}</td><td class="num mono">${esc(this._bytes(p.tx_bytes))}</td>
-        <td>${this._errors(p) > 5 ? `<span class="tag warn">${esc(t("check"))}</span>` : `<span class="tag">${esc(t("fine"))}</span>`}</td></tr>`).join("")}
+        <td>${this._errors(p) > 5 ? `<span class="tag warn">${esc(t(this._assess(p)))}</span>` : `<span class="tag">${esc(t("fine"))}</span>`}</td></tr>`).join("")}
       </tbody></table></div></section>`;
   }
 

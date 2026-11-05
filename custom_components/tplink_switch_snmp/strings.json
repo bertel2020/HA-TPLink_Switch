@@ -135,6 +135,24 @@
       },
       "rx_multicast": {
         "name": "Port {port} Multicast Empfang"
+      },
+      "crc_errors": {
+        "name": "Port {port} CRC-Fehler"
+      },
+      "undersize_packets": {
+        "name": "Port {port} Zu kurze Pakete"
+      },
+      "oversize_packets": {
+        "name": "Port {port} Zu lange Pakete"
+      },
+      "fragments": {
+        "name": "Port {port} Fragmente"
+      },
+      "jabbers": {
+        "name": "Port {port} Jabber"
+      },
+      "collisions": {
+        "name": "Port {port} Kollisionen"
       }
     },
     "switch": {
@@ -184,7 +202,8 @@
         "macs": "Anzahl der MAC-Adressen je Port",
         "uptime": "Laufzeit des Switches",
         "devices": "Port von bekannten Geräten",
-        "loop": "Schleife erkannt (Schleifenerkennung des Switches)"
+        "loop": "Schleife erkannt (Schleifenerkennung des Switches)",
+        "error_details": "Fehler im Detail (CRC, Kollisionen, zu kurze und zu lange Pakete)"
       }
     }
   },

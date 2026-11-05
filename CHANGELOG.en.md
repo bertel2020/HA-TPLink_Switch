@@ -11,6 +11,7 @@ All notable changes to this integration are recorded here.
 - **Port security:** if a port has the switch's port security on and has learned as many MAC addresses as it may, the panel tags it and shows a note on the overview: one more device does not get onto the network at that port. Not yet checked against real hardware.
 - **Storm control and settings in the port card:** the card shown when hovering a port also lists the storm control limits (broadcast, multicast, unicast), the flow control and the learned against the allowed MAC addresses, as far as the switch reports them.
 - **Alarms from the switch:** with trap receiving on, a trap for CPU or memory load over 80 %, a loop or a storm control limit fires the event `tplink_switch_snmp_alarm` (with a text in the logbook). The poll that follows still runs at once.
+- **Error details:** the switch counts CRC errors, collisions, undersize and oversize packets, fragments and jabbers per port through RMON (`etherStats`). They are diagnostic sensors (off by default, only at ports the switch reports values for; new group "Error details") and part of the port card. The diagnostics table then says more exactly what to check: collisions point to a duplex mismatch, CRC errors and fragments to the cable. Not yet checked against real hardware.
 
 ## 0.8.0 – 2026-11-04
 

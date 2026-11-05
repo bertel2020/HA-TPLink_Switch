@@ -84,6 +84,7 @@ def _switch(hass: HomeAssistant, entry: SwitchConfigEntry) -> dict[str, Any]:
                 "security_max": port.security_max,
                 "security_learned": port.security_learned,
                 "storm": port.storm,
+                "error_details": port.error_details,
                 "loop": port.loop,
                 "loop_blocked": port.loop_blocked,
                 "rx_util": port.rx_util,

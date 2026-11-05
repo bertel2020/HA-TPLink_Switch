@@ -58,6 +58,7 @@ from .const import (
     OID_TPLINK_FIRMWARE,
     OID_TPLINK_HARDWARE,
     PROTECTED_MAC_COUNT,
+    RMON_TABLES,
     TRAP_ALARMS,
     VERSION_1,
 )
@@ -67,6 +68,7 @@ from .model import (
     SwitchData,
     UptimeTracker,
     add_config,
+    add_error_details,
     add_loops,
     add_rates,
     add_security,
@@ -167,14 +169,14 @@ class SwitchCoordinator(DataUpdateCoordinator[SwitchData]):
             info[key] = text(value).strip() or None if value is not None else None
         return info
 
-    async def _read_extras(self) -> dict[str, dict[str, Any]]:
-        """TP-Link's own tables. A switch without one of them just leaves it out."""
+    async def _read_extras(self, tables: dict[str, str]) -> dict[str, dict[str, Any]]:
+        """Optional tables. A switch without one of them just leaves it out."""
         results = await asyncio.gather(
-            *(self.client.walk_many({key: oid}) for key, oid in EXTRA_TABLES.items()),
+            *(self.client.walk_many({key: oid}) for key, oid in tables.items()),
             return_exceptions=True,
         )
         extras: dict[str, dict[str, Any]] = {}
-        for key, result in zip(EXTRA_TABLES, results, strict=True):
+        for key, result in zip(tables, results, strict=True):
             if isinstance(result, SnmpError):
                 continue
             if isinstance(result, BaseException):
@@ -202,8 +204,9 @@ class SwitchCoordinator(DataUpdateCoordinator[SwitchData]):
         previous = self.data.ports if self.data else None
         elapsed = now - self._last_poll if self._last_poll is not None else 0
         add_rates(ports, previous, elapsed, 32 if self._v1 else 64)
+        add_error_details(ports, await self._read_extras(RMON_TABLES))
         if manufacturer(text(system.get(OID_SYS_OBJECT_ID, ""))) == "TP-Link":
-            extras = await self._read_extras()
+            extras = await self._read_extras(EXTRA_TABLES)
             add_loops(ports, extras)
             add_config(ports, extras)
             add_security(ports, extras)

@@ -135,6 +135,24 @@
       },
       "rx_multicast": {
         "name": "Port {port} multicast received"
+      },
+      "crc_errors": {
+        "name": "Port {port} CRC errors"
+      },
+      "undersize_packets": {
+        "name": "Port {port} Undersize packets"
+      },
+      "oversize_packets": {
+        "name": "Port {port} Oversize packets"
+      },
+      "fragments": {
+        "name": "Port {port} Fragments"
+      },
+      "jabbers": {
+        "name": "Port {port} Jabbers"
+      },
+      "collisions": {
+        "name": "Port {port} Collisions"
       }
     },
     "switch": {
@@ -184,7 +202,8 @@
         "macs": "Number of MAC addresses per port",
         "uptime": "Uptime of the switch",
         "devices": "Port of known devices",
-        "loop": "Loop found (the switch's loop detection)"
+        "loop": "Loop found (the switch's loop detection)",
+        "error_details": "Error details (CRC, collisions, undersize and oversize packets)"
       }
     }
   },

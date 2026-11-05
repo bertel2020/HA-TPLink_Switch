@@ -94,6 +94,27 @@ TRAP_ALARMS = {
     "1.3.6.1.4.1.11863.1.1.3.6.4.1": "broadcast_storm",  # broadcastRateExceed
     "1.3.6.1.4.1.11863.1.1.3.6.4.2": "multicast_storm",  # multicastRateExceed
 }
+# RMON etherStatsTable (standard): the errors of a port told apart. The row index is not always
+# the port, so etherStatsDataSource (an ifIndex as an OID) says which interface a row is for.
+OID_RMON_STATS = "1.3.6.1.2.1.16.1.1.1"
+RMON_TABLES = {
+    "rmon_source": f"{OID_RMON_STATS}.2",
+    "rmon_crc": f"{OID_RMON_STATS}.8",
+    "rmon_under": f"{OID_RMON_STATS}.9",
+    "rmon_over": f"{OID_RMON_STATS}.10",
+    "rmon_frag": f"{OID_RMON_STATS}.11",
+    "rmon_jabber": f"{OID_RMON_STATS}.12",
+    "rmon_coll": f"{OID_RMON_STATS}.13",
+}
+# the kinds of error and the column that holds each; the names are the keys of the sensors
+ERROR_DETAILS = {
+    "crc_errors": "rmon_crc",
+    "undersize_packets": "rmon_under",
+    "oversize_packets": "rmon_over",
+    "fragments": "rmon_frag",
+    "jabbers": "rmon_jabber",
+    "collisions": "rmon_coll",
+}
 OID_SYS_NAME = "1.3.6.1.2.1.1.5.0"
 OID_BRIDGE_ADDRESS = "1.3.6.1.2.1.17.1.1.0"
 
@@ -163,6 +184,7 @@ PORT_ENTITY_GROUPS: dict[str, tuple[str, ...]] = {
     "link_changed": ("link_changed",),
     "macs": ("macs",),
     "loop": ("loop",),
+    "error_details": tuple(ERROR_DETAILS),
 }
 # groups of entities that belong to the switch and not to a port
 SWITCH_ENTITY_GROUPS = ("uptime", "devices")

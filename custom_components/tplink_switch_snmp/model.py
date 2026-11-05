@@ -7,7 +7,7 @@ from datetime import datetime
 import re
 from typing import Any
 
-from .const import ADMIN_DOWN, ADMIN_UP
+from .const import ADMIN_DOWN, ADMIN_UP, PORT_MODES
 
 PORT_NAME = re.compile(r"^port\s*(\d+)", re.IGNORECASE)
 OPER_UP = 1
@@ -47,6 +47,9 @@ class PortData:
     link_changed_at: datetime | None = None
     loop: bool | None = None  # a loop is detected here; None if the port is not watched
     loop_blocked: bool | None = None  # the switch has blocked the port because of a loop
+    mode: str | None = None  # how the port is set: "auto", "100full", ... (None if unknown)
+    flow_control: bool | None = None
+    lag: str | None = None  # the link aggregation group the port belongs to
 
 
 @dataclass
@@ -242,6 +245,20 @@ def add_loops(ports: dict[int, PortData], extras: dict[str, dict[str, Any]]) -> 
         port.loop = flag(looped[suffix])
         if suffix in extras.get("loop_blocked", {}):
             port.loop_blocked = flag(extras["loop_blocked"][suffix])
+
+
+def add_config(ports: dict[int, PortData], extras: dict[str, dict[str, Any]]) -> None:
+    """Fill in how the ports are set (speed and duplex, flow control, trunk)."""
+    for number, port in ports.items():
+        suffix = str(number)
+        mode = extras.get("cfg_mode", {}).get(suffix)
+        if isinstance(mode, int):
+            port.mode = PORT_MODES.get(mode)
+        flow = extras.get("cfg_flow", {}).get(suffix)
+        if isinstance(flow, int):
+            port.flow_control = flow == 1
+        lag = text(extras.get("cfg_lag", {}).get(suffix, b"")).strip()
+        port.lag = lag if lag.strip("-") else None
 
 
 def _delta(new: int, old: int, bits: int) -> int | None:

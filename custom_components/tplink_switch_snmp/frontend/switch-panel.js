@@ -389,6 +389,8 @@ class TplinkSwitchPanel extends HTMLElement {
     const tags = [
       `<span class="tag ${p.up ? "ok" : ""}">${esc(p.up ? this._speedText(p) : t("noLink"))}</span>`,
       p.admin_up === false ? `<span class="tag bad">${esc(t("switchedOff"))}</span>` : "",
+      this._fixed(p) ? `<span class="tag warn">${esc(t("fixedMode", { mode: t("mode_" + p.mode) }))}</span>` : "",
+      p.lag ? `<span class="tag">${esc(t("lagN", { lag: p.lag }))}</span>` : "",
       p.loop ? `<span class="tag bad">${esc(t(p.loop_blocked ? "loopBlocked" : "loopFound"))}</span>` : "",
       p.up && p.speed > 0 && p.speed < 1000 ? `<span class="tag warn">${esc(t("only100"))}</span>` : "",
       this._errors(p) ? `<span class="tag bad">${esc(t.count("errorsN", this._errors(p)))}</span>` : "",
@@ -495,6 +497,11 @@ class TplinkSwitchPanel extends HTMLElement {
     return `<div class="plate" style="--cols:${cols}"><div class="plate-row">${odd.map(jack).join("")}</div><div class="plate-row">${even.map(jack).join("")}</div></div>`;
   }
 
+  // a port that is set to a fixed speed and not to auto negotiation
+  _fixed(p) {
+    return !!p.mode && p.mode !== "auto";
+  }
+
   _overview(sw) {
     const t = this._t;
     const live = sw.last_update_success ? `<span class="live"><span class="dot"></span>${esc(t("live"))}</span>` : `<span class="live stale"><span class="dot"></span>${esc(t("stale"))}</span>`;
@@ -504,6 +511,7 @@ class TplinkSwitchPanel extends HTMLElement {
     const errs = sw.ports.filter((p) => this._errors(p));
     const loud = sw.ports.filter((p) => (p.rx_bcast_pps ?? 0) >= BROADCAST_STORM);
     const loops = sw.ports.filter((p) => p.loop);
+    const fixed = sw.ports.filter((p) => this._fixed(p));
     const day = Date.now() - 86400000;
     const flips = sw.ports.filter((p) => (this._changedAt(sw, p) ?? 0) > day);
     const note = (cls, ic, title, text) => `<div class="issue ${cls}">${icon(ic)}<div><b>${esc(title)}</b><br>${esc(text)}</div></div>`;
@@ -512,8 +520,9 @@ class TplinkSwitchPanel extends HTMLElement {
       errs.length ? note("warn", "warn", t.count("errorPorts", errs.length), t("errorPortsText", { ports: errs.map((p) => `${t("port")} ${p.n}`).join(", ") })) : "",
       slow.length ? note("warn", "warn", t.count("slowPorts", slow.length), t("slowPortsText", { ports: slow.map((p) => `${t("port")} ${p.n}`).join(", ") })) : "",
       loud.length ? note("warn", "warn", t.count("manyBroadcast", loud.length), t("manyBroadcastText", { ports: loud.map((p) => `${t("port")} ${p.n}`).join(", ") })) : "",
+      fixed.length ? note("warn", "warn", t.count("fixedPorts", fixed.length), t("fixedPortsText", { ports: fixed.map((p) => `${t("port")} ${p.n} (${t("mode_" + p.mode)})`).join(", ") })) : "",
       flips.length ? note("warn", "warn", t.count("linkChanges", flips.length), t("linkChangesText", { ports: flips.map((p) => `${t("port")} ${p.n}`).join(", ") })) : "",
-      !errs.length && !slow.length && !flips.length && !loud.length && !loops.length ? note("ok", "ok", t("allFine"), t("allFineText")) : "",
+      !errs.length && !slow.length && !flips.length && !loud.length && !loops.length && !fixed.length ? note("ok", "ok", t("allFine"), t("allFineText")) : "",
     ].join("");
     return `<section class="card"><div class="card-h"><h2>${esc(t("faceplate"))}</h2>${live}<span class="grow"></span><span class="sub">${esc(t("clickPort"))}</span></div>
       <div class="face">${this._plate(sw)}<div class="legend">

@@ -49,10 +49,18 @@ OID_TPLINK = "1.3.6.1.4.1.11863.1.1.3"
 OID_LOOP_ENABLED = f"{OID_TPLINK}.2.1.5.4.1.2"  # loopbackDetectionState
 OID_LOOP_LOOPED = f"{OID_TPLINK}.2.1.5.4.1.5"  # loopbackDetectionLoopState
 OID_LOOP_BLOCKED = f"{OID_TPLINK}.2.1.5.4.1.6"  # loopbackDetectionBlockState
+OID_CFG_MODE = f"{OID_TPLINK}.2.1.1.1.1.4"  # l2PortConfigPortMode
+OID_CFG_FLOW = f"{OID_TPLINK}.2.1.1.1.1.5"  # l2PortConfigPortFlowCtrl
+OID_CFG_LAG = f"{OID_TPLINK}.2.1.1.1.1.6"  # l2PortConfigPortLAG
+# l2PortConfigPortMode: how the port is set (6 is auto negotiation)
+PORT_MODES = {1: "10half", 2: "10full", 3: "100half", 4: "100full", 5: "1000full", 6: "auto"}
 EXTRA_TABLES = {
     "loop_on": OID_LOOP_ENABLED,
     "loop": OID_LOOP_LOOPED,
     "loop_blocked": OID_LOOP_BLOCKED,
+    "cfg_mode": OID_CFG_MODE,
+    "cfg_flow": OID_CFG_FLOW,
+    "cfg_lag": OID_CFG_LAG,
 }
 OID_SYS_NAME = "1.3.6.1.2.1.1.5.0"
 OID_BRIDGE_ADDRESS = "1.3.6.1.2.1.17.1.1.0"

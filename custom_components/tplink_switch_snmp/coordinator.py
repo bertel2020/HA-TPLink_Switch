@@ -64,6 +64,7 @@ from .model import (
     PortData,
     SwitchData,
     UptimeTracker,
+    add_config,
     add_loops,
     add_rates,
     build_ports,
@@ -198,7 +199,9 @@ class SwitchCoordinator(DataUpdateCoordinator[SwitchData]):
         elapsed = now - self._last_poll if self._last_poll is not None else 0
         add_rates(ports, previous, elapsed, 32 if self._v1 else 64)
         if manufacturer(text(system.get(OID_SYS_OBJECT_ID, ""))) == "TP-Link":
-            add_loops(ports, await self._read_extras())
+            extras = await self._read_extras()
+            add_loops(ports, extras)
+            add_config(ports, extras)
         self._last_poll = now
 
         ticks = int(system.get(OID_SYS_UPTIME, 0))

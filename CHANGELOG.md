@@ -6,6 +6,8 @@ Alle nennenswerten Änderungen an dieser Integration werden hier festgehalten.
 
 ### Neu
 
+- **Burger-Menü auf dem Handy:** Auf schmalen Bildschirmen stehen die Reiter des Panels in einem Burger-Menü statt in einer umbrechenden Leiste. Ein Tipp auf einen Reiter schließt das Menü wieder.
+
 - **Panel zeigt sofort Menü und Reiter:** Das Panel zeichnet Kopfleiste und Reiter gleich beim Öffnen und meldet „Daten werden geladen …“, bis der Switch antwortet. Schlägt das erste Laden fehl, versucht es nach 3 Sekunden erneut, statt bis zum Neuladen leer zu bleiben.
 
 - **Schleifenerkennung:** Pro Port, an dem die Schleifenerkennung des Switches eingeschaltet ist, gibt es einen Binärsensor **Port N Schleife** (Problem; Attribut `blocked`, wenn der Switch den Port gesperrt hat). Das Panel zeigt einen Hinweis und eine Markierung in der Karte des Ports. Die Werte stammen aus der TP-Link-MIB des TL-SG3424 und sind noch nicht an echter Hardware geprüft; fehlt die Tabelle, gibt es die Sensoren einfach nicht. Neue Gruppe „Schleife erkannt“ in den Optionen (wer die Auswahl schon gespeichert hat, wählt sie dort nach).

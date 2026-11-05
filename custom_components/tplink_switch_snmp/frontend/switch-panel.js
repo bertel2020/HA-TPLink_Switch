@@ -85,6 +85,7 @@ class TplinkSwitchPanel extends HTMLElement {
     this._look = { ...DEFAULTS };
     this._lookKey = null;
     this._menuOpen = false;
+    this._navOpen = false; // the tabs in the burger menu of a narrow screen
     this._lastData = 0;
     this._tipPort = null;
   }
@@ -452,7 +453,8 @@ class TplinkSwitchPanel extends HTMLElement {
     return `<header class="topbar"><div class="topbar-in">
       <button class="menu" data-a="menu" aria-label="${esc(t("menu"))}">${icon("menu")}</button>
       <div class="brand"><div class="logo">${icon("lan")}</div>${esc(t("title"))}</div>
-      <nav role="tablist">${tab("overview", t("overview"))}${tab("ports", t("ports"))}${tab("devices", t("devices"))}${tab("diag", t("diag"))}${tab("config", t("config"))}</nav>
+      <button class="burger" data-a="nav-toggle" aria-label="${esc(t("tabsMenu"))}" aria-expanded="${this._navOpen}">${icon("menu")}</button>
+      <nav role="tablist" class="${this._navOpen ? "open" : ""}">${tab("overview", t("overview"))}${tab("ports", t("ports"))}${tab("devices", t("devices"))}${tab("diag", t("diag"))}${tab("config", t("config"))}</nav>
       <span class="lookwrap">
         <button class="icon-btn" id="lookBtn" data-a="look-toggle" title="${esc(t("lookTitle"))}" aria-label="${esc(t("lookTitle"))}" aria-haspopup="true" aria-expanded="${this._menuOpen}">${icon("palette")}</button>
         ${this._menuOpen ? this._lookMenu() : ""}
@@ -916,7 +918,8 @@ class TplinkSwitchPanel extends HTMLElement {
         }
         case "look-toggle": this._menuOpen = !this._menuOpen; break;
         case "look": this._setLook({ [el.dataset.kind]: v }); break;
-        case "tab": this._tab = v; this._editing = false; this._notice = null; break;
+        case "nav-toggle": this._navOpen = !this._navOpen; break;
+        case "tab": this._navOpen = false; this._tab = v; this._editing = false; this._notice = null; break;
         case "menu":
           this.dispatchEvent(new CustomEvent("hass-toggle-menu", { bubbles: true, composed: true }));
           if (outside) this._render();

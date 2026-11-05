@@ -23,6 +23,14 @@ nav { display: flex; gap: 2px; flex-wrap: wrap; }
 .tab { border: 0; background: none; border-radius: 20px; padding: 8px 16px; font-weight: 500; color: var(--muted); cursor: pointer; }
 .tab:hover { color: var(--text); }
 .tab[aria-selected="true"] { background: var(--accent-soft); color: var(--accent-hover); }
+.burger { display: none; border: 0; background: none; cursor: pointer; border-radius: 50%; padding: 6px; color: var(--text); }
+.burger:focus-visible, .menu:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+@media (max-width: 700px) {
+  .burger { display: inline-flex; }
+  nav { display: none; order: 10; width: 100%; flex-direction: column; gap: 0; border-top: 1px solid var(--line); padding-top: 6px; }
+  nav.open { display: flex; }
+  .tab { text-align: left; border-radius: 10px; padding: 12px 14px; }
+}
 .chip { min-height: 32px; padding: 0 14px; border-radius: 18px; border: 1px solid var(--input-line); font-size: max(10.5px, calc(13px * var(--fs))); font-weight: 500; background: var(--surface); color: var(--text); cursor: pointer; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
 .chip:hover { background: var(--accent-soft); color: var(--accent-hover); }
 .chip[aria-pressed="true"] { border-color: var(--accent); color: var(--accent-hover); background: var(--accent-soft); }

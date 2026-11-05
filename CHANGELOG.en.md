@@ -6,6 +6,8 @@ All notable changes to this integration are recorded here.
 
 ### New
 
+- **Burger menu on a phone:** On narrow screens the tabs of the panel sit in a burger menu instead of a wrapping bar. Tapping a tab closes the menu again.
+
 - **The panel shows its menu and tabs at once:** The panel draws the top bar and tabs as soon as it opens and says "Loading data …" until the switch answers. If the first load fails, it tries again after 3 seconds instead of staying empty until a reload.
 
 - **Loop detection:** for every port where the switch's loop detection is on there is a binary sensor **Port N loop** (problem; attribute `blocked` when the switch has blocked the port). The panel shows a note and a tag on the port's card. The values come from TP-Link's MIB for the TL-SG3424 and are not yet checked against real hardware; if the table is missing, the sensors are simply not created. New group "Loop found" in the options (if you saved the selection before, pick it there).

@@ -865,28 +865,40 @@ class TplinkSwitchPanel extends HTMLElement {
     this._render();
   }
 
-  // The VLANs of the switch with the ports that belong to them; a port is untagged or tagged in a VLAN.
+  // The VLANs of the switch as a grid: one tile per port, filled when the port is untagged in the
+  // VLAN, outlined when it is tagged. A VLAN without a port is dimmed.
   _vlanCard(sw) {
     const t = this._t;
     const ids = Object.keys(sw.vlans || {}).map(Number).sort((a, b) => a - b);
     if (!ids.length) return "";
-    const members = (id, key) => sw.ports.filter((p) => (p[key] || []).includes(id)).map((p) => p.n);
-    // 1, 2, 3, 5 becomes "1–3, 5": a whole switch fits in a few characters
-    const ranges = (ports) => {
-      const out = [];
-      for (let i = 0; i < ports.length; ) {
-        let j = i;
-        while (ports[j + 1] === ports[j] + 1) j++;
-        out.push(j - i >= 2 ? `${ports[i]}–${ports[j]}` : ports.slice(i, j + 1).join(", "));
-        i = j + 1;
-      }
-      return out.join(", ");
+    const last = sw.ports.length - 1;
+    const axis = sw.ports.map((p, i) => `<span>${i === 0 || p.n % 5 === 0 || i === last ? p.n : ""}</span>`).join("");
+    const grid = (id) => {
+      let count = 0;
+      const tiles = sw.ports
+        .map((p) => {
+          const untagged = (p.vlans_untagged || []).includes(id);
+          const tagged = (p.vlans_tagged || []).includes(id);
+          if (untagged || tagged) count++;
+          const kind = untagged ? "u" : tagged ? "g" : "";
+          const state = untagged ? t("vlanUntagged") : tagged ? t("vlanTagged") : t("vlanNone");
+          const pvid = p.pvid === id ? ` · PVID ${id}` : "";
+          return `<span class="vt ${kind}" title="${esc(`${t("port")} ${p.n}: ${state}${pvid}`)}">${p.n}</span>`;
+        })
+        .join("");
+      return { count, tiles };
     };
-    const list = (ports) => (ports.length ? esc(ranges(ports)) : `<span class="muted">–</span>`);
+    const rows = ids
+      .map((id) => {
+        const { count, tiles } = grid(id);
+        const name = `${esc(sw.vlans[id] || "")}<span class="badge">${esc(count ? t.count("vlanPorts", count) : t("vlanUnused"))}</span>`;
+        const cell = count ? `<div class="vgrid" style="--cols:${sw.ports.length}">${tiles}</div>` : `<span class="muted">${esc(t("vlanNoPorts"))}</span>`;
+        return `<tr class="row${count ? "" : " unused"}"><td class="num mono">${id}</td><td>${name}</td><td>${cell}</td></tr>`;
+      })
+      .join("");
     return `<section class="card"><div class="card-h"><h2>${esc(t("vlans"))}</h2><span class="grow"></span><span class="sub">${esc(t.count("vlanCount", ids.length))}</span></div>
-      <div class="tablewrap"><table><thead><tr><th class="num">${esc(t("vlanId"))}</th><th>${esc(t("vlanName"))}</th><th>${esc(t("vlanUntagged"))}</th><th>${esc(t("vlanTagged"))}</th><th>PVID</th></tr></thead><tbody>
-      ${ids.map((id) => `<tr class="row"><td class="num mono">${id}</td><td>${esc(sw.vlans[id] || "")}</td><td class="mono">${list(members(id, "vlans_untagged"))}</td><td class="mono">${list(members(id, "vlans_tagged"))}</td><td class="mono">${list(sw.ports.filter((p) => p.pvid === id).map((p) => p.n))}</td></tr>`).join("")}
-      </tbody></table></div></section>`;
+      <div class="tablewrap"><table><thead><tr><th class="num">${esc(t("vlanId"))}</th><th>${esc(t("vlanName"))}</th><th><div class="vgrid vaxis" style="--cols:${sw.ports.length}">${axis}</div></th></tr></thead><tbody>${rows}</tbody></table></div>
+      <div class="vlegend"><span><i class="vt u"></i>${esc(t("vlanUntagged"))}</span><span><i class="vt g"></i>${esc(t("vlanTagged"))}</span><span><i class="vt"></i>${esc(t("vlanNone"))}</span><span>${esc(t("vlanHover"))}</span></div></section>`;
   }
 
   // ---- events --------------------------------------------------------------------------------

@@ -170,6 +170,15 @@ th[aria-sort]:not([aria-sort="none"]) { color: var(--text); }
 .look-menu button:hover { background: var(--soft); }
 .look-menu button[aria-checked="true"] { color: var(--accent-hover); background: var(--accent-soft); font-weight: 500; }
 .look-menu .dot { width: 14px; height: 14px; border-radius: 50%; flex: none; border: 1px solid var(--line); }
+.badge { font-size: max(10.5px, calc(11px * var(--fs))); color: var(--muted); border: 1px solid var(--line); border-radius: 10px; padding: 1px 8px; margin-left: 8px; white-space: nowrap; }
+.vgrid { display: grid; grid-template-columns: repeat(var(--cols), minmax(17px, 1fr)); gap: 3px; min-width: 460px; }
+.vaxis { font: 10px ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--muted); text-align: center; text-transform: none; letter-spacing: 0; }
+.vt { height: 22px; border-radius: 5px; background: var(--soft); border: 1px solid var(--line-2); display: grid; place-items: center; font: 10px ui-monospace, SFMono-Regular, Menlo, monospace; color: transparent; }
+.vt.u { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.vt.g { background: var(--warn-soft); border: 1.5px solid var(--warn); color: var(--warn); }
+tr.unused td, tr.unused .badge { color: var(--muted); } tr.unused .mono { opacity: .6; }
+.vlegend { display: flex; gap: 18px; flex-wrap: wrap; align-items: center; padding: 12px 20px; border-top: 1px solid var(--line); color: var(--muted); font-size: max(10.5px, calc(12px * var(--fs))); }
+.vlegend .vt { display: inline-block; width: 14px; height: 14px; vertical-align: -3px; margin-right: 6px; }
 @media (max-width: 700px) {
   .lookwrap { align-self: stretch; }
   .icon-btn { width: auto; padding: 0 14px; gap: 10px; border-radius: 20px; display: inline-flex; align-items: center; }

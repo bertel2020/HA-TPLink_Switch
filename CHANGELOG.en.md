@@ -6,7 +6,7 @@ All notable changes to this integration are recorded here.
 
 ### New
 
-- **Compact VLAN table:** The port lists show as ranges ("1–24, 26") instead of a long enumeration, so the table fits the width even with 24 ports.
+- **VLAN grid:** The VLAN table shows a grid per VLAN with one tile per port: filled when untagged, outlined when tagged, grey when not a member. The PVID is in the port's tooltip. A VLAN without ports shows dimmed as "unused".
 
 - **Burger menu on a phone:** On narrow screens the tabs of the panel sit in a burger menu instead of a wrapping bar. Tapping a tab closes the menu again. The appearance settings (colour scheme, light or dark, font size) and the link to the integration are in there too.
 

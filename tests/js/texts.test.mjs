@@ -17,7 +17,7 @@ test("a text has the same placeholders in both languages", () => {
 });
 
 test("a text that counts has a form for exactly one", () => {
-  for (const key of ["errorPorts", "slowPorts", "slowNote", "manyBroadcast", "linkChanges", "errorsN", "vlanCount"]) {
+  for (const key of ["errorPorts", "slowPorts", "slowNote", "manyBroadcast", "linkChanges", "errorsN", "vlanCount", "vlanPorts"]) {
     for (const lang of ["de", "en"]) assert.ok(`${key}One` in TEXTS[lang], `${lang}.${key}One`);
   }
 });

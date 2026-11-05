@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mockup VLAN-Tabelle</title>
+<style>
+  :root { --bg:#f4f6f9; --surface:#fff; --soft:#f5f7f9; --line:#e1e5ea; --line-2:#eef0f3; --text:#1b1f24; --muted:#5b6270; --accent:#0a6aa8; --accent-soft:#eaf3fa; --tag:#c9741a; --tag-soft:#fdf1e4; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#14181d; --surface:#1d232a; --soft:#232a32; --line:#2f3740; --line-2:#272e36; --text:#e7eaee; --muted:#9aa3af; --accent:#5aaee6; --accent-soft:#1d3447; --tag:#f0a24f; --tag-soft:#3a2d1c; } }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 24px 16px 48px; background: var(--bg); color: var(--text); font: 14px/1.45 system-ui, sans-serif; }
+  .wrap { max-width: 1100px; margin: 0 auto; display: grid; gap: 28px; }
+  h1 { font-size: 20px; margin: 0; } p.lead { margin: 4px 0 0; color: var(--muted); }
+  .label { font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin: 0 0 8px; }
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 1px 3px rgb(0 0 0 / 8%); overflow: hidden; }
+  .card-h { display: flex; align-items: center; gap: 10px; padding: 14px 20px; border-bottom: 1px solid var(--line); }
+  .card-h h2 { margin: 0; font-size: 16px; font-weight: 500; flex: 1; } .sub { color: var(--muted); font-size: 12px; }
+  .wr { overflow-x: auto; } table { width: 100%; border-collapse: collapse; }
+  th { text-align: left; font-size: 11px; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); font-weight: 500; padding: 10px 12px; background: var(--soft); border-bottom: 1px solid var(--line); }
+  td { padding: 12px; border-bottom: 1px solid var(--line-2); vertical-align: middle; }
+  tr:last-child td { border-bottom: 0; }
+  th:first-child, td:first-child { padding-left: 20px; } th:last-child, td:last-child { padding-right: 20px; }
+  .id { font: 500 13px ui-monospace, Menlo, monospace; color: var(--accent); background: var(--accent-soft); border-radius: 8px; padding: 3px 9px; }
+  .mono { font: 13px ui-monospace, Menlo, monospace; white-space: nowrap; } .muted { color: var(--muted); }
+  tr.empty td { color: var(--muted); } tr.empty .name { color: var(--muted); }
+  .badge { font-size: 11px; color: var(--muted); border: 1px solid var(--line); border-radius: 10px; padding: 1px 8px; margin-left: 8px; }
+
+  /* B: one small tile per port */
+  .tiles { display: grid; grid-template-columns: repeat(24, minmax(16px, 1fr)); gap: 3px; min-width: 520px; }
+  .t { height: 22px; border-radius: 5px; background: var(--soft); border: 1px solid var(--line-2); display: grid; place-items: center; font: 10px ui-monospace, Menlo, monospace; color: transparent; }
+  .t.u { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .t.g { background: var(--tag-soft); border: 1.5px solid var(--tag); color: var(--tag); }
+  .t.p { box-shadow: 0 0 0 2px var(--surface), 0 0 0 3.5px var(--text); }
+  .axis { display: grid; grid-template-columns: repeat(24, minmax(16px, 1fr)); gap: 3px; min-width: 520px; font: 10px ui-monospace, Menlo, monospace; color: var(--muted); text-align: center; padding-bottom: 4px; }
+  .legend { display: flex; gap: 18px; flex-wrap: wrap; padding: 12px 20px; border-top: 1px solid var(--line); color: var(--muted); font-size: 12px; align-items: center; }
+  .legend i { display: inline-block; width: 14px; height: 14px; border-radius: 4px; vertical-align: -3px; margin-right: 6px; }
+
+  /* C: compact summary with chips */
+  .chip { display: inline-flex; align-items: center; gap: 6px; border-radius: 14px; padding: 2px 10px; font: 12px ui-monospace, Menlo, monospace; margin: 2px 6px 2px 0; background: var(--accent-soft); color: var(--accent); }
+  .chip.g { background: var(--tag-soft); color: var(--tag); }
+  .chip b { font: 500 11px system-ui, sans-serif; opacity: .8; }
+  @media (max-width: 700px) { .hide-m { display: none; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div><h1>VLAN-Tabelle: zwei Vorschläge</h1><p class="lead">Beispiel: TL-SG3424 mit drei VLANs. Port 24 ist ein Trunk: VLAN 1 ohne Tag, VLAN 2 mit Tag. Port 23 hängt nur in VLAN 2.</p></div>
+
+  <section>
+    <p class="label">Vorschlag B: Port-Raster – auf einen Blick, wer wo hängt</p>
+    <div class="card">
+      <div class="card-h"><h2>VLANs</h2><span class="sub">3 VLANs</span></div>
+      <div class="wr"><table>
+        <thead><tr><th>ID</th><th>Name</th><th>Ports</th></tr></thead>
+        <tbody>
+          <tr><td><span class="id">1</span></td><td>Default VLAN<span class="badge">23 Ports</span></td>
+            <td><div class="axis"><span>1</span><span></span><span></span><span></span><span>5</span><span></span><span></span><span></span><span></span><span>10</span><span></span><span></span><span></span><span></span><span>15</span><span></span><span></span><span></span><span></span><span>20</span><span></span><span></span><span></span><span>24</span></div>
+              <div class="tiles" id="v1"></div></td></tr>
+          <tr><td><span class="id">2</span></td><td>Aussenbereich<span class="badge">2 Ports</span></td><td><div class="tiles" id="v2"></div></td></tr>
+          <tr class="empty"><td><span class="id" style="opacity:.55">3</span></td><td class="name">OPNsense WAN<span class="badge">ungenutzt</span></td><td>keine Ports zugeordnet</td></tr>
+        </tbody></table></div>
+      <div class="legend"><span><i style="background:var(--accent)"></i>ohne Tag</span><span><i style="border:1.5px solid var(--tag);background:var(--tag-soft)"></i>mit Tag</span><span><i style="background:var(--soft);border:1px solid var(--line)"></i>nicht Mitglied</span><span>Mauszeiger auf einem Port: Name und PVID</span></div>
+    </div>
+  </section>
+
+  <section>
+    <p class="label">Vorschlag C: kompakte Chips – spart Platz, gut für das Handy</p>
+    <div class="card">
+      <div class="card-h"><h2>VLANs</h2><span class="sub">3 VLANs</span></div>
+      <div class="wr"><table>
+        <thead><tr><th>ID</th><th>Name</th><th>Mitglieder</th></tr></thead>
+        <tbody>
+          <tr><td><span class="id">1</span></td><td>Default VLAN</td>
+            <td><span class="chip">1–22, 24 <b>ohne Tag</b></span></td></tr>
+          <tr><td><span class="id">2</span></td><td>Aussenbereich</td><td><span class="chip">23 <b>ohne Tag</b></span><span class="chip g">24 <b>mit Tag</b></span></td></tr>
+          <tr class="empty"><td><span class="id" style="opacity:.55">3</span></td><td class="name">OPNsense WAN</td><td>ungenutzt</td></tr>
+        </tbody></table></div>
+      <div class="legend">PVID steht nur dann dabei, wenn er vom Rest abweicht, z. B. <span class="chip" style="margin:0 0 0 6px">24 <b>PVID 1</b></span><span class="chip g" style="margin:0">24 <b>mit Tag</b></span></div>
+    </div>
+  </section>
+</div>
+<script>
+  // untagged / tagged / pvid per port of the example
+  const build = (id, untagged, tagged, pvid) => {
+    const el = document.getElementById(id);
+    for (let n = 1; n <= 24; n++) {
+      const d = document.createElement("div");
+      d.className = "t" + (untagged.includes(n) ? " u" : tagged.includes(n) ? " g" : "") + "";
+      d.title = "Port " + n + (pvid.includes(n) ? " · PVID " + id.slice(1) : "");
+      d.textContent = n;
+      el.append(d);
+    }
+  };
+  build("v1", Array.from({ length: 22 }, (_, i) => i + 1).concat([24]).filter((n) => n !== 23), [], Array.from({ length: 22 }, (_, i) => i + 1).concat([24]));
+  build("v2", [23], [24], [23]);
+</script>
+</body>
+</html>

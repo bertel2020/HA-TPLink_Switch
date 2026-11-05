@@ -50,6 +50,8 @@ class PortData:
     mode: str | None = None  # how the port is set: "auto", "100full", ... (None if unknown)
     flow_control: bool | None = None
     lag: str | None = None  # the link aggregation group the port belongs to
+    security_max: int | None = None  # port security: most MAC addresses the port may learn
+    security_learned: int | None = None  # ... and how many it has learned (None: not on)
 
 
 @dataclass
@@ -259,6 +261,17 @@ def add_config(ports: dict[int, PortData], extras: dict[str, dict[str, Any]]) ->
             port.flow_control = flow == 1
         lag = text(extras.get("cfg_lag", {}).get(suffix, b"")).strip()
         port.lag = lag if lag.strip("-") else None
+
+
+def add_security(ports: dict[int, PortData], extras: dict[str, dict[str, Any]]) -> None:
+    """Fill in port security for the ports where the switch has it switched on."""
+    for number, port in ports.items():
+        suffix = str(number)
+        maximum = extras.get("sec_max", {}).get(suffix)
+        learned = extras.get("sec_learned", {}).get(suffix)
+        if extras.get("sec_on", {}).get(suffix) == 1 and isinstance(maximum, int):
+            port.security_max = maximum
+            port.security_learned = learned if isinstance(learned, int) else None
 
 
 def _delta(new: int, old: int, bits: int) -> int | None:

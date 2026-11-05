@@ -67,6 +67,7 @@ from .model import (
     add_config,
     add_loops,
     add_rates,
+    add_security,
     build_ports,
     manufacturer,
     split_hardware,
@@ -202,6 +203,7 @@ class SwitchCoordinator(DataUpdateCoordinator[SwitchData]):
             extras = await self._read_extras()
             add_loops(ports, extras)
             add_config(ports, extras)
+            add_security(ports, extras)
         self._last_poll = now
 
         ticks = int(system.get(OID_SYS_UPTIME, 0))

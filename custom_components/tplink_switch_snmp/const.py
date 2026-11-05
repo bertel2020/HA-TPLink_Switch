@@ -54,6 +54,9 @@ OID_CFG_FLOW = f"{OID_TPLINK}.2.1.1.1.1.5"  # l2PortConfigPortFlowCtrl
 OID_CFG_LAG = f"{OID_TPLINK}.2.1.1.1.1.6"  # l2PortConfigPortLAG
 # l2PortConfigPortMode: how the port is set (6 is auto negotiation)
 PORT_MODES = {1: "10half", 2: "10full", 3: "100half", 4: "100full", 5: "1000full", 6: "auto"}
+OID_SEC_MAX = f"{OID_TPLINK}.2.1.3.1.1.2"  # l2PortSecurityMaxNum
+OID_SEC_LEARNED = f"{OID_TPLINK}.2.1.3.1.1.3"  # l2PortSecurityLearnNum
+OID_SEC_ON = f"{OID_TPLINK}.2.1.3.1.1.5"  # l2PortSecurityPortStatus
 EXTRA_TABLES = {
     "loop_on": OID_LOOP_ENABLED,
     "loop": OID_LOOP_LOOPED,
@@ -61,6 +64,9 @@ EXTRA_TABLES = {
     "cfg_mode": OID_CFG_MODE,
     "cfg_flow": OID_CFG_FLOW,
     "cfg_lag": OID_CFG_LAG,
+    "sec_on": OID_SEC_ON,
+    "sec_max": OID_SEC_MAX,
+    "sec_learned": OID_SEC_LEARNED,
 }
 OID_SYS_NAME = "1.3.6.1.2.1.1.5.0"
 OID_BRIDGE_ADDRESS = "1.3.6.1.2.1.17.1.1.0"

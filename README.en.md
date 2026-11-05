@@ -66,7 +66,7 @@ To change it later: **Devices & services → TP-Link Switch (SNMP) → ⋮ → R
 
 The integration adds the entry **Switch** to the sidebar (admins only):
 
-- **Overview:** a front panel with every port coloured by link speed (hovering a port shows a card with speed, rates, errors and devices), a port detail with the last 24 hours, the time of the last link change and the utilization, the ports with the most traffic and notes on errors, ports that run at 100 Mbit/s only, ports with a fixed mode, loops and link changes in the last 24 hours.
+- **Overview:** a front panel with every port coloured by link speed (hovering a port shows a card with speed, rates, errors and devices), a port detail with the last 24 hours, the time of the last link change and the utilization, the ports with the most traffic and notes on errors, ports that run at 100 Mbit/s only, ports at their port security limit, ports with a fixed mode, loops and link changes in the last 24 hours.
 - **Ports:** a table with filters, search and utilization in percent.
 - **Devices:** the learned MAC addresses per port; names come from devices Home Assistant knows by their MAC address (for example from "FRITZ!Box Network"); the manufacturer from there or else from the MAC address (Home Assistant's manufacturer list, no internet; the random addresses of phones have none).
 - **Diagnostics:** errors, discarded packets and data volume per port.

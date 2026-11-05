@@ -540,6 +540,8 @@ class TplinkSwitchPanel extends HTMLElement {
     }
     const igmp = Object.entries(p.igmp || {}).filter(([, n]) => n > 0).map(([kind, n]) => `${t("igmp_" + kind)} ${n}`);
     if (igmp.length) lines.push(`IGMP: ${igmp.join(" · ")}`);
+    else if (p.igmp_snooping) lines.push(t("igmpOn"));
+    if (p.isolated && p.isolation_forward?.length) lines.push(t("isolatedTo", { ports: p.isolation_forward.join(", ") }));
     if (p.qos_priority) lines.push(t("qosPriority", { n: p.qos_priority }));
     if (p.flow_control) lines.push(t("flowOn"));
     if (p.dhcp_trusted) lines.push(t("dhcpTrusted"));

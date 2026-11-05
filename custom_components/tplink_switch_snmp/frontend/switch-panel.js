@@ -454,12 +454,13 @@ class TplinkSwitchPanel extends HTMLElement {
       <button class="menu" data-a="menu" aria-label="${esc(t("menu"))}">${icon("menu")}</button>
       <div class="brand"><div class="logo">${icon("lan")}</div>${esc(t("title"))}</div>
       <button class="burger" data-a="nav-toggle" aria-label="${esc(t("tabsMenu"))}" aria-expanded="${this._navOpen}">${icon("menu")}</button>
-      <nav role="tablist" class="${this._navOpen ? "open" : ""}">${tab("overview", t("overview"))}${tab("ports", t("ports"))}${tab("devices", t("devices"))}${tab("diag", t("diag"))}${tab("config", t("config"))}</nav>
+      <div class="navwrap${this._navOpen ? " open" : ""}"><nav role="tablist">${tab("overview", t("overview"))}${tab("ports", t("ports"))}${tab("devices", t("devices"))}${tab("diag", t("diag"))}${tab("config", t("config"))}</nav>
       <span class="lookwrap">
-        <button class="icon-btn" id="lookBtn" data-a="look-toggle" title="${esc(t("lookTitle"))}" aria-label="${esc(t("lookTitle"))}" aria-haspopup="true" aria-expanded="${this._menuOpen}">${icon("palette")}</button>
+        <button class="icon-btn" id="lookBtn" data-a="look-toggle" title="${esc(t("lookTitle"))}" aria-label="${esc(t("lookTitle"))}" aria-haspopup="true" aria-expanded="${this._menuOpen}">${icon("palette")}<span class="btnlabel">${esc(t("lookTitle"))}</span></button>
         ${this._menuOpen ? this._lookMenu() : ""}
       </span>
       <button class="chip outline" data-a="integration">${icon("open")}${esc(t("integration"))}</button>
+      </div>
     </div></header>`;
   }
 

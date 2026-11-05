@@ -25,11 +25,15 @@ nav { display: flex; gap: 2px; flex-wrap: wrap; }
 .tab[aria-selected="true"] { background: var(--accent-soft); color: var(--accent-hover); }
 .burger { display: none; border: 0; background: none; cursor: pointer; border-radius: 50%; padding: 6px; color: var(--text); }
 .burger:focus-visible, .menu:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.navwrap { display: contents; }
+.btnlabel { display: none; }
 @media (max-width: 700px) {
   .burger { display: inline-flex; }
-  nav { display: none; order: 10; width: 100%; flex-direction: column; gap: 0; border-top: 1px solid var(--line); padding-top: 6px; }
-  nav.open { display: flex; }
+  .navwrap { display: none; order: 10; width: 100%; flex-direction: column; align-items: stretch; gap: 8px; border-top: 1px solid var(--line); padding-top: 6px; }
+  .navwrap.open { display: flex; }
+  nav { flex-direction: column; gap: 0; }
   .tab { text-align: left; border-radius: 10px; padding: 12px 14px; }
+  .navwrap .chip { align-self: flex-start; }
 }
 .chip { min-height: 32px; padding: 0 14px; border-radius: 18px; border: 1px solid var(--input-line); font-size: max(10.5px, calc(13px * var(--fs))); font-weight: 500; background: var(--surface); color: var(--text); cursor: pointer; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
 .chip:hover { background: var(--accent-soft); color: var(--accent-hover); }
@@ -166,4 +170,11 @@ th[aria-sort]:not([aria-sort="none"]) { color: var(--text); }
 .look-menu button:hover { background: var(--soft); }
 .look-menu button[aria-checked="true"] { color: var(--accent-hover); background: var(--accent-soft); font-weight: 500; }
 .look-menu .dot { width: 14px; height: 14px; border-radius: 50%; flex: none; border: 1px solid var(--line); }
+@media (max-width: 700px) {
+  .lookwrap { align-self: stretch; }
+  .icon-btn { width: auto; padding: 0 14px; gap: 10px; border-radius: 20px; display: inline-flex; align-items: center; }
+  .btnlabel { display: inline; font-weight: 500; }
+  .look-menu { position: static; margin-top: 4px; min-width: 0; box-shadow: none; }
+  .icon-btn { justify-content: flex-start; }
+}
 `;

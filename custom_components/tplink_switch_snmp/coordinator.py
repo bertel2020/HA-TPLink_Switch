@@ -75,6 +75,7 @@ from .model import (
     add_config,
     add_error_details,
     add_features,
+    add_igmp,
     add_isolation,
     add_loops,
     add_mirror,
@@ -226,6 +227,7 @@ class SwitchCoordinator(DataUpdateCoordinator[SwitchData]):
             features = add_features(ports, extras)
             mirror = add_mirror(ports, extras)
             add_isolation(ports, extras)
+            add_igmp(ports, extras)
             add_loops(ports, extras)
             add_config(ports, extras)
             add_security(ports, extras)

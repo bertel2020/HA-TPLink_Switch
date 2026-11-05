@@ -88,6 +88,9 @@
       },
       "feature_mirror": {
         "name": "Port mirroring"
+      },
+      "feature_igmp": {
+        "name": "IGMP snooping"
       }
     },
     "sensor": {
@@ -174,6 +177,18 @@
       },
       "pvid": {
         "name": "Port {port} PVID"
+      },
+      "igmp_queries": {
+        "name": "Port {port} IGMP queries"
+      },
+      "igmp_reports": {
+        "name": "Port {port} IGMP reports"
+      },
+      "igmp_leaves": {
+        "name": "Port {port} IGMP leaves"
+      },
+      "igmp_errors": {
+        "name": "Port {port} IGMP error packets"
       }
     },
     "switch": {
@@ -237,7 +252,8 @@
         "arp": "Illegal ARP packets (the switch's ARP protection)",
         "vlan": "VLAN: PVID and membership per port",
         "security": "Security: DoS defence, DHCP snooping, 802.1X (on or off)",
-        "mirror": "Port mirroring (on or off) and port isolation in the panel"
+        "mirror": "Port mirroring (on or off) and port isolation in the panel",
+        "igmp": "IGMP snooping: packets per port and state"
       }
     }
   },

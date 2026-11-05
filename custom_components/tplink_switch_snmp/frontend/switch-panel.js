@@ -537,6 +537,8 @@ class TplinkSwitchPanel extends HTMLElement {
       if (p.vlans_tagged?.length) parts.push(`${t("vlanTagged")} ${list(p.vlans_tagged)}`);
       lines.push(`VLAN: ${parts.join(" · ")}`);
     }
+    const igmp = Object.entries(p.igmp || {}).filter(([, n]) => n > 0).map(([kind, n]) => `${t("igmp_" + kind)} ${n}`);
+    if (igmp.length) lines.push(`IGMP: ${igmp.join(" · ")}`);
     if (p.flow_control) lines.push(t("flowOn"));
     if (p.dhcp_trusted) lines.push(t("dhcpTrusted"));
     if (p.arp_illegal > 0) lines.push(t("arpIllegal", { n: p.arp_illegal }));

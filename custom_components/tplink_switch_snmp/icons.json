@@ -27,6 +27,9 @@
       },
       "feature_mirror": {
         "default": "mdi:content-copy"
+      },
+      "feature_igmp": {
+        "default": "mdi:multicast"
       }
     },
     "sensor": {
@@ -113,6 +116,18 @@
       },
       "pvid": {
         "default": "mdi:lan"
+      },
+      "igmp_queries": {
+        "default": "mdi:help-network-outline"
+      },
+      "igmp_reports": {
+        "default": "mdi:account-multiple-plus-outline"
+      },
+      "igmp_leaves": {
+        "default": "mdi:account-multiple-minus-outline"
+      },
+      "igmp_errors": {
+        "default": "mdi:alert-network-outline"
       }
     },
     "switch": {

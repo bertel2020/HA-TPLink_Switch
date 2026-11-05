@@ -88,6 +88,9 @@
       },
       "feature_mirror": {
         "name": "Port-Spiegelung"
+      },
+      "feature_igmp": {
+        "name": "IGMP-Snooping"
       }
     },
     "sensor": {
@@ -174,6 +177,18 @@
       },
       "pvid": {
         "name": "Port {port} PVID"
+      },
+      "igmp_queries": {
+        "name": "Port {port} IGMP-Queries"
+      },
+      "igmp_reports": {
+        "name": "Port {port} IGMP-Reports"
+      },
+      "igmp_leaves": {
+        "name": "Port {port} IGMP-Leaves"
+      },
+      "igmp_errors": {
+        "name": "Port {port} IGMP-Fehlerpakete"
       }
     },
     "switch": {
@@ -237,7 +252,8 @@
         "arp": "Unzulässige ARP-Pakete (ARP-Schutz des Switches)",
         "vlan": "VLAN: PVID und Mitgliedschaft je Port",
         "security": "Sicherheit: DoS-Schutz, DHCP-Snooping, 802.1X (an oder aus)",
-        "mirror": "Port-Spiegelung (an oder aus) und Port-Isolation im Panel"
+        "mirror": "Port-Spiegelung (an oder aus) und Port-Isolation im Panel",
+        "igmp": "IGMP-Snooping: Pakete je Port und Status"
       }
     }
   },

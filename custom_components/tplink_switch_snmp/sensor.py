@@ -23,7 +23,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import ERROR_DETAILS
+from .const import ERROR_DETAILS, IGMP_COUNTERS
 from .coordinator import SwitchConfigEntry, SwitchCoordinator
 from .entity import PortEntity, SwitchEntity
 from .model import PortData
@@ -160,6 +160,38 @@ PORT_SENSORS: tuple[PortSensorDescription, ...] = (
         value_fn=lambda p: p.arp_illegal,
     ),
     PortSensorDescription(
+        key="igmp_queries",
+        translation_key="igmp_queries",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda p: p.igmp.get("queries"),
+    ),
+    PortSensorDescription(
+        key="igmp_reports",
+        translation_key="igmp_reports",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda p: p.igmp.get("reports"),
+    ),
+    PortSensorDescription(
+        key="igmp_leaves",
+        translation_key="igmp_leaves",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda p: p.igmp.get("leaves"),
+    ),
+    PortSensorDescription(
+        key="igmp_errors",
+        translation_key="igmp_errors",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda p: p.igmp.get("errors"),
+    ),
+    PortSensorDescription(
         key="pvid",
         translation_key="pvid",
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -260,6 +292,8 @@ def _reported(key: str, port: PortData) -> bool:
         return port.arp_illegal is not None
     if key == "pvid":
         return port.pvid is not None
+    if key in IGMP_COUNTERS:
+        return key.removeprefix("igmp_") in port.igmp
     return True
 
 

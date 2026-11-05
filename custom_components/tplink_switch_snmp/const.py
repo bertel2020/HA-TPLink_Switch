@@ -75,10 +75,19 @@ OID_STORM = f"{OID_TPLINK}.6.2.2.1.1"  # stormControlEntry: 2 broadcast, 3 multi
 OID_ARP = f"{OID_TPLINK}.8.2.1"  # arpDetection: the switch's ARP protection
 OID_SAVE_CONFIG = f"{OID_TPLINK}.11.1.0"  # save: 1 writes the running configuration to flash
 OID_REBOOT = f"{OID_TPLINK}.1.3.1.0"  # systemToolReBoot: 1 restarts the switch
+OID_IGMP_STATS = f"{OID_TPLINK}.5.1.8.1.1.1"
+# IGMP snooping counters: the sensor key -> the columns of the table that add up to it
+IGMP_COUNTERS = {
+    "igmp_queries": ("igmp_queries",),
+    "igmp_reports": ("igmp_report_v1", "igmp_report_v2", "igmp_report_v3"),
+    "igmp_leaves": ("igmp_leaves",),
+    "igmp_errors": ("igmp_errors",),
+}
 # Functions of the switch that are on or off as a whole: name -> (entity group, EXTRA_TABLES key).
 # None of these MIBs has counters, only the settings, so they show as on/off sensors.
 FEATURES: dict[str, tuple[str, str]] = {
     "mirror": ("mirror", "mirror_state"),  # port mirroring: on if any group is
+    "igmp": ("igmp", "feat_igmp"),  # igmpSnoopingEnable
     "dos": ("security", "feat_dos"),  # dosDefendGlobalConfig: DoS defence
     "dhcp": ("security", "feat_dhcp"),  # dhcpSnoopingEnable
     "dot1x": ("security", "feat_8021x"),  # sw8021xGlobalEnable
@@ -101,6 +110,14 @@ EXTRA_TABLES = {
     "mirror_in": f"{OID_TPLINK}.2.1.2.1.1.5",  # l2PortMirrorIngressPort: a port list
     "mirror_out": f"{OID_TPLINK}.2.1.2.1.1.6",  # l2PortMirrorEgressPort: a port list
     "isolation": f"{OID_TPLINK}.2.1.4.1.1.2",  # portIsolationForList: the ports a port may reach
+    "feat_igmp": f"{OID_TPLINK}.5.1.1.1",
+    "igmp_port_on": f"{OID_TPLINK}.5.1.2.1.1.2",  # igmpSnoopingPortEnable
+    "igmp_queries": f"{OID_IGMP_STATS}.2",  # igmpPktStatTable: the packets seen at each port
+    "igmp_report_v1": f"{OID_IGMP_STATS}.3",
+    "igmp_report_v2": f"{OID_IGMP_STATS}.4",
+    "igmp_report_v3": f"{OID_IGMP_STATS}.5",
+    "igmp_leaves": f"{OID_IGMP_STATS}.6",
+    "igmp_errors": f"{OID_IGMP_STATS}.7",
     "feat_dos": f"{OID_TPLINK}.8.4.1.1",
     "feat_dhcp": f"{OID_TPLINK}.8.1.1.1",
     "feat_8021x": f"{OID_TPLINK}.8.5.1.1",
@@ -236,6 +253,7 @@ PORT_ENTITY_GROUPS: dict[str, tuple[str, ...]] = {
     "error_details": tuple(ERROR_DETAILS),
     "arp": ("arp_illegal",),
     "vlan": ("pvid",),
+    "igmp": tuple(IGMP_COUNTERS),
 }
 # groups of entities that belong to the switch and not to a port
 SWITCH_ENTITY_GROUPS = ("uptime", "devices", "stp", "security", "mirror")

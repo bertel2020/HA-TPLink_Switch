@@ -87,6 +87,8 @@ def _switch(hass: HomeAssistant, entry: SwitchConfigEntry) -> dict[str, Any]:
                 "error_details": port.error_details,
                 "stp_state": port.stp_state,
                 "dhcp_trusted": port.dhcp_trusted,
+                "igmp": port.igmp,
+                "igmp_snooping": port.igmp_snooping,
                 "mirror": port.mirror,
                 "isolated": port.isolated,
                 "isolation_forward": port.isolation_forward,

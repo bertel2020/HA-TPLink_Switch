@@ -12,6 +12,7 @@ from .const import (
     ADMIN_UP,
     ERROR_DETAILS,
     FEATURES,
+    IGMP_COUNTERS,
     PORT_MODES,
     STORM_LIMITS,
     STP_STATES,
@@ -67,6 +68,8 @@ class PortData:
     arp_illegal: int | None = None  # illegal ARP packets seen (the switch's ARP protection)
     arp_trusted: bool | None = None  # the port is trusted by the ARP protection
     dhcp_trusted: bool | None = None  # DHCP snooping is on and the port is a trusted one
+    igmp: dict[str, int] = field(default_factory=dict)  # IGMP snooping packets seen
+    igmp_snooping: bool | None = None  # IGMP snooping is on at this port
     mirror: str | None = None  # port mirroring: "monitor" (gets the copies) or "source"
     isolated: bool | None = None  # the port cannot reach all the other ports (port isolation)
     isolation_forward: list[int] | None = None  # the ports it can reach, if the switch says
@@ -400,6 +403,22 @@ def add_vlans(
             if port is not None:
                 (port.vlans_untagged if member in untagged else port.vlans_tagged).append(vlan)
     return names
+
+
+def add_igmp(ports: dict[int, PortData], extras: dict[str, dict[str, Any]]) -> None:
+    """Fill in the IGMP snooping packet counters of each port that has a row for them."""
+    for number, port in ports.items():
+        suffix = str(number)
+        for key, columns in IGMP_COUNTERS.items():
+            values = [
+                value
+                for column in columns
+                if isinstance(value := extras.get(column, {}).get(suffix), int)
+            ]
+            if values:
+                port.igmp[key.removeprefix("igmp_")] = sum(values)
+        enabled = extras.get("igmp_port_on", {}).get(suffix)
+        port.igmp_snooping = enabled == 1 if isinstance(enabled, int) else None
 
 
 def port_list(value: Any) -> set[int]:

@@ -6,6 +6,8 @@ All notable changes to this integration are recorded here.
 
 ### New
 
+- **Compact VLAN table:** The port lists show as ranges ("1–24, 26") instead of a long enumeration, so the table fits the width even with 24 ports.
+
 - **Burger menu on a phone:** On narrow screens the tabs of the panel sit in a burger menu instead of a wrapping bar. Tapping a tab closes the menu again. The appearance settings (colour scheme, light or dark, font size) and the link to the integration are in there too.
 
 - **The panel shows its menu and tabs at once:** The panel draws the top bar and tabs as soon as it opens and says "Loading data …" until the switch answers. If the first load fails, it tries again after 3 seconds instead of staying empty until a reload.

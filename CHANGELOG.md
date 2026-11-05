@@ -6,6 +6,8 @@ Alle nennenswerten Änderungen an dieser Integration werden hier festgehalten.
 
 ### Neu
 
+- **VLAN-Tabelle kompakter:** Die Portlisten stehen als Bereiche („1–24, 26“) statt als lange Aufzählung, sodass die Tabelle auch bei 24 Ports in die Breite passt.
+
 - **Burger-Menü auf dem Handy:** Auf schmalen Bildschirmen stehen die Reiter des Panels in einem Burger-Menü statt in einer umbrechenden Leiste. Ein Tipp auf einen Reiter schließt das Menü wieder. Auch die Darstellung (Farbschema, Hell oder Dunkel, Schriftgröße) und der Link zur Integration liegen dort.
 
 - **Panel zeigt sofort Menü und Reiter:** Das Panel zeichnet Kopfleiste und Reiter gleich beim Öffnen und meldet „Daten werden geladen …“, bis der Switch antwortet. Schlägt das erste Laden fehl, versucht es nach 3 Sekunden erneut, statt bis zum Neuladen leer zu bleiben.

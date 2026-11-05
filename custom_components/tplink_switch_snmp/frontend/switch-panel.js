@@ -871,7 +871,18 @@ class TplinkSwitchPanel extends HTMLElement {
     const ids = Object.keys(sw.vlans || {}).map(Number).sort((a, b) => a - b);
     if (!ids.length) return "";
     const members = (id, key) => sw.ports.filter((p) => (p[key] || []).includes(id)).map((p) => p.n);
-    const list = (ports) => (ports.length ? esc(ports.join(", ")) : `<span class="muted">–</span>`);
+    // 1, 2, 3, 5 becomes "1–3, 5": a whole switch fits in a few characters
+    const ranges = (ports) => {
+      const out = [];
+      for (let i = 0; i < ports.length; ) {
+        let j = i;
+        while (ports[j + 1] === ports[j] + 1) j++;
+        out.push(j - i >= 2 ? `${ports[i]}–${ports[j]}` : ports.slice(i, j + 1).join(", "));
+        i = j + 1;
+      }
+      return out.join(", ");
+    };
+    const list = (ports) => (ports.length ? esc(ranges(ports)) : `<span class="muted">–</span>`);
     return `<section class="card"><div class="card-h"><h2>${esc(t("vlans"))}</h2><span class="grow"></span><span class="sub">${esc(t.count("vlanCount", ids.length))}</span></div>
       <div class="tablewrap"><table><thead><tr><th class="num">${esc(t("vlanId"))}</th><th>${esc(t("vlanName"))}</th><th>${esc(t("vlanUntagged"))}</th><th>${esc(t("vlanTagged"))}</th><th>PVID</th></tr></thead><tbody>
       ${ids.map((id) => `<tr class="row"><td class="num mono">${id}</td><td>${esc(sw.vlans[id] || "")}</td><td class="mono">${list(members(id, "vlans_untagged"))}</td><td class="mono">${list(members(id, "vlans_tagged"))}</td><td class="mono">${list(sw.ports.filter((p) => p.pvid === id).map((p) => p.n))}</td></tr>`).join("")}

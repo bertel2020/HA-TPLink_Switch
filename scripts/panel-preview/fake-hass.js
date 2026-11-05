@@ -32,6 +32,7 @@ function snapshot() {
   });
   return {
     switches: [{ entry_id: "e1", title: "TL-SG3424 Keller", host: "192.168.79.15", mac: "64:66:b3:6c:28:64", manufacturer: "TP-Link", model: "TL-SG3424", hw_version: "1.0", sw_version: "1.11.10 Build 20150713 Rel.53496(n)", location: "Technikraum", contact: "Roberto", description: "JetStream 24-Port Gigabit L2 Managed Switch with 4 Combo SFP Slots",
+      features: { igmp: true, dscp: false, dos: true, dhcp: false, dot1x: false, mirror: true }, mirror: [{ monitor: 24, ingress: [5], egress: [5] }],
       vlans: { 1: "Default", 10: "Büro", 20: "IoT", 30: "Gäste" }, can_write: true, uptime: 158 * 86400 + 4 * 3600, interval: 30, last_update_success: true, ports }],
   };
 }

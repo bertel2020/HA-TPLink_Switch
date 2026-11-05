@@ -803,7 +803,23 @@ class TplinkSwitchPanel extends HTMLElement {
   // ---- configuration of the switch -----------------------------------------------------------
 
   _configView(sw) {
-    return this._vlanCard(sw);
+    return this._functionsCard(sw) + this._vlanCard(sw);
+  }
+
+  // Which functions of the switch are on: IGMP snooping, DSCP priority, DoS defense, DHCP snooping,
+  // 802.1X and port mirroring (with the groups that run).
+  _functionsCard(sw) {
+    const t = this._t;
+    const names = Object.keys(sw.features || {});
+    if (!names.length) return "";
+    const groups = (sw.mirror || []).filter((m) => m.monitor != null);
+    const mirror = (m) => `${t("port")} ${m.monitor} ← ${[...new Set([...m.ingress, ...m.egress])].join(", ") || "–"}`;
+    const row = (name) => {
+      const on = sw.features[name];
+      const extra = name === "mirror" && on && groups.length ? ` <span class="muted">${esc(groups.map(mirror).join("; "))}</span>` : "";
+      return `<div><span>${esc(t("feature_" + name))}</span><span><span class="tag ${on ? "ok" : ""}">${esc(t(on ? "on" : "off"))}</span>${extra}</span></div>`;
+    };
+    return `<section class="card"><div class="card-h"><h2>${esc(t("functions"))}</h2></div><div class="details"><div class="kv">${names.map(row).join("")}</div></div></section>`;
   }
 
   // The VLANs of the switch with the ports that belong to them; a port is untagged or tagged in a VLAN.

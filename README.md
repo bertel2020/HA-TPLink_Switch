@@ -1,6 +1,28 @@
-<p align="center"><img src="custom_components/tplink_switch_snmp/brand/logo@2x.png" alt="TP-Link Switch (SNMP)" width="160"></p>
+<p align="center">
+  <img src="https://raw.githubusercontent.com/bertel2020/HA-TPLink_Switch/main/custom_components/tplink_switch_snmp/brand/logo@2x.png" alt="TP-Link Switch (SNMP)" width="160">
+</p>
 
-# TP-Link Switch (SNMP)
+<h1 align="center">TP-Link Switch (SNMP)</h1>
+
+<p align="center">
+  Dein TP-Link-JetStream-Switch in Home Assistant, lokal per SNMP: Ports, Datenrate, Fehler und gelernte Geräte, mit Seitenleisten-Panel und Dashboard-Karte.
+</p>
+
+<p align="center">
+  <a href="https://github.com/hacs/integration"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5.svg" alt="HACS Custom"></a>
+  <a href="https://www.home-assistant.io/"><img src="https://img.shields.io/badge/Home%20Assistant-Custom%20Integration-18BCF2.svg?logo=home-assistant&logoColor=white" alt="Home Assistant"></a>
+  <a href="https://github.com/bertel2020/HA-TPLink_Switch/releases"><img src="https://img.shields.io/github/v/release/bertel2020/HA-TPLink_Switch?sort=semver&include_prereleases" alt="Release"></a>
+  <a href="https://github.com/bertel2020/HA-TPLink_Switch/actions/workflows/tests.yml"><img src="https://github.com/bertel2020/HA-TPLink_Switch/actions/workflows/tests.yml/badge.svg" alt="Tests"></a>
+  <a href="https://github.com/bertel2020/HA-TPLink_Switch/actions/workflows/hassfest.yml"><img src="https://github.com/bertel2020/HA-TPLink_Switch/actions/workflows/hassfest.yml/badge.svg" alt="Hassfest"></a>
+  <a href="https://github.com/bertel2020/HA-TPLink_Switch/actions/workflows/hacs.yml"><img src="https://github.com/bertel2020/HA-TPLink_Switch/actions/workflows/hacs.yml/badge.svg" alt="HACS"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/github/license/bertel2020/HA-TPLink_Switch" alt="Lizenz"></a>
+</p>
+
+<p align="center">
+  <a href="https://buymeacoffee.com/bertel2020"><img src="https://img.shields.io/badge/Buy%20Me%20a%20Coffee-support-FFDD00?logo=buy-me-a-coffee&logoColor=black" alt="Buy Me a Coffee"></a>
+  <a href="https://ko-fi.com/bertel2020"><img src="https://img.shields.io/badge/Ko--fi-support-FF5E5B?logo=ko-fi&logoColor=white" alt="Ko-fi"></a>
+  <a href="https://paypal.me/RobertoMartins"><img src="https://img.shields.io/badge/PayPal-donate-00457C?logo=paypal&logoColor=white" alt="PayPal"></a>
+</p>
 
 <p align="center"><em><a href="README.en.md">English version</a></em></p>
 

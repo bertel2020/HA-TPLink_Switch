@@ -502,11 +502,12 @@ class TplinkSwitchPanel extends HTMLElement {
     return `<div class="plate" style="--cols:${cols}"><div class="plate-row">${odd.map(jack).join("")}</div><div class="plate-row">${even.map(jack).join("")}</div></div>`;
   }
 
-  // the RMON counters that are not zero, as "CRC 5 · Kollisionen 2"
+  // the RMON counters that are not zero, as "CRC 5 · Kollisionen 2"; oversize packets are
+  // well formed (jumbo frames, VLAN tags) and so no error: the sensor has them, the card does not
   _detailText(p) {
     const t = this._t;
     return Object.entries(p.error_details || {})
-      .filter(([, n]) => n > 0)
+      .filter(([kind, n]) => n > 0 && kind !== "oversize_packets")
       .map(([kind, n]) => `${t("err_" + kind)} ${n}`)
       .join(" · ");
   }

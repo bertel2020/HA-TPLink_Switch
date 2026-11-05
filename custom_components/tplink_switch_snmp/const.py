@@ -57,6 +57,21 @@ PORT_MODES = {1: "10half", 2: "10full", 3: "100half", 4: "100full", 5: "1000full
 OID_SEC_MAX = f"{OID_TPLINK}.2.1.3.1.1.2"  # l2PortSecurityMaxNum
 OID_SEC_LEARNED = f"{OID_TPLINK}.2.1.3.1.1.3"  # l2PortSecurityLearnNum
 OID_SEC_ON = f"{OID_TPLINK}.2.1.3.1.1.5"  # l2PortSecurityPortStatus
+# stormControlBroadCastRate and the like: the limit in kbit/s (0 is "off")
+STORM_LIMITS = {
+    1: 128,
+    2: 256,
+    3: 512,
+    4: 1000,
+    5: 2000,
+    6: 4000,
+    7: 5000,
+    8: 10000,
+    9: 20000,
+    10: 40000,
+    11: 50000,
+}
+OID_STORM = f"{OID_TPLINK}.6.2.2.1.1"  # stormControlEntry: 2 broadcast, 3 multicast, 4 unicast
 EXTRA_TABLES = {
     "loop_on": OID_LOOP_ENABLED,
     "loop": OID_LOOP_LOOPED,
@@ -67,6 +82,9 @@ EXTRA_TABLES = {
     "sec_on": OID_SEC_ON,
     "sec_max": OID_SEC_MAX,
     "sec_learned": OID_SEC_LEARNED,
+    "storm_bc": f"{OID_STORM}.2",
+    "storm_mc": f"{OID_STORM}.3",
+    "storm_ul": f"{OID_STORM}.4",
 }
 OID_SYS_NAME = "1.3.6.1.2.1.1.5.0"
 OID_BRIDGE_ADDRESS = "1.3.6.1.2.1.17.1.1.0"

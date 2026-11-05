@@ -7,7 +7,7 @@ from datetime import datetime
 import re
 from typing import Any
 
-from .const import ADMIN_DOWN, ADMIN_UP, PORT_MODES
+from .const import ADMIN_DOWN, ADMIN_UP, PORT_MODES, STORM_LIMITS
 
 PORT_NAME = re.compile(r"^port\s*(\d+)", re.IGNORECASE)
 OPER_UP = 1
@@ -52,6 +52,7 @@ class PortData:
     lag: str | None = None  # the link aggregation group the port belongs to
     security_max: int | None = None  # port security: most MAC addresses the port may learn
     security_learned: int | None = None  # ... and how many it has learned (None: not on)
+    storm: dict[str, int] = field(default_factory=dict)  # storm control limits in kbit/s
 
 
 @dataclass
@@ -272,6 +273,18 @@ def add_security(ports: dict[int, PortData], extras: dict[str, dict[str, Any]]) 
         if extras.get("sec_on", {}).get(suffix) == 1 and isinstance(maximum, int):
             port.security_max = maximum
             port.security_learned = learned if isinstance(learned, int) else None
+
+
+STORM_KINDS = {"storm_bc": "broadcast", "storm_mc": "multicast", "storm_ul": "unicast"}
+
+
+def add_storm(ports: dict[int, PortData], extras: dict[str, dict[str, Any]]) -> None:
+    """Fill in the storm control limits; a kind that is off is left out."""
+    for number, port in ports.items():
+        for key, kind in STORM_KINDS.items():
+            limit = STORM_LIMITS.get(extras.get(key, {}).get(str(number), 0))
+            if limit:
+                port.storm[kind] = limit
 
 
 def _delta(new: int, old: int, bits: int) -> int | None:

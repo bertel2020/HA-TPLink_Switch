@@ -68,6 +68,7 @@ from .model import (
     add_loops,
     add_rates,
     add_security,
+    add_storm,
     build_ports,
     manufacturer,
     split_hardware,
@@ -204,6 +205,7 @@ class SwitchCoordinator(DataUpdateCoordinator[SwitchData]):
             add_loops(ports, extras)
             add_config(ports, extras)
             add_security(ports, extras)
+            add_storm(ports, extras)
         self._last_poll = now
 
         ticks = int(system.get(OID_SYS_UPTIME, 0))

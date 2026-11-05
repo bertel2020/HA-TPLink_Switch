@@ -404,6 +404,7 @@ class TplinkSwitchPanel extends HTMLElement {
     return `<div class="tip-h"><b>${esc(t("port"))} ${p.n}</b>${p.name ? `<span class="muted"> · ${esc(p.name)}</span>` : ""}</div>
       <div class="tip-tags">${tags}</div>
       ${p.up ? rate(t("receive"), p.rx_rate, p.rx_util, "var(--rx)") + rate(t("send"), p.tx_rate, p.tx_util, "var(--tx)") : ""}
+      ${this._settings(p)}
       ${when ? `<div class="sub">${esc(t("linkChangedAgo", { when: this._ago(when) }))}</div>` : ""}
       <div class="tip-sep"></div>${devices}`;
   }
@@ -496,6 +497,22 @@ class TplinkSwitchPanel extends HTMLElement {
       return `<button class="port ${this._linkClass(p)} ${this._errors(p) ? "err" : ""} ${p.n === this._sel ? "sel" : ""}" data-a="port" data-v="${p.n}" aria-label="${esc(`${t("port")} ${p.n}, ${this._speedText(p)}`)}"><span class="n">${p.n}</span><span class="jack"></span><span class="v">${speed}</span></button>`;
     };
     return `<div class="plate" style="--cols:${cols}"><div class="plate-row">${odd.map(jack).join("")}</div><div class="plate-row">${even.map(jack).join("")}</div></div>`;
+  }
+
+  // "128 kbit/s" or "10 Mbit/s"
+  _kbit(k) {
+    return k >= 1000 ? `${k / 1000} Mbit/s` : `${k} kbit/s`;
+  }
+
+  // lines for the tooltip about what is set at the switch: flow control, port security, storm control
+  _settings(p) {
+    const t = this._t;
+    const lines = [];
+    if (p.flow_control) lines.push(t("flowOn"));
+    if (p.security_max != null) lines.push(t("secCount", { n: p.security_learned ?? "–", max: p.security_max }));
+    const storm = Object.entries(p.storm || {}).map(([kind, k]) => `${t("storm_" + kind)} ${this._kbit(k)}`);
+    if (storm.length) lines.push(`${t("stormLimit")}: ${storm.join(", ")}`);
+    return lines.map((l) => `<div class="sub">${esc(l)}</div>`).join("");
   }
 
   // port security is on and the port cannot learn another address

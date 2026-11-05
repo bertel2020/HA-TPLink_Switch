@@ -75,6 +75,13 @@ OID_STORM = f"{OID_TPLINK}.6.2.2.1.1"  # stormControlEntry: 2 broadcast, 3 multi
 OID_ARP = f"{OID_TPLINK}.8.2.1"  # arpDetection: the switch's ARP protection
 OID_SAVE_CONFIG = f"{OID_TPLINK}.11.1.0"  # save: 1 writes the running configuration to flash
 OID_REBOOT = f"{OID_TPLINK}.1.3.1.0"  # systemToolReBoot: 1 restarts the switch
+# Functions of the switch that are on or off as a whole: name -> (entity group, EXTRA_TABLES key).
+# None of these MIBs has counters, only the settings, so they show as on/off sensors.
+FEATURES: dict[str, tuple[str, str]] = {
+    "dos": ("security", "feat_dos"),  # dosDefendGlobalConfig: DoS defence
+    "dhcp": ("security", "feat_dhcp"),  # dhcpSnoopingEnable
+    "dot1x": ("security", "feat_8021x"),  # sw8021xGlobalEnable
+}
 EXTRA_TABLES = {
     "loop_on": OID_LOOP_ENABLED,
     "loop": OID_LOOP_LOOPED,
@@ -88,6 +95,10 @@ EXTRA_TABLES = {
     "storm_bc": f"{OID_STORM}.2",
     "storm_mc": f"{OID_STORM}.3",
     "storm_ul": f"{OID_STORM}.4",
+    "feat_dos": f"{OID_TPLINK}.8.4.1.1",
+    "feat_dhcp": f"{OID_TPLINK}.8.1.1.1",
+    "feat_8021x": f"{OID_TPLINK}.8.5.1.1",
+    "dhcp_trust": f"{OID_TPLINK}.8.1.3.1.1.2",  # dhcpSnoopingPortConfigTrustPort
     "arp_on": f"{OID_ARP}.1.1",  # arpDetectionConfigEnable
     "arp_state": f"{OID_ARP}.2.2.1.2",  # arpDetectionStatState: 1 trusted port, 0 not
     "arp_illegal": f"{OID_ARP}.2.2.1.3",  # arpDetectionStatNonLegalPkt
@@ -99,6 +110,9 @@ TRAP_ALARMS = {
     "1.3.6.1.4.1.11863.1.1.3.2.1.5.5": "loop",  # loopbackStatusChange
     "1.3.6.1.4.1.11863.1.1.3.6.4.1": "broadcast_storm",  # broadcastRateExceed
     "1.3.6.1.4.1.11863.1.1.3.6.4.2": "multicast_storm",  # multicastRateExceed
+    "1.3.6.1.4.1.11863.1.1.3.6.4.3": "ingress_rate",  # ingressRateExceed
+    "1.3.6.1.4.1.11863.1.1.3.6.4.4": "egress_rate",  # egressRateExceed
+    "1.3.6.1.4.1.11863.1.1.3.1.5": "config_changed",  # flashModify: the configuration was saved
 }
 # RMON etherStatsTable (standard): the errors of a port told apart. The row index is not always
 # the port, so etherStatsDataSource (an ifIndex as an OID) says which interface a row is for.
@@ -218,5 +232,5 @@ PORT_ENTITY_GROUPS: dict[str, tuple[str, ...]] = {
     "vlan": ("pvid",),
 }
 # groups of entities that belong to the switch and not to a port
-SWITCH_ENTITY_GROUPS = ("uptime", "devices", "stp")
+SWITCH_ENTITY_GROUPS = ("uptime", "devices", "stp", "security")
 ENTITY_GROUPS = (*PORT_ENTITY_GROUPS, *SWITCH_ENTITY_GROUPS)

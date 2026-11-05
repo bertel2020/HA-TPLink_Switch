@@ -11,6 +11,7 @@ from .const import (
     CONF_ENTITY_GROUPS,
     CONF_ENTITY_PORTS,
     ENTITY_GROUPS,
+    FEATURES,
     PORT_ENTITY_GROUPS,
 )
 from .coordinator import SwitchConfigEntry
@@ -57,6 +58,8 @@ def async_remove_unwanted(hass: HomeAssistant, entry: SwitchConfigEntry) -> None
             unwanted = "uptime" not in groups
         elif reg.unique_id.endswith("_stp_changes"):
             unwanted = "stp" not in groups
+        elif reg.unique_id.rpartition("_feature_")[2] in FEATURES:
+            unwanted = FEATURES[reg.unique_id.rpartition("_feature_")[2]][0] not in groups
         elif reg.translation_key == "device_port":
             unwanted = "devices" not in groups
         elif match := _PORT_ID.search(reg.unique_id):

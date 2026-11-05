@@ -536,6 +536,7 @@ class TplinkSwitchPanel extends HTMLElement {
       lines.push(`VLAN: ${parts.join(" · ")}`);
     }
     if (p.flow_control) lines.push(t("flowOn"));
+    if (p.dhcp_trusted) lines.push(t("dhcpTrusted"));
     if (p.arp_illegal > 0) lines.push(t("arpIllegal", { n: p.arp_illegal }));
     if (p.security_max != null) lines.push(t("secCount", { n: p.security_learned ?? "–", max: p.security_max }));
     const storm = Object.entries(p.storm || {}).map(([kind, k]) => `${t("storm_" + kind)} ${this._kbit(k)}`);

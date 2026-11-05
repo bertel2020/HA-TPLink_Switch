@@ -12,6 +12,18 @@
         "state": {
           "off": "mdi:sync"
         }
+      },
+      "feature_dos": {
+        "default": "mdi:shield-off-outline",
+        "state": {
+          "on": "mdi:shield-check-outline"
+        }
+      },
+      "feature_dhcp": {
+        "default": "mdi:ip-network-outline"
+      },
+      "feature_dot1x": {
+        "default": "mdi:account-lock-outline"
       }
     },
     "sensor": {

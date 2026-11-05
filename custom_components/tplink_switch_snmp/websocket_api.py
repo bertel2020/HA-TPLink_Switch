@@ -86,6 +86,7 @@ def _switch(hass: HomeAssistant, entry: SwitchConfigEntry) -> dict[str, Any]:
                 "storm": port.storm,
                 "error_details": port.error_details,
                 "stp_state": port.stp_state,
+                "dhcp_trusted": port.dhcp_trusted,
                 "pvid": port.pvid,
                 "vlans_untagged": port.vlans_untagged,
                 "vlans_tagged": port.vlans_tagged,
@@ -114,6 +115,7 @@ def _switch(hass: HomeAssistant, entry: SwitchConfigEntry) -> dict[str, Any]:
         "stp_changes": data.stp_changes,
         "stp_root_port": data.stp_root_port,
         "vlans": {str(vlan): name for vlan, name in data.vlans.items()},
+        "features": data.features,
         "interval": int(coordinator.update_interval.total_seconds())
         if coordinator.update_interval
         else 0,

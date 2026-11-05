@@ -28,6 +28,9 @@ ALARM_TEXTS = {
     "multicast_storm": "multicast storm control limit exceeded",
     "stp_topology_change": "spanning tree topology changed",
     "arp_illegal": "illegal ARP packets received",
+    "ingress_rate": "ingress bandwidth limit exceeded",
+    "egress_rate": "egress bandwidth limit exceeded",
+    "config_changed": "configuration saved",
 }
 
 

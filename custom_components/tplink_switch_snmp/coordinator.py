@@ -74,6 +74,7 @@ from .model import (
     add_arp,
     add_config,
     add_error_details,
+    add_features,
     add_loops,
     add_rates,
     add_security,
@@ -216,8 +217,10 @@ class SwitchCoordinator(DataUpdateCoordinator[SwitchData]):
             ports, await self._read_extras(STP_TABLES), tables["base_port"]
         )
         vlans = add_vlans(ports, await self._read_extras(VLAN_TABLES), tables["base_port"])
+        features: dict[str, bool] = {}
         if manufacturer(text(system.get(OID_SYS_OBJECT_ID, ""))) == "TP-Link":
             extras = await self._read_extras(EXTRA_TABLES)
+            features = add_features(ports, extras)
             add_loops(ports, extras)
             add_config(ports, extras)
             add_security(ports, extras)
@@ -255,6 +258,7 @@ class SwitchCoordinator(DataUpdateCoordinator[SwitchData]):
             stp_changes=stp_changes,
             stp_root_port=stp_root_port,
             vlans=vlans,
+            features=features,
         )
         if self.data:
             self._fire_move_events(data, self.data)

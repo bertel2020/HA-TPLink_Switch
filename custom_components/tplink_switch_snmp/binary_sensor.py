@@ -6,12 +6,14 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import FEATURES
 from .coordinator import SwitchConfigEntry, SwitchCoordinator
-from .entity import PortEntity
-from .selection import wants
+from .entity import PortEntity, SwitchEntity
+from .selection import selected_groups, wants
 
 PARALLEL_UPDATES = 0
 
@@ -33,7 +35,31 @@ async def async_setup_entry(
         for n, port in ports.items()
         if port.loop is not None and wants(entry, n, "loop")
     )
+    # the functions of the switch that are on or off as a whole, where the switch tells
+    groups = selected_groups(entry)
+    entities.extend(
+        SwitchFeature(coordinator, name)
+        for name, (group, _) in FEATURES.items()
+        if group in groups and name in coordinator.data.features
+    )
     async_add_entities(entities)
+
+
+class SwitchFeature(SwitchEntity, BinarySensorEntity):
+    """Whether a function of the switch (DoS defence, DHCP snooping, 802.1X ...) is switched on."""
+
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_entity_registry_enabled_default = False
+
+    def __init__(self, coordinator: SwitchCoordinator, name: str) -> None:
+        super().__init__(coordinator)
+        self._name = name
+        self._attr_translation_key = f"feature_{name}"
+        self._attr_unique_id = f"{self._mac}_feature_{name}"
+
+    @property
+    def is_on(self) -> bool | None:
+        return self.coordinator.data.features.get(self._name)
 
 
 class PortLink(PortEntity, BinarySensorEntity):

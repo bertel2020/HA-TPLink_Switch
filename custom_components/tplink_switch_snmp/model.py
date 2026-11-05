@@ -7,7 +7,15 @@ from datetime import datetime
 import re
 from typing import Any
 
-from .const import ADMIN_DOWN, ADMIN_UP, ERROR_DETAILS, PORT_MODES, STORM_LIMITS, STP_STATES
+from .const import (
+    ADMIN_DOWN,
+    ADMIN_UP,
+    ERROR_DETAILS,
+    FEATURES,
+    PORT_MODES,
+    STORM_LIMITS,
+    STP_STATES,
+)
 
 PORT_NAME = re.compile(r"^port\s*(\d+)", re.IGNORECASE)
 OPER_UP = 1
@@ -57,6 +65,7 @@ class PortData:
     stp_state: str | None = None  # spanning tree: "forwarding", "blocking", ...
     arp_illegal: int | None = None  # illegal ARP packets seen (the switch's ARP protection)
     arp_trusted: bool | None = None  # the port is trusted by the ARP protection
+    dhcp_trusted: bool | None = None  # DHCP snooping is on and the port is a trusted one
     pvid: int | None = None  # the VLAN that untagged frames at this port belong to
     vlans_untagged: list[int] = field(default_factory=list)  # VLANs sent without a tag
     vlans_tagged: list[int] = field(default_factory=list)  # VLANs sent with a tag
@@ -78,6 +87,7 @@ class SwitchData:
     stp_changes: int | None = None  # how often the spanning tree topology has changed
     stp_root_port: int | None = None  # the port that leads to the root bridge
     vlans: dict[int, str] = field(default_factory=dict)  # VLAN ID -> name
+    features: dict[str, bool] = field(default_factory=dict)  # FEATURES name -> switched on
 
     @property
     def mac_ports(self) -> dict[str, int]:
@@ -385,6 +395,21 @@ def add_vlans(
             if port is not None:
                 (port.vlans_untagged if member in untagged else port.vlans_tagged).append(vlan)
     return names
+
+
+def add_features(ports: dict[int, PortData], extras: dict[str, dict[str, Any]]) -> dict[str, bool]:
+    """Which of the functions of the switch are on; the ports of DHCP snooping get their trust."""
+    features = {
+        name: value == 1
+        for name, (_, table) in FEATURES.items()
+        if isinstance(value := extras.get(table, {}).get("0"), int)
+    }
+    if features.get("dhcp"):
+        for number, port in ports.items():
+            trust = extras.get("dhcp_trust", {}).get(str(number))
+            if isinstance(trust, int):
+                port.dhcp_trusted = trust == 1
+    return features
 
 
 STORM_KINDS = {"storm_bc": "broadcast", "storm_mc": "multicast", "storm_ul": "unicast"}

@@ -76,6 +76,15 @@
       },
       "loop": {
         "name": "Port {port} Schleife"
+      },
+      "feature_dos": {
+        "name": "DoS-Schutz"
+      },
+      "feature_dhcp": {
+        "name": "DHCP-Snooping"
+      },
+      "feature_dot1x": {
+        "name": "802.1X"
       }
     },
     "sensor": {
@@ -223,7 +232,8 @@
         "error_details": "Fehler im Detail (CRC, Kollisionen, zu kurze und zu lange Pakete)",
         "stp": "Spanning Tree: Zahl der Topologieänderungen",
         "arp": "Unzulässige ARP-Pakete (ARP-Schutz des Switches)",
-        "vlan": "VLAN: PVID und Mitgliedschaft je Port"
+        "vlan": "VLAN: PVID und Mitgliedschaft je Port",
+        "security": "Sicherheit: DoS-Schutz, DHCP-Snooping, 802.1X (an oder aus)"
       }
     }
   },

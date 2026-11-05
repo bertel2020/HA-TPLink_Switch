@@ -76,6 +76,15 @@
       },
       "loop": {
         "name": "Port {port} loop"
+      },
+      "feature_dos": {
+        "name": "DoS defence"
+      },
+      "feature_dhcp": {
+        "name": "DHCP snooping"
+      },
+      "feature_dot1x": {
+        "name": "802.1X"
       }
     },
     "sensor": {
@@ -223,7 +232,8 @@
         "error_details": "Error details (CRC, collisions, undersize and oversize packets)",
         "stp": "Spanning tree: number of topology changes",
         "arp": "Illegal ARP packets (the switch's ARP protection)",
-        "vlan": "VLAN: PVID and membership per port"
+        "vlan": "VLAN: PVID and membership per port",
+        "security": "Security: DoS defence, DHCP snooping, 802.1X (on or off)"
       }
     }
   },

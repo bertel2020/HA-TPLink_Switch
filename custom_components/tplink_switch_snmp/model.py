@@ -292,7 +292,8 @@ def add_config(ports: dict[int, PortData], extras: dict[str, dict[str, Any]]) ->
         if isinstance(flow, int):
             port.flow_control = flow == 1
         lag = text(extras.get("cfg_lag", {}).get(suffix, b"")).strip()
-        port.lag = lag if lag.strip("-") else None
+        # the switch writes "N/A" (or dashes) for a port that is in no trunk
+        port.lag = lag if lag.strip("-") and lag.upper() != "N/A" else None
 
 
 def add_security(ports: dict[int, PortData], extras: dict[str, dict[str, Any]]) -> None:

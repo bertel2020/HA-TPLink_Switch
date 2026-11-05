@@ -10,17 +10,17 @@ def _port(number: int) -> model.PortData:
 
 
 def test_the_configuration_is_filled_in():
-    ports = {1: _port(1), 2: _port(2), 3: _port(3)}
+    ports = {1: _port(1), 2: _port(2), 3: _port(3), 4: _port(4)}
     extras = {
         "cfg_mode": {"1": 6, "2": 4, "3": 99},
         "cfg_flow": {"1": 0, "2": 1},
-        "cfg_lag": {"1": b"", "2": b"LAG1", "3": b"--"},
+        "cfg_lag": {"1": b"", "2": b"LAG1", "3": b"--", "4": b"N/A"},
     }
     model.add_config(ports, extras)
 
-    assert [p.mode for p in ports.values()] == ["auto", "100full", None]  # 99 is unknown
-    assert [p.flow_control for p in ports.values()] == [False, True, None]
-    assert [p.lag for p in ports.values()] == [None, "LAG1", None]
+    assert [p.mode for p in ports.values()] == ["auto", "100full", None, None]  # 99 is unknown
+    assert [p.flow_control for p in ports.values()] == [False, True, None, None]
+    assert [p.lag for p in ports.values()] == [None, "LAG1", None, None]
 
 
 def test_a_switch_without_the_table_leaves_everything_unknown():

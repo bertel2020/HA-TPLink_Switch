@@ -805,7 +805,7 @@ class TplinkSwitchPanel extends HTMLElement {
   // ---- configuration of the switch -----------------------------------------------------------
 
   _configView(sw) {
-    return this._functionsCard(sw) + this._vlanCard(sw);
+    return this._actionsCard(sw) + this._functionsCard(sw) + this._vlanCard(sw);
   }
 
   // Which functions of the switch are on: IGMP snooping, DSCP priority, DoS defense, DHCP snooping,
@@ -829,6 +829,30 @@ class TplinkSwitchPanel extends HTMLElement {
     ].join("");
     if (!names.length && !more) return "";
     return `<section class="card"><div class="card-h"><h2>${esc(t("functions"))}</h2></div><div class="details"><div class="kv">${names.map(row).join("")}${more}</div></div></section>`;
+  }
+
+  // Saving the configuration (so that a restart keeps it) and restarting, when the integration may write.
+  _actionsCard(sw) {
+    if (!sw.can_act) return "";
+    const t = this._t;
+    return `<section class="card"><div class="card-h"><h2>${esc(t("actions"))}</h2></div><div class="details">
+      ${this._notice ? `<div class="notice" role="alert">${esc(this._notice)}</div>` : ""}
+      <button class="chip" data-a="act" data-v="save_config">${esc(t("saveConfig"))}</button>
+      <button class="chip" data-a="act" data-v="reboot">${esc(t("rebootSwitch"))}</button>
+      <div class="sub" style="margin-top:8px">${esc(t("actionsHint"))}</div></div></section>`;
+  }
+
+  async _act(sw, action) {
+    const t = this._t;
+    if (action === "reboot" && !confirm(t("confirmReboot"))) return;
+    this._notice = null;
+    try {
+      await this._hass.callWS({ type: `${DOMAIN}/action`, entry_id: sw.entry_id, action });
+      this._notice = t(action === "reboot" ? "rebootSent" : "configSaved");
+    } catch (err) {
+      this._notice = t("writeFailed", { e: err?.message || String(err) });
+    }
+    this._render();
   }
 
   // The VLANs of the switch with the ports that belong to them; a port is untagged or tagged in a VLAN.
@@ -876,6 +900,11 @@ class TplinkSwitchPanel extends HTMLElement {
         case "toggle": {
           const sw = this._switch;
           if (sw) this._togglePort(sw, Number(v));
+          return;
+        }
+        case "act": {
+          const sw = this._switch;
+          if (sw) this._act(sw, v);
           return;
         }
         case "look-toggle": this._menuOpen = !this._menuOpen; break;

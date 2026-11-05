@@ -25,6 +25,7 @@ All notable changes to this integration are recorded here.
 - **QoS in the panel:** the tab **Configuration** says how the switch serves its queues (strict priority, weighted, mixed, equal).
 - **Spanning tree in the panel:** the tab **Configuration** gives the number of topology changes since the switch started and the port that leads to the root bridge.
 - **Isolation and IGMP in the port card:** the card shown when hovering a port says which ports an isolated port can reach, and whether IGMP snooping is on at the port.
+- **Actions in the panel:** with writing allowed, the tab **Configuration** has the buttons **Save configuration** and **Restart switch** (with a confirmation) for a TP-Link switch, the same actions as the buttons.
 - **Checked against the switch (TL-SG3424):** The tables for loop, port settings, port security, mirroring, isolation, IGMP, QoS, storm control, ARP, DHCP, VLAN, RMON and STP answer with the expected types. The switch writes `N/A` for a port in no trunk; that is no longer shown as a trunk.
 - **Oversize packets are no errors:** The switch counts every well-formed packet over 1518 bytes as "oversize" through RMON (over a billion at one port of the TL-SG3424). The port card no longer shows this counter as an error; the diagnostic sensor stays.
 

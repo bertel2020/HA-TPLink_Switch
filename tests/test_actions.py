@@ -69,3 +69,70 @@ async def test_the_actions_need_writing_to_be_allowed(hass: HomeAssistant, snmp,
     with pytest.raises(ServiceValidationError):
         await entry.runtime_data.async_reboot()
     snmp.set.assert_not_awaited()
+
+
+async def _command(hass: HomeAssistant, hass_ws_client, payload: dict) -> dict:
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id({"type": "tplink_switch_snmp/action", **payload})
+    return await client.receive_json()
+
+
+async def test_the_panel_saves_and_restarts(
+    hass: HomeAssistant, hass_ws_client, snmp, entry
+) -> None:
+    await _setup(hass, entry, **WRITE)
+
+    saved = await _command(
+        hass, hass_ws_client, {"entry_id": entry.entry_id, "action": "save_config"}
+    )
+    assert saved["success"] is True and saved["result"] == {"action": "save_config"}
+    snmp.set.assert_awaited_with(OID_SAVE_CONFIG, 1)
+
+    restarted = await _command(
+        hass, hass_ws_client, {"entry_id": entry.entry_id, "action": "reboot"}
+    )
+    assert restarted["success"] is True
+    snmp.set.assert_awaited_with(OID_REBOOT, 1)
+
+
+async def test_the_snapshot_tells_if_the_switch_can_act(
+    hass: HomeAssistant, hass_ws_client, snmp, entry
+) -> None:
+    await _setup(hass, entry, **WRITE)
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id({"type": "tplink_switch_snmp/snapshot"})
+    assert (await client.receive_json())["result"]["switches"][0]["can_act"] is True
+
+
+async def test_without_writing_the_panel_cannot_act(
+    hass: HomeAssistant, hass_ws_client, snmp, entry
+) -> None:
+    await _setup(hass, entry)
+
+    reply = await _command(hass, hass_ws_client, {"entry_id": entry.entry_id, "action": "reboot"})
+
+    assert reply["success"] is False and reply["error"]["code"] == "not_allowed"
+    snmp.set.assert_not_awaited()
+
+
+async def test_a_refusal_of_the_switch_reaches_the_panel(
+    hass: HomeAssistant, hass_ws_client, snmp, entry
+) -> None:
+    await _setup(hass, entry, **WRITE)
+    snmp.set.side_effect = SnmpError("notWritable")
+
+    reply = await _command(
+        hass, hass_ws_client, {"entry_id": entry.entry_id, "action": "save_config"}
+    )
+
+    assert reply["success"] is False and reply["error"]["code"] == "write_failed"
+
+
+async def test_an_unknown_switch_cannot_be_told_to_act(
+    hass: HomeAssistant, hass_ws_client, snmp, entry
+) -> None:
+    await _setup(hass, entry, **WRITE)
+
+    reply = await _command(hass, hass_ws_client, {"entry_id": "nope", "action": "reboot"})
+
+    assert reply["success"] is False and reply["error"]["code"] == "not_found"

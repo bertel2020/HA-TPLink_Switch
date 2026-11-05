@@ -354,6 +354,11 @@ class SwitchCoordinator(DataUpdateCoordinator[SwitchData]):
         """Whether writing to the switch is switched on in the options."""
         return bool(self.write_key[0])
 
+    @property
+    def can_act(self) -> bool:
+        """Whether the switch can be told to save or restart: a TP-Link, with writing on."""
+        return self.can_write and manufacturer(self.data.object_id) == "TP-Link"
+
     def port_label(self, number: int) -> str:
         """The name of a port: the one given in Home Assistant, else the one at the switch."""
         custom: str = self.config_entry.options.get(CONF_PORT_NAMES, {}).get(str(number), "")

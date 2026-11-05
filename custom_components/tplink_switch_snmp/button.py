@@ -9,7 +9,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import SwitchConfigEntry, SwitchCoordinator
 from .entity import SwitchEntity
-from .model import manufacturer
 
 PARALLEL_UPDATES = 1  # one write at a time
 
@@ -19,9 +18,9 @@ async def async_setup_entry(
     entry: SwitchConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Add the buttons, but only if the options allow writing and the switch is a TP-Link."""
+    """Add the buttons, but only if the switch can be told to do something."""
     coordinator = entry.runtime_data
-    if coordinator.can_write and manufacturer(coordinator.data.object_id) == "TP-Link":
+    if coordinator.can_act:
         async_add_entities([SaveConfig(coordinator), Reboot(coordinator)])
 
 

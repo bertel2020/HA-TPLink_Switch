@@ -27,6 +27,7 @@ def async_register(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, ws_history)
     websocket_api.async_register_command(hass, ws_set_port_enabled)
     websocket_api.async_register_command(hass, ws_set_port_name)
+    websocket_api.async_register_command(hass, ws_action)
 
 
 def _device_names(hass: HomeAssistant, mac: str) -> dict[str, str | None]:
@@ -129,6 +130,7 @@ def _switch(hass: HomeAssistant, entry: SwitchConfigEntry) -> dict[str, Any]:
         else 0,
         "last_update_success": coordinator.last_update_success,
         "can_write": coordinator.can_write,
+        "can_act": coordinator.can_act,
         "ports": ports,
     }
 
@@ -264,3 +266,34 @@ async def ws_set_port_name(
             connection.send_error(msg["id"], "write_failed", str(err))
             return
     connection.send_result(msg["id"], {"name": name})
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        probatio.Required("type"): f"{DOMAIN}/action",
+        probatio.Required("entry_id"): str,
+        probatio.Required("action"): probatio.In(["save_config", "reboot"]),
+    }
+)
+@websocket_api.async_response
+async def ws_action(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Save the configuration of the switch or restart it, if writing is allowed."""
+    entry = hass.config_entries.async_get_entry(msg["entry_id"])
+    if entry is None or entry.domain != DOMAIN or entry.state is not ConfigEntryState.LOADED:
+        connection.send_error(msg["id"], "not_found", "switch not found")
+        return
+    coordinator = entry.runtime_data
+    try:
+        if msg["action"] == "save_config":
+            await coordinator.async_save_config()
+        else:
+            await coordinator.async_reboot()
+    except ServiceValidationError as err:
+        connection.send_error(msg["id"], "not_allowed", str(err))
+    except HomeAssistantError as err:
+        connection.send_error(msg["id"], "write_failed", str(err))
+    else:
+        connection.send_result(msg["id"], {"action": msg["action"]})

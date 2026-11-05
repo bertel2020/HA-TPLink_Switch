@@ -123,6 +123,7 @@ Beide Ereignisse erscheinen im Logbuch und lassen sich in Automationen als Ausl�
 
 - `tplink_switch_snmp_link_changed`: Ein Link hat gewechselt. Daten: `port`, `port_name`, `up`, `speed`, `flap` (der Link fiel zwischen zwei Abfragen aus und kam wieder), `switch`, `entry_id`, `entity_id`. Nach einem Neustart des Switches gibt es keine Ereignisse.
 - `tplink_switch_snmp_device_moved`: Ein Gerät, das Home Assistant kennt, taucht an einem anderen Port auf. Daten: `mac`, `name`, `device_id`, `from_port`, `from_port_name`, `to_port`, `to_port_name`, `switch`, `entry_id`.
+- `tplink_switch_snmp_alarm`: Der Switch meldet per Trap einen Alarm (nur mit eingeschaltetem Trap-Empfang). Daten: `alarm` (`cpu_load` und `memory_load` über 80 %, `loop`, `broadcast_storm`, `multicast_storm`), `switch`, `entry_id`.
 
 ```yaml
 triggers:

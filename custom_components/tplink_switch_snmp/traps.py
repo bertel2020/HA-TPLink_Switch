@@ -16,15 +16,18 @@ from pysnmp.hlapi.v3arch.asyncio import SnmpEngine
 
 _LOGGER = logging.getLogger(__name__)
 
-type TrapHandler = Callable[[], None]
+OID_SNMP_TRAP = "1.3.6.1.6.3.1.1.4.1.0"  # snmpTrapOID.0: which trap this is
+
+# called with the OID of the trap, which is None if the trap does not carry one
+type TrapHandler = Callable[[str | None], None]
 
 
 class TrapReceiver:
     """One UDP port that receives v1 and v2c traps from several switches.
 
     A trap is accepted if its community and its sender address are both registered for
-    a handler; that handler is then called. The trap's content is not used: it only
-    says "something changed", and the poll that follows reads what.
+    a handler; that handler is then called with the kind of trap. What changed is read by
+    the poll that follows.
     """
 
     def __init__(self, port: int, bind: str = "0.0.0.0") -> None:
@@ -96,10 +99,11 @@ class TrapReceiver:
         _domain, source = engine.message_dispatcher.get_transport_info(state_reference)
         address = str(source[0])
         # pysnmp has already dropped traps with an unknown community; find which one this was.
+        trap = next((str(value) for name, value in var_binds if str(name) == OID_SNMP_TRAP), None)
         for (known, _community), handler in list(self._handlers.items()):
             if known == address:
-                _LOGGER.debug("Trap from %s", address)
-                handler()
+                _LOGGER.debug("Trap %s from %s", trap, address)
+                handler(trap)
                 return
         _LOGGER.debug("Trap from %s ignored: no switch with that address", address)
 

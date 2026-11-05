@@ -10,6 +10,7 @@ All notable changes to this integration are recorded here.
 - **Port settings in the panel:** the panel reads from TP-Link's table how a port is set (auto negotiation or fixed to 10/100/1000 Mbit/s with duplex), the flow control and the trunk. A port with a fixed setting gets a tag on its card and a note on the overview, because the other end then has to be set the same way. A trunk is tagged too. This often explains ports that run at 100 Mbit/s only. This is not yet checked against real hardware either.
 - **Port security:** if a port has the switch's port security on and has learned as many MAC addresses as it may, the panel tags it and shows a note on the overview: one more device does not get onto the network at that port. Not yet checked against real hardware.
 - **Storm control and settings in the port card:** the card shown when hovering a port also lists the storm control limits (broadcast, multicast, unicast), the flow control and the learned against the allowed MAC addresses, as far as the switch reports them.
+- **Alarms from the switch:** with trap receiving on, a trap for CPU or memory load over 80 %, a loop or a storm control limit fires the event `tplink_switch_snmp_alarm` (with a text in the logbook). The poll that follows still runs at once.
 
 ## 0.8.0 – 2026-11-04
 

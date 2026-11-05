@@ -16,11 +16,13 @@ from pysnmp.hlapi.v3arch.asyncio import (
     send_notification,
 )
 import pytest
-from pytest_homeassistant_custom_component.common import MockConfigEntry
+from pytest_homeassistant_custom_component.common import MockConfigEntry, async_capture_events
 
 from custom_components.tplink_switch_snmp import traps
+from custom_components.tplink_switch_snmp.const import EVENT_ALARM
 
 LINK_DOWN = "1.3.6.1.6.3.1.1.5.3"
+CPU_LOAD = "1.3.6.1.4.1.11863.1.1.3.14.12.1"
 
 
 def _free_port() -> int:
@@ -29,7 +31,7 @@ def _free_port() -> int:
         return sock.getsockname()[1]
 
 
-async def _send(port: int, community: str) -> None:
+async def _send(port: int, community: str, trap: str = LINK_DOWN) -> None:
     # A new engine per trap: one engine keeps using the first community it was given.
     engine = SnmpEngine()
     target = await UdpTransportTarget.create(("127.0.0.1", port))
@@ -39,7 +41,7 @@ async def _send(port: int, community: str) -> None:
         target,
         ContextData(),
         "trap",
-        NotificationType(ObjectIdentity(LINK_DOWN)),
+        NotificationType(ObjectIdentity(trap)),
     )
     await asyncio.sleep(0.3)
     engine.close_dispatcher()
@@ -60,7 +62,7 @@ async def test_a_trap_from_a_known_switch_calls_the_handler(receiver) -> None:
 
     await _send(receiver.port, "homeassistant")
 
-    handler.assert_called_once_with()
+    handler.assert_called_once_with(LINK_DOWN)
 
 
 async def test_a_trap_with_the_wrong_community_is_dropped(receiver) -> None:
@@ -100,7 +102,7 @@ async def test_two_switches_share_one_port(receiver) -> None:
 
     await _send(receiver.port, "homeassistant")
 
-    mine.assert_called_once_with()
+    mine.assert_called_once_with(LINK_DOWN)
     other.assert_not_called()
 
 
@@ -166,7 +168,7 @@ async def test_a_trap_triggers_a_poll(hass: HomeAssistant, snmp, entry) -> None:
     assert args[1:4] == (1162, "192.168.79.15", "homeassistant")
     polls = _polls(snmp)
 
-    args[4]()  # the handler the setup passed: a trap arrives
+    args[4](LINK_DOWN)  # the handler the setup passed: a trap arrives
     await hass.async_block_till_done()
 
     assert _polls(snmp) == polls + 1
@@ -247,3 +249,34 @@ async def test_other_option_changes_do_not_reload(hass: HomeAssistant, snmp, ent
         await hass.async_block_till_done()
 
         assert subscribe.await_count == 1
+
+
+async def test_the_handler_gets_the_oid_of_the_trap(receiver) -> None:
+    handler = MagicMock()
+    receiver.add("127.0.0.1", "homeassistant", handler)
+
+    await _send(receiver.port, "homeassistant", CPU_LOAD)
+
+    handler.assert_called_once_with(CPU_LOAD)
+
+
+async def test_an_alarm_trap_fires_an_event(hass: HomeAssistant, snmp, entry) -> None:
+    with patch(
+        "custom_components.tplink_switch_snmp.async_subscribe",
+        AsyncMock(return_value=AsyncMock()),
+    ) as subscribe:
+        await _setup(hass, entry, options={"trap_port": 1162})
+    events = async_capture_events(hass, EVENT_ALARM)
+    on_trap = subscribe.await_args.args[4]
+
+    on_trap(CPU_LOAD)
+    on_trap(LINK_DOWN)  # a trap that is no alarm
+    on_trap(None)  # a trap without an OID
+    await hass.async_block_till_done()
+
+    assert len(events) == 1
+    assert events[0].data == {
+        "entry_id": entry.entry_id,
+        "switch": "TL-SG3424",
+        "alarm": "cpu_load",
+    }

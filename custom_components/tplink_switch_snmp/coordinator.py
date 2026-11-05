@@ -27,6 +27,7 @@ from .const import (
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_VERSION,
     DOMAIN,
+    EVENT_ALARM,
     EVENT_DEVICE_MOVED,
     EVENT_LINK_CHANGED,
     EXTRA_TABLES,
@@ -57,6 +58,7 @@ from .const import (
     OID_TPLINK_FIRMWARE,
     OID_TPLINK_HARDWARE,
     PROTECTED_MAC_COUNT,
+    TRAP_ALARMS,
     VERSION_1,
 )
 from .history import RateHistory
@@ -274,6 +276,20 @@ class SwitchCoordinator(DataUpdateCoordinator[SwitchData]):
                     ),
                 },
             )
+
+    def fire_alarm(self, trap: str | None) -> None:
+        """Fire an event if the trap is one of the alarms the switch reports on its own."""
+        alarm = TRAP_ALARMS.get(trap or "")
+        if alarm is None:
+            return
+        self.hass.bus.async_fire(
+            EVENT_ALARM,
+            {
+                "entry_id": self.config_entry.entry_id,
+                "switch": self.config_entry.title,
+                "alarm": alarm,
+            },
+        )
 
     @property
     def can_write(self) -> bool:

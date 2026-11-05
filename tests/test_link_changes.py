@@ -10,6 +10,7 @@ from pytest_homeassistant_custom_component.common import MockConfigEntry, async_
 from custom_components.tplink_switch_snmp import logbook
 from custom_components.tplink_switch_snmp.const import (
     DOMAIN,
+    EVENT_ALARM,
     EVENT_LINK_CHANGED,
     OID_SYS_UPTIME,
 )
@@ -157,3 +158,19 @@ async def test_logbook_texts(hass: HomeAssistant) -> None:
         describe(Event(EVENT_LINK_CHANGED, {**nameless, "up": True, "flap": False}))["message"]
         == "Port 12: link up at 100 Mbit/s"
     )
+
+
+async def test_logbook_text_of_alarms(hass: HomeAssistant) -> None:
+    described = {}
+
+    @callback
+    def register(domain, event_type, describe):
+        described[event_type] = describe
+
+    logbook.async_describe_events(hass, register)
+    describe = described[EVENT_ALARM]
+
+    cpu = describe(Event(EVENT_ALARM, {"switch": "TL-SG3424", "alarm": "cpu_load"}))
+    assert cpu["name"] == "TL-SG3424"
+    assert cpu["message"] == "CPU load is over 80 %"
+    assert describe(Event(EVENT_ALARM, {"alarm": "other"}))["message"] == "other"

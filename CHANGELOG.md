@@ -10,6 +10,7 @@ Alle nennenswerten Änderungen an dieser Integration werden hier festgehalten.
 - **Port-Einstellung im Panel:** Das Panel liest aus der TP-Link-Tabelle, wie ein Port eingestellt ist (Auto-Aushandlung oder fest auf 10/100/1000 Mbit/s mit Duplex), die Flusssteuerung und den Trunk. Ein Port mit fester Einstellung bekommt in der Karte eine Markierung und einen Hinweis auf der Übersicht, denn die Gegenstelle muss dann genauso eingestellt sein. Ein Trunk wird ebenfalls markiert. Das erklärt oft Ports, die nur mit 100 Mbit/s laufen. Auch das ist noch nicht an echter Hardware geprüft.
 - **MAC-Sicherheit:** Hat ein Port die Port-Security des Switches eingeschaltet und so viele MAC-Adressen gelernt, wie er darf, markiert das Panel ihn und zeigt einen Hinweis auf der Übersicht: Ein weiteres Gerät kommt an diesem Port nicht ins Netz. Noch nicht an echter Hardware geprüft.
 - **Storm-Control und Einstellungen in der Port-Karte:** Die Karte beim Überfahren eines Ports zeigt zusätzlich die Storm-Control-Grenzen (Broadcast, Multicast, Unicast), die Flusssteuerung und die gelernten gegenüber den erlaubten MAC-Adressen, soweit der Switch sie meldet.
+- **Alarme des Switches:** Mit eingeschaltetem Trap-Empfang löst ein Trap für CPU- oder Speicherlast über 80 %, eine Schleife oder ein Storm-Control-Limit das Ereignis `tplink_switch_snmp_alarm` aus (mit Text im Logbuch). Die Abfrage danach läuft wie bisher sofort.
 
 ## 0.8.0 – 2026-11-04
 

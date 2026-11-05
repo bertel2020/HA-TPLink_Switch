@@ -86,6 +86,14 @@ EXTRA_TABLES = {
     "storm_mc": f"{OID_STORM}.3",
     "storm_ul": f"{OID_STORM}.4",
 }
+# Traps of the TL-SG3424 that are reported as an alarm event (snmpTrapOID -> what it says)
+TRAP_ALARMS = {
+    "1.3.6.1.4.1.11863.1.1.3.14.12.1": "cpu_load",  # cpuLoadExceed: over 80 %
+    "1.3.6.1.4.1.11863.1.1.3.14.12.2": "memory_load",  # memoryLoadExceed: over 80 %
+    "1.3.6.1.4.1.11863.1.1.3.2.1.5.5": "loop",  # loopbackStatusChange
+    "1.3.6.1.4.1.11863.1.1.3.6.4.1": "broadcast_storm",  # broadcastRateExceed
+    "1.3.6.1.4.1.11863.1.1.3.6.4.2": "multicast_storm",  # multicastRateExceed
+}
 OID_SYS_NAME = "1.3.6.1.2.1.1.5.0"
 OID_BRIDGE_ADDRESS = "1.3.6.1.2.1.17.1.1.0"
 
@@ -138,6 +146,7 @@ PANEL_PATH = "tplink-switch"
 
 EVENT_LINK_CHANGED = f"{DOMAIN}_link_changed"
 EVENT_DEVICE_MOVED = f"{DOMAIN}_device_moved"
+EVENT_ALARM = f"{DOMAIN}_alarm"
 
 # Which entities are created: groups of them can be left out, and so can ports (options).
 CONF_ENTITY_GROUPS = "entity_groups"

@@ -91,7 +91,8 @@ async def _async_setup_traps(
         _LOGGER.warning("Traps are only supported with SNMP v1 and v2c, not receiving any")
         return
 
-    def on_trap() -> None:
+    def on_trap(trap: str | None) -> None:
+        coordinator.fire_alarm(trap)
         # The poll reads what changed; its own debounce keeps a burst of traps to one poll.
         hass.async_create_task(coordinator.async_request_refresh())
 

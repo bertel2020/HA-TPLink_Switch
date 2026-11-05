@@ -12,12 +12,21 @@ from homeassistant.components.logbook import (
 )
 from homeassistant.core import Event, HomeAssistant, callback
 
-from .const import DOMAIN, EVENT_DEVICE_MOVED, EVENT_LINK_CHANGED
+from .const import DOMAIN, EVENT_ALARM, EVENT_DEVICE_MOVED, EVENT_LINK_CHANGED
 
 
 def _port(data: Mapping[str, Any]) -> str:
     name = data.get("port_name")
     return f"Port {data['port']}" + (f" ({name})" if name else "")
+
+
+ALARM_TEXTS = {
+    "cpu_load": "CPU load is over 80 %",
+    "memory_load": "memory use is over 80 %",
+    "loop": "loop detection reports a change",
+    "broadcast_storm": "broadcast storm control limit exceeded",
+    "multicast_storm": "multicast storm control limit exceeded",
+}
 
 
 def _speed(mbit: int) -> str:
@@ -57,5 +66,14 @@ def async_describe_events(
             LOGBOOK_ENTRY_MESSAGE: f"moved from {before} to {after} at {switch}",
         }
 
+    @callback
+    def describe_alarm(event: Event) -> dict[str, Any]:
+        data = event.data
+        return {
+            LOGBOOK_ENTRY_NAME: data.get("switch", "Switch"),
+            LOGBOOK_ENTRY_MESSAGE: ALARM_TEXTS.get(data["alarm"], data["alarm"]),
+        }
+
+    async_describe_event(DOMAIN, EVENT_ALARM, describe_alarm)
     async_describe_event(DOMAIN, EVENT_LINK_CHANGED, describe_link_changed)
     async_describe_event(DOMAIN, EVENT_DEVICE_MOVED, describe_device_moved)

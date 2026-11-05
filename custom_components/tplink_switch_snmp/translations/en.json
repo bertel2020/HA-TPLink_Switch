@@ -156,6 +156,9 @@
       },
       "stp_changes": {
         "name": "STP topology changes"
+      },
+      "arp_illegal": {
+        "name": "Port {port} Illegal ARP packets"
       }
     },
     "switch": {
@@ -207,7 +210,8 @@
         "devices": "Port of known devices",
         "loop": "Loop found (the switch's loop detection)",
         "error_details": "Error details (CRC, collisions, undersize and oversize packets)",
-        "stp": "Spanning tree: number of topology changes"
+        "stp": "Spanning tree: number of topology changes",
+        "arp": "Illegal ARP packets (the switch's ARP protection)"
       }
     }
   },

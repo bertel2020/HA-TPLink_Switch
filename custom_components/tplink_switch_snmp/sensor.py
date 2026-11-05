@@ -152,6 +152,14 @@ PORT_SENSORS: tuple[PortSensorDescription, ...] = (
         value_fn=lambda p: p.error_details.get("collisions"),
     ),
     PortSensorDescription(
+        key="arp_illegal",
+        translation_key="arp_illegal",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda p: p.arp_illegal,
+    ),
+    PortSensorDescription(
         key="rx_discards",
         translation_key="rx_discards",
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -237,6 +245,15 @@ PORT_SENSORS: tuple[PortSensorDescription, ...] = (
 )
 
 
+def _reported(key: str, port: PortData) -> bool:
+    """Whether the switch reports the value; some sensors exist only where it does."""
+    if key in ERROR_DETAILS:
+        return key in port.error_details
+    if key == "arp_illegal":
+        return port.arp_illegal is not None
+    return True
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: SwitchConfigEntry,
@@ -253,11 +270,7 @@ async def async_setup_entry(
         for number in coordinator.data.ports
         for description in PORT_SENSORS
         if wants(entry, number, description.key)
-        # the error details exist only where the switch reports them
-        and (
-            description.key not in ERROR_DETAILS
-            or description.key in coordinator.data.ports[number].error_details
-        )
+        and _reported(description.key, coordinator.data.ports[number])
     )
     async_add_entities(entities)
 

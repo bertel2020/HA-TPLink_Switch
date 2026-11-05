@@ -156,6 +156,9 @@
       },
       "stp_changes": {
         "name": "STP-Topologieänderungen"
+      },
+      "arp_illegal": {
+        "name": "Port {port} Unzulässige ARP-Pakete"
       }
     },
     "switch": {
@@ -207,7 +210,8 @@
         "devices": "Port von bekannten Geräten",
         "loop": "Schleife erkannt (Schleifenerkennung des Switches)",
         "error_details": "Fehler im Detail (CRC, Kollisionen, zu kurze und zu lange Pakete)",
-        "stp": "Spanning Tree: Zahl der Topologieänderungen"
+        "stp": "Spanning Tree: Zahl der Topologieänderungen",
+        "arp": "Unzulässige ARP-Pakete (ARP-Schutz des Switches)"
       }
     }
   },

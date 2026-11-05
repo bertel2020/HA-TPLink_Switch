@@ -72,6 +72,7 @@ STORM_LIMITS = {
     11: 50000,
 }
 OID_STORM = f"{OID_TPLINK}.6.2.2.1.1"  # stormControlEntry: 2 broadcast, 3 multicast, 4 unicast
+OID_ARP = f"{OID_TPLINK}.8.2.1"  # arpDetection: the switch's ARP protection
 EXTRA_TABLES = {
     "loop_on": OID_LOOP_ENABLED,
     "loop": OID_LOOP_LOOPED,
@@ -85,6 +86,9 @@ EXTRA_TABLES = {
     "storm_bc": f"{OID_STORM}.2",
     "storm_mc": f"{OID_STORM}.3",
     "storm_ul": f"{OID_STORM}.4",
+    "arp_on": f"{OID_ARP}.1.1",  # arpDetectionConfigEnable
+    "arp_state": f"{OID_ARP}.2.2.1.2",  # arpDetectionStatState: 1 trusted port, 0 not
+    "arp_illegal": f"{OID_ARP}.2.2.1.3",  # arpDetectionStatNonLegalPkt
 }
 # Traps of the TL-SG3424 that are reported as an alarm event (snmpTrapOID -> what it says)
 TRAP_ALARMS = {
@@ -200,6 +204,7 @@ PORT_ENTITY_GROUPS: dict[str, tuple[str, ...]] = {
     "macs": ("macs",),
     "loop": ("loop",),
     "error_details": tuple(ERROR_DETAILS),
+    "arp": ("arp_illegal",),
 }
 # groups of entities that belong to the switch and not to a port
 SWITCH_ENTITY_GROUPS = ("uptime", "devices", "stp")

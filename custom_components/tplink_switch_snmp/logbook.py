@@ -27,6 +27,7 @@ ALARM_TEXTS = {
     "broadcast_storm": "broadcast storm control limit exceeded",
     "multicast_storm": "multicast storm control limit exceeded",
     "stp_topology_change": "spanning tree topology changed",
+    "arp_illegal": "illegal ARP packets received",
 }
 
 
@@ -70,10 +71,10 @@ def async_describe_events(
     @callback
     def describe_alarm(event: Event) -> dict[str, Any]:
         data = event.data
-        return {
-            LOGBOOK_ENTRY_NAME: data.get("switch", "Switch"),
-            LOGBOOK_ENTRY_MESSAGE: ALARM_TEXTS.get(data["alarm"], data["alarm"]),
-        }
+        message = ALARM_TEXTS.get(data["alarm"], data["alarm"])
+        if "port" in data:
+            message = f"{_port(data)}: {message}"
+        return {LOGBOOK_ENTRY_NAME: data.get("switch", "Switch"), LOGBOOK_ENTRY_MESSAGE: message}
 
     async_describe_event(DOMAIN, EVENT_ALARM, describe_alarm)
     async_describe_event(DOMAIN, EVENT_LINK_CHANGED, describe_link_changed)

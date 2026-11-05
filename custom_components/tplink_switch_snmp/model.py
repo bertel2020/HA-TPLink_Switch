@@ -55,6 +55,8 @@ class PortData:
     storm: dict[str, int] = field(default_factory=dict)  # storm control limits in kbit/s
     error_details: dict[str, int] = field(default_factory=dict)  # RMON: CRC, collisions ...
     stp_state: str | None = None  # spanning tree: "forwarding", "blocking", ...
+    arp_illegal: int | None = None  # illegal ARP packets seen (the switch's ARP protection)
+    arp_trusted: bool | None = None  # the port is trusted by the ARP protection
 
 
 @dataclass
@@ -323,6 +325,19 @@ def add_stp(
         changes if isinstance(changes, int) else None,
         root_port.number if root_port else None,
     )
+
+
+def add_arp(ports: dict[int, PortData], extras: dict[str, dict[str, Any]]) -> None:
+    """Fill in the ARP protection counters, if the switch has that protection switched on."""
+    enabled = extras.get("arp_on", {})
+    if enabled and enabled.get("0") != 1:
+        return
+    for number, port in ports.items():
+        illegal = extras.get("arp_illegal", {}).get(str(number))
+        if isinstance(illegal, int):
+            port.arp_illegal = illegal
+            state = extras.get("arp_state", {}).get(str(number))
+            port.arp_trusted = state == 1 if isinstance(state, int) else None
 
 
 STORM_KINDS = {"storm_bc": "broadcast", "storm_mc": "multicast", "storm_ul": "unicast"}

@@ -92,6 +92,9 @@
       },
       "stp_changes": {
         "default": "mdi:graph-outline"
+      },
+      "arp_illegal": {
+        "default": "mdi:shield-alert-outline"
       }
     },
     "switch": {

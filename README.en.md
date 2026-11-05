@@ -106,6 +106,7 @@ Per port:
 | **Received / sent total** | off | data volume |
 | **Receive / transmit errors** | off | |
 | **CRC errors, collisions, undersize/oversize packets, fragments, jabbers** | off | only at ports the switch reports RMON values for |
+| **Illegal ARP packets** | off | only at ports the switch reports ARP detection values for |
 | **Receive / transmit discarded** | off | discarded packets |
 | **Link changed** (timestamp) | off | time of the last link change |
 | **Packets/s receive/transmit**, **broadcast/multicast receive** | off | from the packet counters |
@@ -115,7 +116,7 @@ On the device: **Uptime** and, if the switch reports spanning tree, **STP topolo
 
 ### Which entities are created
 
-Under **Configure** you choose which groups of entities exist (link, rates, speed, data totals, errors, packets, utilization, link changes, MAC addresses, loop, error details, STP, uptime, port of devices) and for which ports (empty = all). What you deselect is not created and is removed from the entity list; its history in Home Assistant is no longer updated. The panel is not affected, it reads from the switch directly.
+Under **Configure** you choose which groups of entities exist (link, rates, speed, data totals, errors, packets, utilization, link changes, MAC addresses, loop, error details, ARP, STP, uptime, port of devices) and for which ports (empty = all). What you deselect is not created and is removed from the entity list; its history in Home Assistant is no longer updated. The panel is not affected, it reads from the switch directly.
 
 ## Events and logbook
 
@@ -123,7 +124,7 @@ Both events appear in the logbook and can be used as triggers in automations:
 
 - `tplink_switch_snmp_link_changed`: a link changed. Data: `port`, `port_name`, `up`, `speed`, `flap` (the link dropped and came back between two polls), `switch`, `entry_id`, `entity_id`. After a reboot of the switch there are no events.
 - `tplink_switch_snmp_device_moved`: a device that Home Assistant knows shows up on another port. Data: `mac`, `name`, `device_id`, `from_port`, `from_port_name`, `to_port`, `to_port_name`, `switch`, `entry_id`.
-- `tplink_switch_snmp_alarm`: the switch reports an alarm by trap (only with trap receiving on). Data: `alarm` (`cpu_load` and `memory_load` over 80 %, `loop`, `broadcast_storm`, `multicast_storm`; also `stp_topology_change` when the spanning tree topology changes, even without traps), `switch`, `entry_id`.
+- `tplink_switch_snmp_alarm`: the switch reports an alarm by trap (only with trap receiving on). Data: `alarm` (`cpu_load` and `memory_load` over 80 %, `loop`, `broadcast_storm`, `multicast_storm`; also `arp_illegal` (with `port` and `count`) and `stp_topology_change` when the spanning tree topology changes, even without traps), `switch`, `entry_id`.
 
 ```yaml
 triggers:

@@ -529,6 +529,7 @@ class TplinkSwitchPanel extends HTMLElement {
     const detail = this._detailText(p);
     if (detail) lines.push(detail);
     if (p.flow_control) lines.push(t("flowOn"));
+    if (p.arp_illegal > 0) lines.push(t("arpIllegal", { n: p.arp_illegal }));
     if (p.security_max != null) lines.push(t("secCount", { n: p.security_learned ?? "–", max: p.security_max }));
     const storm = Object.entries(p.storm || {}).map(([kind, k]) => `${t("storm_" + kind)} ${this._kbit(k)}`);
     if (storm.length) lines.push(`${t("stormLimit")}: ${storm.join(", ")}`);
@@ -562,6 +563,7 @@ class TplinkSwitchPanel extends HTMLElement {
     const fixed = sw.ports.filter((p) => this._fixed(p));
     const secFull = sw.ports.filter((p) => this._secFull(p));
     const stp = sw.ports.filter((p) => this._stpBlocked(p));
+    const arp = sw.ports.filter((p) => p.arp_illegal > 0);
     const day = Date.now() - 86400000;
     const flips = sw.ports.filter((p) => (this._changedAt(sw, p) ?? 0) > day);
     const note = (cls, ic, title, text) => `<div class="issue ${cls}">${icon(ic)}<div><b>${esc(title)}</b><br>${esc(text)}</div></div>`;
@@ -570,11 +572,12 @@ class TplinkSwitchPanel extends HTMLElement {
       errs.length ? note("warn", "warn", t.count("errorPorts", errs.length), t("errorPortsText", { ports: errs.map((p) => `${t("port")} ${p.n}`).join(", ") })) : "",
       slow.length ? note("warn", "warn", t.count("slowPorts", slow.length), t("slowPortsText", { ports: slow.map((p) => `${t("port")} ${p.n}`).join(", ") })) : "",
       loud.length ? note("warn", "warn", t.count("manyBroadcast", loud.length), t("manyBroadcastText", { ports: loud.map((p) => `${t("port")} ${p.n}`).join(", ") })) : "",
+      arp.length ? note("bad", "warn", t.count("arpPorts", arp.length), t("arpPortsText", { ports: arp.map((p) => `${t("port")} ${p.n} (${p.arp_illegal})`).join(", ") })) : "",
       stp.length ? note("warn", "warn", t.count("stpPorts", stp.length), t("stpPortsText", { ports: stp.map((p) => `${t("port")} ${p.n}`).join(", ") })) : "",
       secFull.length ? note("warn", "warn", t.count("secFullPorts", secFull.length), t("secFullPortsText", { ports: secFull.map((p) => `${t("port")} ${p.n}`).join(", ") })) : "",
       fixed.length ? note("warn", "warn", t.count("fixedPorts", fixed.length), t("fixedPortsText", { ports: fixed.map((p) => `${t("port")} ${p.n} (${t("mode_" + p.mode)})`).join(", ") })) : "",
       flips.length ? note("warn", "warn", t.count("linkChanges", flips.length), t("linkChangesText", { ports: flips.map((p) => `${t("port")} ${p.n}`).join(", ") })) : "",
-      !errs.length && !slow.length && !flips.length && !loud.length && !loops.length && !fixed.length && !secFull.length && !stp.length ? note("ok", "ok", t("allFine"), t("allFineText")) : "",
+      !errs.length && !slow.length && !flips.length && !loud.length && !loops.length && !fixed.length && !secFull.length && !stp.length && !arp.length ? note("ok", "ok", t("allFine"), t("allFineText")) : "",
     ].join("");
     return `<section class="card"><div class="card-h"><h2>${esc(t("faceplate"))}</h2>${live}<span class="grow"></span><span class="sub">${esc(t("clickPort"))}</span></div>
       <div class="face">${this._plate(sw)}<div class="legend">

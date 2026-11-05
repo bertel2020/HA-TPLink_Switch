@@ -68,6 +68,7 @@ from .model import (
     PortData,
     SwitchData,
     UptimeTracker,
+    add_arp,
     add_config,
     add_error_details,
     add_loops,
@@ -216,6 +217,7 @@ class SwitchCoordinator(DataUpdateCoordinator[SwitchData]):
             add_config(ports, extras)
             add_security(ports, extras)
             add_storm(ports, extras)
+            add_arp(ports, extras)
         self._last_poll = now
 
         ticks = int(system.get(OID_SYS_UPTIME, 0))
@@ -250,6 +252,7 @@ class SwitchCoordinator(DataUpdateCoordinator[SwitchData]):
         )
         if self.data:
             self._fire_move_events(data, self.data)
+            self._fire_arp_events(data, self.data)
             if (
                 data.stp_changes is not None
                 and self.data.stp_changes is not None
@@ -298,6 +301,20 @@ class SwitchCoordinator(DataUpdateCoordinator[SwitchData]):
         alarm = TRAP_ALARMS.get(trap or "")
         if alarm is not None:
             self._fire_alarm_event(alarm)
+
+    def _fire_arp_events(self, data: SwitchData, previous: SwitchData) -> None:
+        """Fire an alarm for each port that has seen illegal ARP packets since the last poll."""
+        for number, port in data.ports.items():
+            old = previous.ports.get(number)
+            if port.arp_illegal is None or old is None or old.arp_illegal is None:
+                continue
+            if port.arp_illegal > old.arp_illegal:
+                self._fire_alarm_event(
+                    "arp_illegal",
+                    port=number,
+                    port_name=self.port_label(number),
+                    count=port.arp_illegal - old.arp_illegal,
+                )
 
     def _fire_alarm_event(self, alarm: str, **details: Any) -> None:
         self.hass.bus.async_fire(

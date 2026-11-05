@@ -811,7 +811,7 @@ class TplinkSwitchPanel extends HTMLElement {
   _functionsCard(sw) {
     const t = this._t;
     const names = Object.keys(sw.features || {});
-    if (!names.length) return "";
+    const info = (label, value) => `<div><span>${esc(label)}</span><span>${esc(value)}</span></div>`;
     const groups = (sw.mirror || []).filter((m) => m.monitor != null);
     const mirror = (m) => `${t("port")} ${m.monitor} ← ${[...new Set([...m.ingress, ...m.egress])].join(", ") || "–"}`;
     const row = (name) => {
@@ -819,7 +819,9 @@ class TplinkSwitchPanel extends HTMLElement {
       const extra = name === "mirror" && on && groups.length ? ` <span class="muted">${esc(groups.map(mirror).join("; "))}</span>` : "";
       return `<div><span>${esc(t("feature_" + name))}</span><span><span class="tag ${on ? "ok" : ""}">${esc(t(on ? "on" : "off"))}</span>${extra}</span></div>`;
     };
-    return `<section class="card"><div class="card-h"><h2>${esc(t("functions"))}</h2></div><div class="details"><div class="kv">${names.map(row).join("")}</div></div></section>`;
+    const more = [sw.qos_mode ? info(t("qosScheduler"), t("qos_" + sw.qos_mode)) : ""].join("");
+    if (!names.length && !more) return "";
+    return `<section class="card"><div class="card-h"><h2>${esc(t("functions"))}</h2></div><div class="details"><div class="kv">${names.map(row).join("")}${more}</div></div></section>`;
   }
 
   // The VLANs of the switch with the ports that belong to them; a port is untagged or tagged in a VLAN.

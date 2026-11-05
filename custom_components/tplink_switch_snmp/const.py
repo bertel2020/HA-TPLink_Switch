@@ -43,6 +43,17 @@ OID_SYS_UPTIME = "1.3.6.1.2.1.1.3.0"
 # TP-Link's own MIB (enterprise 11863): hardware and firmware version of a JetStream switch
 OID_TPLINK_HARDWARE = "1.3.6.1.4.1.11863.1.1.3.1.1.1.5.0"
 OID_TPLINK_FIRMWARE = "1.3.6.1.4.1.11863.1.1.3.1.1.1.6.0"
+# TP-Link's private tables (read from the MIB package of the TL-SG3424, indexed by port number).
+# The switch may not have all of them, so they are read apart from the standard ones.
+OID_TPLINK = "1.3.6.1.4.1.11863.1.1.3"
+OID_LOOP_ENABLED = f"{OID_TPLINK}.2.1.5.4.1.2"  # loopbackDetectionState
+OID_LOOP_LOOPED = f"{OID_TPLINK}.2.1.5.4.1.5"  # loopbackDetectionLoopState
+OID_LOOP_BLOCKED = f"{OID_TPLINK}.2.1.5.4.1.6"  # loopbackDetectionBlockState
+EXTRA_TABLES = {
+    "loop_on": OID_LOOP_ENABLED,
+    "loop": OID_LOOP_LOOPED,
+    "loop_blocked": OID_LOOP_BLOCKED,
+}
 OID_SYS_NAME = "1.3.6.1.2.1.1.5.0"
 OID_BRIDGE_ADDRESS = "1.3.6.1.2.1.17.1.1.0"
 
@@ -110,6 +121,7 @@ PORT_ENTITY_GROUPS: dict[str, tuple[str, ...]] = {
     "utilization": ("rx_utilization", "tx_utilization"),
     "link_changed": ("link_changed",),
     "macs": ("macs",),
+    "loop": ("loop",),
 }
 # groups of entities that belong to the switch and not to a port
 SWITCH_ENTITY_GROUPS = ("uptime", "devices")

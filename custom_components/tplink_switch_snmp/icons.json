@@ -6,6 +6,12 @@
         "state": {
           "on": "mdi:ethernet"
         }
+      },
+      "loop": {
+        "default": "mdi:sync-alert",
+        "state": {
+          "off": "mdi:sync"
+        }
       }
     },
     "sensor": {

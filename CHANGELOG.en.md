@@ -2,6 +2,12 @@
 
 All notable changes to this integration are recorded here.
 
+## 0.9.0 – unreleased
+
+### New
+
+- **Loop detection:** for every port where the switch's loop detection is on there is a binary sensor **Port N loop** (problem; attribute `blocked` when the switch has blocked the port). The panel shows a note and a tag on the port's card. The values come from TP-Link's MIB for the TL-SG3424 and are not yet checked against real hardware; if the table is missing, the sensors are simply not created. New group "Loop found" in the options (if you saved the selection before, pick it there).
+
 ## 0.8.0 – 2026-11-04
 
 ### New

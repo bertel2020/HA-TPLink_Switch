@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import asyncio
 from datetime import datetime, timedelta
 import logging
 import time
+from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
@@ -27,6 +29,7 @@ from .const import (
     DOMAIN,
     EVENT_DEVICE_MOVED,
     EVENT_LINK_CHANGED,
+    EXTRA_TABLES,
     OID_BASE_PORT_IF_INDEX,
     OID_FDB,
     OID_FDB_Q,
@@ -61,6 +64,7 @@ from .model import (
     PortData,
     SwitchData,
     UptimeTracker,
+    add_loops,
     add_rates,
     build_ports,
     manufacturer,
@@ -158,6 +162,21 @@ class SwitchCoordinator(DataUpdateCoordinator[SwitchData]):
             info[key] = text(value).strip() or None if value is not None else None
         return info
 
+    async def _read_extras(self) -> dict[str, dict[str, Any]]:
+        """TP-Link's own tables. A switch without one of them just leaves it out."""
+        results = await asyncio.gather(
+            *(self.client.walk_many({key: oid}) for key, oid in EXTRA_TABLES.items()),
+            return_exceptions=True,
+        )
+        extras: dict[str, dict[str, Any]] = {}
+        for key, result in zip(EXTRA_TABLES, results, strict=True):
+            if isinstance(result, SnmpError):
+                continue
+            if isinstance(result, BaseException):
+                raise result
+            extras[key] = result.get(key, {})
+        return extras
+
     async def _async_update_data(self) -> SwitchData:
         try:
             system = await self.client.get(OID_SYS_UPTIME, OID_SYS_DESCR, OID_SYS_OBJECT_ID)
@@ -178,6 +197,8 @@ class SwitchCoordinator(DataUpdateCoordinator[SwitchData]):
         previous = self.data.ports if self.data else None
         elapsed = now - self._last_poll if self._last_poll is not None else 0
         add_rates(ports, previous, elapsed, 32 if self._v1 else 64)
+        if manufacturer(text(system.get(OID_SYS_OBJECT_ID, ""))) == "TP-Link":
+            add_loops(ports, await self._read_extras())
         self._last_poll = now
 
         ticks = int(system.get(OID_SYS_UPTIME, 0))

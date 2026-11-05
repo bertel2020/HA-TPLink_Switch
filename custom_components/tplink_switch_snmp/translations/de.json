@@ -73,6 +73,9 @@
     "binary_sensor": {
       "link": {
         "name": "Port {port} Link"
+      },
+      "loop": {
+        "name": "Port {port} Schleife"
       }
     },
     "sensor": {
@@ -180,7 +183,8 @@
         "link_changed": "Zeitpunkt des letzten Link-Wechsels",
         "macs": "Anzahl der MAC-Adressen je Port",
         "uptime": "Laufzeit des Switches",
-        "devices": "Port von bekannten Geräten"
+        "devices": "Port von bekannten Geräten",
+        "loop": "Schleife erkannt (Schleifenerkennung des Switches)"
       }
     }
   },

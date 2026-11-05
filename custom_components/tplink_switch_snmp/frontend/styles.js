@@ -143,7 +143,7 @@ th[aria-sort]:not([aria-sort="none"]) { color: var(--text); }
 .toprow .b i { display: block; height: 100%; background: var(--accent); border-radius: 4px; }
 .issues { padding: 6px 20px 16px; display: grid; gap: 8px; }
 .issue { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border-radius: 10px; font-size: max(10.5px, calc(13px * var(--fs))); }
-.issue.warn { background: var(--warn-soft); color: var(--warn); } .issue.ok { background: var(--ok-soft); color: var(--ok); }
+.issue.warn { background: var(--warn-soft); color: var(--warn); } .issue.bad { background: var(--bad-soft, var(--warn-soft)); color: var(--bad); } .issue.ok { background: var(--ok-soft); color: var(--ok); }
 .issue svg { width: 18px; height: 18px; margin-top: 1px; }
 .lookwrap { position: relative; }
 .icon-btn { width: 40px; height: 40px; border-radius: 50%; display: inline-grid; place-items: center; color: var(--muted); border: 0; background: none; cursor: pointer; }

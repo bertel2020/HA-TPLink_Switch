@@ -2,6 +2,12 @@
 
 Alle nennenswerten Änderungen an dieser Integration werden hier festgehalten.
 
+## 0.9.0 – unveröffentlicht
+
+### Neu
+
+- **Schleifenerkennung:** Pro Port, an dem die Schleifenerkennung des Switches eingeschaltet ist, gibt es einen Binärsensor **Port N Schleife** (Problem; Attribut `blocked`, wenn der Switch den Port gesperrt hat). Das Panel zeigt einen Hinweis und eine Markierung in der Karte des Ports. Die Werte stammen aus der TP-Link-MIB des TL-SG3424 und sind noch nicht an echter Hardware geprüft; fehlt die Tabelle, gibt es die Sensoren einfach nicht. Neue Gruppe „Schleife erkannt“ in den Optionen (wer die Auswahl schon gespeichert hat, wählt sie dort nach).
+
 ## 0.8.0 – 2026-11-04
 
 ### Neu

@@ -149,6 +149,11 @@ async def test_traps_are_off_by_default(hass: HomeAssistant, snmp, entry) -> Non
     subscribe.assert_not_called()
 
 
+def _polls(snmp) -> int:
+    """How often the interface tables were read (TP-Link's own tables come on top)."""
+    return sum("name" in call.args[0] for call in snmp.walk_many.await_args_list)
+
+
 async def test_a_trap_triggers_a_poll(hass: HomeAssistant, snmp, entry) -> None:
     unsubscribe = AsyncMock()
     with patch(
@@ -159,12 +164,12 @@ async def test_a_trap_triggers_a_poll(hass: HomeAssistant, snmp, entry) -> None:
 
     args = subscribe.await_args.args
     assert args[1:4] == (1162, "192.168.79.15", "homeassistant")
-    polls = snmp.walk_many.await_count
+    polls = _polls(snmp)
 
     args[4]()  # the handler the setup passed: a trap arrives
     await hass.async_block_till_done()
 
-    assert snmp.walk_many.await_count == polls + 1
+    assert _polls(snmp) == polls + 1
 
 
 async def test_unload_closes_the_listener(hass: HomeAssistant, snmp, entry) -> None:

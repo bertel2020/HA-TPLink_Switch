@@ -99,6 +99,7 @@ Pro Port:
 | Entität | Standard | Hinweis |
 | --- | --- | --- |
 | **Link** (binary_sensor) | an | |
+| **Schleife** (binary_sensor) | an | nur an Ports mit eingeschalteter Schleifenerkennung des Switches |
 | **Empfang**, **Senden** (Mbit/s) | an | aus den Zählern des Switches berechnet |
 | **Geschwindigkeit** | an | |
 | **MAC-Adressen** | an | Anzahl; die Liste steht im Attribut `mac_addresses` |
@@ -114,7 +115,7 @@ Am Gerät: **Laufzeit**. Für jedes Gerät, das Home Assistant über seine MAC-A
 
 ### Welche Entitäten angelegt werden
 
-Unter **Konfigurieren** wählst du, welche Gruppen von Entitäten es gibt (Link, Datenraten, Geschwindigkeit, Datenmenge, Fehler, Pakete, Auslastung, Link-Wechsel, MAC-Adressen, Laufzeit, Port von Geräten) und für welche Ports (leer = alle). Was du abwählst, wird nicht angelegt und aus der Entitäten-Liste entfernt; dabei werden auch deren Verlaufsdaten in Home Assistant nicht mehr fortgeschrieben. Das Panel ist nicht betroffen, es liest direkt vom Switch.
+Unter **Konfigurieren** wählst du, welche Gruppen von Entitäten es gibt (Link, Datenraten, Geschwindigkeit, Datenmenge, Fehler, Pakete, Auslastung, Link-Wechsel, MAC-Adressen, Schleife, Laufzeit, Port von Geräten) und für welche Ports (leer = alle). Was du abwählst, wird nicht angelegt und aus der Entitäten-Liste entfernt; dabei werden auch deren Verlaufsdaten in Home Assistant nicht mehr fortgeschrieben. Das Panel ist nicht betroffen, es liest direkt vom Switch.
 
 ## Ereignisse und Logbuch
 

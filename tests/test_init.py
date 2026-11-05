@@ -147,7 +147,7 @@ async def test_v1_reads_the_32_bit_counters(hass: HomeAssistant, snmp, entry) ->
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    asked = snmp.walk_many.await_args.args[0]
+    asked = snmp.walk_many.await_args_list[0].args[0]
     assert asked["rx"].endswith("2.2.1.10")  # ifInOctets, not the 64 bit ifHCInOctets
 
 
@@ -229,7 +229,7 @@ async def test_v1_reads_the_32_bit_packet_counters(hass: HomeAssistant, snmp, en
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    asked = snmp.walk_many.await_args.args[0]
+    asked = snmp.walk_many.await_args_list[0].args[0]
     assert asked["rx_uc"].endswith("2.2.1.11")  # ifInUcastPkts
     assert asked["rx_bc"].endswith("31.1.1.1.3")  # ifInBroadcastPkts, 32 bit
 

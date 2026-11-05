@@ -73,6 +73,9 @@
     "binary_sensor": {
       "link": {
         "name": "Port {port} link"
+      },
+      "loop": {
+        "name": "Port {port} loop"
       }
     },
     "sensor": {
@@ -180,7 +183,8 @@
         "link_changed": "Time of the last link change",
         "macs": "Number of MAC addresses per port",
         "uptime": "Uptime of the switch",
-        "devices": "Port of known devices"
+        "devices": "Port of known devices",
+        "loop": "Loop found (the switch's loop detection)"
       }
     }
   },

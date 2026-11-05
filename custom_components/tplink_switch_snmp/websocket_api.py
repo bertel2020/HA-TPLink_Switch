@@ -78,6 +78,8 @@ def _switch(hass: HomeAssistant, entry: SwitchConfigEntry) -> dict[str, Any]:
                 "tx_pps": port.tx_pps,
                 "rx_mcast_pps": port.rx_mcast_pps,
                 "rx_bcast_pps": port.rx_bcast_pps,
+                "loop": port.loop,
+                "loop_blocked": port.loop_blocked,
                 "rx_util": port.rx_util,
                 "tx_util": port.tx_util,
                 "macs": [{"mac": mac, **_device_names(hass, mac)} for mac in port.macs],

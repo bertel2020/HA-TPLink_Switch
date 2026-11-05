@@ -98,6 +98,7 @@ Per port:
 | Entity | Default | Note |
 | --- | --- | --- |
 | **Link** (binary_sensor) | on | |
+| **Loop** (binary_sensor) | on | only at ports where the switch's loop detection is on |
 | **Receive**, **Transmit** (Mbit/s) | on | calculated from the switch's counters |
 | **Speed** | on | |
 | **MAC addresses** | on | the count; the list is in the attribute `mac_addresses` |
@@ -113,7 +114,7 @@ On the device: **Uptime**. For every device that Home Assistant knows by its MAC
 
 ### Which entities are created
 
-Under **Configure** you choose which groups of entities exist (link, rates, speed, data totals, errors, packets, utilization, link changes, MAC addresses, uptime, port of devices) and for which ports (empty = all). What you deselect is not created and is removed from the entity list; its history in Home Assistant is no longer updated. The panel is not affected, it reads from the switch directly.
+Under **Configure** you choose which groups of entities exist (link, rates, speed, data totals, errors, packets, utilization, link changes, MAC addresses, loop, uptime, port of devices) and for which ports (empty = all). What you deselect is not created and is removed from the entity list; its history in Home Assistant is no longer updated. The panel is not affected, it reads from the switch directly.
 
 ## Events and logbook
 

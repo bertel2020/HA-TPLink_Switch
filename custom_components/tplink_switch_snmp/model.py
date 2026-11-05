@@ -45,6 +45,8 @@ class PortData:
     admin_up: bool = True  # the port is switched on (a switched-off port has no link)
     alias: str = ""  # the name given to the port at the switch (ifAlias)
     link_changed_at: datetime | None = None
+    loop: bool | None = None  # a loop is detected here; None if the port is not watched
+    loop_blocked: bool | None = None  # the switch has blocked the port because of a loop
 
 
 @dataclass
@@ -215,6 +217,31 @@ def build_ports(
             macs=sorted(macs_by_if.get(if_index, ())),
         )
     return ports
+
+
+_NO = ("no", "not", "normal", "none", "false", "off", "disable", "free", "-")
+
+
+def flag(value: Any) -> bool:
+    """Whether a state of the switch (a number or a text like "Loop" or "No Loop") is set."""
+    if isinstance(value, int):
+        return value != 0
+    word = text(value).strip().lower()
+    return bool(word) and word != "0" and not word.startswith(_NO)
+
+
+def add_loops(ports: dict[int, PortData], extras: dict[str, dict[str, Any]]) -> None:
+    """Fill in loop detection from TP-Link's table; ports it does not watch stay None."""
+    looped = extras.get("loop", {})
+    for number, port in ports.items():
+        suffix = str(number)
+        if suffix not in looped:
+            continue
+        if extras.get("loop_on") and extras["loop_on"].get(suffix) != 1:
+            continue  # detection is switched off at this port
+        port.loop = flag(looped[suffix])
+        if suffix in extras.get("loop_blocked", {}):
+            port.loop_blocked = flag(extras["loop_blocked"][suffix])
 
 
 def _delta(new: int, old: int, bits: int) -> int | None:

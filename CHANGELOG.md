@@ -2,6 +2,17 @@
 
 Alle nennenswerten Änderungen an dieser Integration werden hier festgehalten.
 
+## Unveröffentlicht
+
+### Neu
+
+- **Switch-Ansicht im Panel:** Die „Frontplatte“ heißt jetzt „Portübersicht“ und sieht aus wie ein Switch: dunkles Gehäuse, Buchsen in Vierergruppen in zwei Reihen mit LEDs für Link und Verkehr. Darunter stehen Kennzahlen des Switches (aktive Ports, Durchsatz, gelernte MAC-Adressen, Laufzeit, Ports mit Fehlern, Ports mit nur 100 Mbit/s).
+- **Kein Port vorgewählt:** Ein Port wird erst durch Anklicken gewählt und lässt sich durch erneutes Anklicken oder mit dem Kreuz wieder abwählen.
+- **Zeilen anklickbar:** In „Meiste Last“, auf der Seite Ports und bei den Geräten öffnet ein Klick auf die ganze Zeile den Port.
+- **Wackelnder Link erkannt:** Die Integration zählt die Link-Wechsel jedes Ports der letzten 24 Stunden (auch nach einem Neustart von Home Assistant). Ab 3 Wechseln warnt das Panel orange mit der Anzahl („Port 1 (6×)“); ein oder zwei Wechsel, meist ein aus- und wieder eingeschaltetes Gerät, erscheinen nur noch als ruhige Info. Die Portkarte nennt die Anzahl.
+- **Hersteller, Modell und Versionen:** Zusätzlich zur TP-Link-MIB liest die Integration die Standard-ENTITY-MIB; trägt die Beschreibung „JetStream“, wird als Hersteller TP-Link angezeigt, auch wenn sysObjectID anderes sagt.
+- **30 Tage und Mittelwerte:** Der Verlauf eines Ports zeigt auch die letzten 30 Tage (Zwei-Stunden-Werte), und die Durchsatz-Kachel nennt den mittleren Gesamtdurchsatz der letzten 24 Stunden, 7 und 30 Tage.
+
 ## 0.9.0 – 2026-11-05
 
 ### Neu

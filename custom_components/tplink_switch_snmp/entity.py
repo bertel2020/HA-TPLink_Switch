@@ -26,7 +26,7 @@ class SwitchEntity(CoordinatorEntity[SwitchCoordinator]):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._mac)},
             connections={(CONNECTION_NETWORK_MAC, self._mac)},
-            manufacturer=manufacturer(coordinator.data.object_id),
+            manufacturer=coordinator.data.manufacturer or manufacturer(coordinator.data.object_id),
             model=coordinator.data.model or coordinator.data.description or None,
             hw_version=coordinator.data.hw_version,
             sw_version=coordinator.data.sw_version,

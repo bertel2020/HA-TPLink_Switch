@@ -5,7 +5,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-from custom_components.tplink_switch_snmp.const import DOMAIN, OID_SYS_OBJECT_ID, OID_SYS_UPTIME
+from custom_components.tplink_switch_snmp.const import (
+    DOMAIN,
+    OID_SYS_DESCR,
+    OID_SYS_OBJECT_ID,
+    OID_SYS_UPTIME,
+)
 from custom_components.tplink_switch_snmp.snmp import SnmpError
 
 from .conftest import BRIDGE_MAC, MAC_OTHER, MAC_PRINTER, SYSTEM
@@ -178,6 +183,40 @@ async def test_model_falls_back_to_the_description_for_other_makers(
     snmp.get.assert_any_await("1.3.6.1.2.1.1.6.0")  # the standard location is still asked for
     asked = [c.args[0] for c in snmp.get.await_args_list if len(c.args) == 1]
     assert not any(oid.startswith("1.3.6.1.4.1.11863") for oid in asked)
+
+
+async def test_the_entity_mib_names_maker_model_and_versions(
+    hass: HomeAssistant, snmp, entry
+) -> None:
+    system = {
+        **SYSTEM,
+        OID_SYS_OBJECT_ID: "1.3.6.1.4.1.9.1.1",
+        "1.3.6.1.2.1.47.1.1.1.1.12.1": b"ACME",
+        "1.3.6.1.2.1.47.1.1.1.1.13.1": b"AS-24",
+        "1.3.6.1.2.1.47.1.1.1.1.8.1": b"2.0",
+        "1.3.6.1.2.1.47.1.1.1.1.10.1": b"5.4.3",
+    }
+    snmp.get.side_effect = lambda *oids: {o: system[o] for o in oids if o in system}
+    await _setup(hass, entry)
+
+    data = entry.runtime_data.data
+    assert data.manufacturer == "ACME"
+    assert (data.model, data.hw_version, data.sw_version) == ("AS-24", "2.0", "5.4.3")
+
+
+async def test_a_jetstream_description_names_tplink_without_the_object_id(
+    hass: HomeAssistant, snmp, entry
+) -> None:
+    system = {
+        **SYSTEM,
+        OID_SYS_OBJECT_ID: "1.3.6.1.4.1.1.1",
+        OID_SYS_DESCR: b"JetStream 24-Port Gigabit L2 Managed Switch",
+    }
+    snmp.get.side_effect = lambda *oids: {o: system[o] for o in oids if o in system}
+    await _setup(hass, entry)
+
+    data = entry.runtime_data.data
+    assert data.manufacturer == "TP-Link"
 
 
 async def test_an_unknown_private_value_does_not_stop_the_poll(

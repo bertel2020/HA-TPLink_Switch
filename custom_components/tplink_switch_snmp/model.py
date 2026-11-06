@@ -56,6 +56,7 @@ class PortData:
     admin_up: bool = True  # the port is switched on (a switched-off port has no link)
     alias: str = ""  # the name given to the port at the switch (ifAlias)
     link_changed_at: datetime | None = None
+    link_changes: int = 0  # how often the link changed in the last 24 hours
     loop: bool | None = None  # a loop is detected here; None if the port is not watched
     loop_blocked: bool | None = None  # the switch has blocked the port because of a loop
     mode: str | None = None  # how the port is set: "auto", "100full", ... (None if unknown)
@@ -89,6 +90,7 @@ class SwitchData:
     object_id: str  # sysObjectID
     ports: dict[int, PortData]  # keyed by port number
     model: str | None = None
+    manufacturer: str | None = None
     hw_version: str | None = None
     sw_version: str | None = None
     location: str | None = None
@@ -115,6 +117,14 @@ def manufacturer(object_id: str) -> str | None:
     parts = object_id.strip(".").split(".")
     if parts[:6] == ["1", "3", "6", "1", "4", "1"] and len(parts) > 6 and parts[6].isdigit():
         return ENTERPRISES.get(int(parts[6]))
+    return None
+
+
+def maker_from_description(description: str) -> str | None:
+    """The maker, when sysObjectID does not tell it but sysDescr does ("JetStream ...")."""
+    lowered = description.lower()
+    if "jetstream" in lowered or "tp-link" in lowered:
+        return "TP-Link"
     return None
 
 

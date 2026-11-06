@@ -32,6 +32,11 @@ from .const import (
     EVENT_LINK_CHANGED,
     EXTRA_TABLES,
     OID_BASE_PORT_IF_INDEX,
+    OID_ENT_FIRMWARE,
+    OID_ENT_HARDWARE,
+    OID_ENT_MAKER,
+    OID_ENT_MODEL,
+    OID_ENT_SOFTWARE,
     OID_FDB,
     OID_FDB_Q,
     OID_IF_ADMIN_STATUS,
@@ -66,7 +71,7 @@ from .const import (
     VERSION_1,
     VLAN_TABLES,
 )
-from .history import RateHistory
+from .history import LinkLog, RateHistory
 from .model import (
     PortData,
     SwitchData,
@@ -86,6 +91,7 @@ from .model import (
     add_stp,
     add_vlans,
     build_ports,
+    maker_from_description,
     manufacturer,
     split_hardware,
     text,
@@ -149,6 +155,7 @@ class SwitchCoordinator(DataUpdateCoordinator[SwitchData]):
         self.write_key: tuple[bool, str] = (False, "")
         self.selection: object = None  # which entities the options asked for, set by the setup
         self.history = RateHistory()
+        self.link_log = LinkLog()
         self._failing_since: datetime | None = None
         self._info: dict[str, str | None] | None = None
         self._store: Store[dict] = Store(hass, 1, f"{DOMAIN}.{entry.entry_id}.history")
@@ -159,17 +166,29 @@ class SwitchCoordinator(DataUpdateCoordinator[SwitchData]):
 
     async def async_load_history(self) -> None:
         """Restore the rates of the last hours, so a restart does not leave a gap."""
-        self.history = RateHistory.from_dict(
-            await self._store.async_load(), dt_util.utcnow().timestamp()
+        stored = await self._store.async_load()
+        now = dt_util.utcnow().timestamp()
+        self.history = RateHistory.from_dict(stored, now)
+        self.link_log = LinkLog.from_dict(
+            stored.get("link_changes") if isinstance(stored, dict) else None, now
         )
 
-    async def _read_info(self, object_id: str) -> dict[str, str | None]:
-        """Location, contact, model and versions. They do not change, so they are read once.
+    async def _read_info(self, object_id: str, description: str) -> dict[str, str | None]:
+        """Location, contact, maker, model and versions. They do not change, so they are read once.
 
         Each value is asked for on its own: with SNMPv1 one unknown value fails the whole
-        request, and a switch of another make does not have TP-Link's own values.
+        request, and a switch of another make does not have TP-Link's own values. The standard
+        ENTITY-MIB is tried for every switch; TP-Link's own values fill what it leaves empty.
         """
-        wanted = {"location": OID_SYS_LOCATION, "contact": OID_SYS_CONTACT}
+        wanted = {
+            "location": OID_SYS_LOCATION,
+            "contact": OID_SYS_CONTACT,
+            "ent_maker": OID_ENT_MAKER,
+            "ent_model": OID_ENT_MODEL,
+            "ent_hardware": OID_ENT_HARDWARE,
+            "ent_firmware": OID_ENT_FIRMWARE,
+            "ent_software": OID_ENT_SOFTWARE,
+        }
         if manufacturer(object_id) == "TP-Link":
             wanted |= {"hardware": OID_TPLINK_HARDWARE, "firmware": OID_TPLINK_FIRMWARE}
         info: dict[str, str | None] = {}
@@ -179,6 +198,14 @@ class SwitchCoordinator(DataUpdateCoordinator[SwitchData]):
             except SnmpError:
                 value = None
             info[key] = text(value).strip() or None if value is not None else None
+        # the standard answers fill the gaps of TP-Link's own
+        if not info.get("hardware") and info["ent_model"]:
+            version = info["ent_hardware"]
+            info["hardware"] = f"{info['ent_model']} {version}" if version else info["ent_model"]
+        info["firmware"] = info.get("firmware") or info["ent_software"] or info["ent_firmware"]
+        info["maker"] = (
+            manufacturer(object_id) or maker_from_description(description) or info["ent_maker"]
+        )
         return info
 
     async def _read_extras(self, tables: dict[str, str]) -> dict[str, dict[str, Any]]:
@@ -244,15 +271,20 @@ class SwitchCoordinator(DataUpdateCoordinator[SwitchData]):
         if previous and self._last_ticks is not None and ticks >= self._last_ticks:
             self._fire_link_events(ports, previous)
         self._last_ticks = ticks
+        stamp = dt_util.utcnow().timestamp()
+        for number, port in ports.items():
+            port.link_changes = self.link_log.count(stamp, number)
 
         self.history.add(
             dt_util.utcnow().timestamp(),
             {number: (port.rx_rate, port.tx_rate) for number, port in ports.items() if port.up},
         )
-        self._store.async_delay_save(self.history.as_dict, HISTORY_SAVE_DELAY)
+        self._store.async_delay_save(self._stored, HISTORY_SAVE_DELAY)
 
         if self._info is None:
-            self._info = await self._read_info(text(system.get(OID_SYS_OBJECT_ID, "")))
+            self._info = await self._read_info(
+                text(system.get(OID_SYS_OBJECT_ID, "")), text(system.get(OID_SYS_DESCR, b""))
+            )
         model, hw_version = split_hardware(self._info.get("hardware") or "")
 
         data = SwitchData(
@@ -260,6 +292,7 @@ class SwitchCoordinator(DataUpdateCoordinator[SwitchData]):
             description=text(system.get(OID_SYS_DESCR, b"")),
             object_id=text(system.get(OID_SYS_OBJECT_ID, "")),
             ports=ports,
+            manufacturer=self._info.get("maker"),
             model=model,
             hw_version=hw_version,
             sw_version=self._info.get("firmware"),
@@ -283,6 +316,10 @@ class SwitchCoordinator(DataUpdateCoordinator[SwitchData]):
                 self._fire_alarm_event("stp_topology_change")
         return data
 
+    def _stored(self) -> dict[str, Any]:
+        """What is kept on disk: the rates and the link changes of the last day."""
+        return {**self.history.as_dict(), "link_changes": self.link_log.as_dict()}
+
     def _stamp_link_changes(self, ports: dict[int, PortData], ticks: int) -> None:
         """Turn ifLastChange into a time. It is fixed when first seen, so it does not drift."""
         now = dt_util.utcnow()
@@ -301,6 +338,8 @@ class SwitchCoordinator(DataUpdateCoordinator[SwitchData]):
             old = previous.get(number)
             if old is None or old.last_change == port.last_change:
                 continue
+            # a link that went down and up between two polls changed twice
+            self.link_log.add(dt_util.utcnow().timestamp(), number, 1 if port.up != old.up else 2)
             self.hass.bus.async_fire(
                 EVENT_LINK_CHANGED,
                 {

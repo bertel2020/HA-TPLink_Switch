@@ -2,6 +2,17 @@
 
 All notable changes to this integration are recorded here.
 
+## Unreleased
+
+### New
+
+- **Switch look in the panel:** The "front panel" is now the "Port view" and looks like a switch: dark housing, sockets in groups of four in two rows with link and traffic LEDs. Below it are the switch's own figures (active ports, throughput, learned MAC addresses, uptime, ports with errors, ports at 100 Mbit/s only).
+- **No port preselected:** A port is chosen by clicking it and deselected by clicking it again or with the cross.
+- **Clickable rows:** In "Most traffic", on the Ports page and in the devices list, a click on the whole row opens the port.
+- **Unstable link detected:** The integration counts each port's link changes over the last 24 hours (it survives a restart of Home Assistant). From 3 changes the panel warns in orange with the count ("Port 1 (6×)"); one or two changes, usually a device switched off and on, show only as a calm info line. The port card names the count.
+- **Manufacturer, model and versions:** Besides TP-Link's MIB the integration reads the standard ENTITY-MIB; if the description says "JetStream" the manufacturer is shown as TP-Link even when sysObjectID says otherwise.
+- **30 days and averages:** The port history can also show the last 30 days (two-hour values), and the throughput tile shows the mean total rate over 24 hours, 7 days and 30 days.
+
 ## 0.9.0 – 2026-11-05
 
 ### New

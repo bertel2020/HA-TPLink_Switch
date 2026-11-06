@@ -66,6 +66,7 @@ async def test_flap_between_two_polls(hass: HomeAssistant, snmp, entry, tables) 
 
     assert len(events) == 1
     assert events[0].data["up"] is True and events[0].data["flap"] is True
+    assert entry.runtime_data.data.ports[1].link_changes == 2  # down and up again
 
 
 async def test_unchanged_ports_fire_nothing(hass: HomeAssistant, snmp, entry) -> None:

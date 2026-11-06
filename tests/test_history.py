@@ -215,3 +215,25 @@ async def test_the_history_is_removed_with_the_switch(
     await hass.async_block_till_done()
 
     assert _key(entry) not in hass_storage
+
+
+def test_average_total_sums_ports_per_value_and_survives_storage() -> None:
+    history = RateHistory()
+    history.add(NOW, {1: (10.0, 2.0), 2: (5.0, 1.0)})
+    assert history.average_total("30d") == (15.0, 3.0)
+    restored = RateHistory.from_dict(history.as_dict(), NOW)
+    assert restored.average_total("30d") == (15.0, 3.0)
+    assert RateHistory().average_total("7d") is None
+
+
+def test_link_log_counts_the_changes_of_the_last_day() -> None:
+    from custom_components.tplink_switch_snmp.history import LinkLog
+
+    log = LinkLog()
+    log.add(1000.0, 3)
+    log.add(2000.0, 3, 2)
+    assert log.count(2000.0, 3) == 3
+    assert log.count(2000.0, 4) == 0
+    assert log.count(1000.0 + 86400 + 1, 3) == 2  # the first one is older than a day
+    restored = LinkLog.from_dict({"3": [2000.0, "x"], "a": [1.0]}, 3000.0)
+    assert restored.count(3000.0, 3) == 1

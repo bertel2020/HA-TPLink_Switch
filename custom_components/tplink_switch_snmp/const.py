@@ -43,6 +43,12 @@ OID_SYS_UPTIME = "1.3.6.1.2.1.1.3.0"
 # TP-Link's own MIB (enterprise 11863): hardware and firmware version of a JetStream switch
 OID_TPLINK_HARDWARE = "1.3.6.1.4.1.11863.1.1.3.1.1.1.5.0"
 OID_TPLINK_FIRMWARE = "1.3.6.1.4.1.11863.1.1.3.1.1.1.6.0"
+# ENTITY-MIB, the chassis is entity 1: most switches name maker, model and versions here
+OID_ENT_HARDWARE = "1.3.6.1.2.1.47.1.1.1.1.8.1"
+OID_ENT_FIRMWARE = "1.3.6.1.2.1.47.1.1.1.1.9.1"
+OID_ENT_SOFTWARE = "1.3.6.1.2.1.47.1.1.1.1.10.1"
+OID_ENT_MAKER = "1.3.6.1.2.1.47.1.1.1.1.12.1"
+OID_ENT_MODEL = "1.3.6.1.2.1.47.1.1.1.1.13.1"
 # TP-Link's private tables (read from the MIB package of the TL-SG3424, indexed by port number).
 # The switch may not have all of them, so they are read apart from the standard ones.
 OID_TPLINK = "1.3.6.1.4.1.11863.1.1.3"

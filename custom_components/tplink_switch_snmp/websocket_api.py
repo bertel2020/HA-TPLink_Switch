@@ -25,6 +25,7 @@ def async_register(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, ws_snapshot)
     websocket_api.async_register_command(hass, ws_subscribe)
     websocket_api.async_register_command(hass, ws_history)
+    websocket_api.async_register_command(hass, ws_history_summary)
     websocket_api.async_register_command(hass, ws_set_port_enabled)
     websocket_api.async_register_command(hass, ws_set_port_name)
     websocket_api.async_register_command(hass, ws_action)
@@ -75,6 +76,7 @@ def _switch(hass: HomeAssistant, entry: SwitchConfigEntry) -> dict[str, Any]:
                 "link_changed_at": port.link_changed_at.isoformat()
                 if port.link_changed_at
                 else None,
+                "link_changes": port.link_changes,
                 "rx_pps": port.rx_pps,
                 "tx_pps": port.tx_pps,
                 "rx_mcast_pps": port.rx_mcast_pps,
@@ -112,7 +114,7 @@ def _switch(hass: HomeAssistant, entry: SwitchConfigEntry) -> dict[str, Any]:
         "host": entry.data["host"],
         "mac": entry.unique_id,
         "description": data.description,
-        "manufacturer": manufacturer(data.object_id),
+        "manufacturer": data.manufacturer or manufacturer(data.object_id),
         "model": data.model or data.description or None,
         "hw_version": data.hw_version,
         "sw_version": data.sw_version,
@@ -203,6 +205,30 @@ def ws_history(hass: HomeAssistant, connection: websocket_api.ActiveConnection, 
             "points": [[t, round(rx, 3), round(tx, 3)] for t, rx, tx in series],
         },
     )
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        probatio.Required("type"): f"{DOMAIN}/history_summary",
+        probatio.Required("entry_id"): str,
+    }
+)
+@callback
+def ws_history_summary(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+) -> None:
+    """The mean total rate of the whole switch over 24 hours, 7 days and 30 days."""
+    entry = hass.config_entries.async_get_entry(msg["entry_id"])
+    if entry is None or entry.domain != DOMAIN or entry.state is not ConfigEntryState.LOADED:
+        connection.send_error(msg["id"], "not_found", "switch not found")
+        return
+    history = entry.runtime_data.history
+    result = {}
+    for name in RANGES:
+        mean = history.average_total(name)
+        result[name] = None if mean is None else [round(mean[0], 3), round(mean[1], 3)]
+    connection.send_result(msg["id"], result)
 
 
 @websocket_api.require_admin

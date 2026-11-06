@@ -5,8 +5,9 @@ from __future__ import annotations
 from collections import deque
 from typing import Any
 
-# name -> (seconds per value, seconds to keep): 24 hours in five-minute values, 7 days in hours
-RANGES = {"24h": (300, 86400), "7d": (3600, 604800)}
+# name -> (seconds per value, seconds to keep): 24 hours in five-minute values, 7 days in hours,
+# 30 days in two-hour values
+RANGES = {"24h": (300, 86400), "7d": (3600, 604800), "30d": (7200, 2592000)}
 BUCKET, KEEP = RANGES["24h"]
 
 
@@ -47,6 +48,21 @@ class _Tier:
     def series(self, port: int) -> list[tuple[float, float, float]]:
         return [(t, rx, tx) for t, rx, tx, _ in self._ports.get(port, ())]
 
+    def average_total(self) -> tuple[float, float] | None:
+        """Mean of the summed receive and transmit rate of all ports, or None without values."""
+        sums: dict[float, list[float]] = {}
+        for values in self._ports.values():
+            for t, rx, tx, _ in values:
+                total = sums.setdefault(t, [0.0, 0.0])
+                total[0] += rx
+                total[1] += tx
+        if not sums:
+            return None
+        return (
+            sum(v[0] for v in sums.values()) / len(sums),
+            sum(v[1] for v in sums.values()) / len(sums),
+        )
+
     def as_dict(self) -> dict[str, list[list[float]]]:
         return {
             str(port): [[t, round(rx, 3), round(tx, 3), n] for t, rx, tx, n in values]
@@ -73,8 +89,50 @@ class _Tier:
         self.prune(int(now // self.bucket * self.bucket))
 
 
+LINK_WINDOW = 86400  # a link change counts for 24 hours
+
+
+class LinkLog:
+    """When the link of each port changed during the last day (a change is up or down)."""
+
+    def __init__(self) -> None:
+        self._events: dict[int, list[float]] = {}
+
+    def add(self, now: float, port: int, times: int = 1) -> None:
+        self._events.setdefault(port, []).extend([now] * times)
+
+    def count(self, now: float, port: int) -> int:
+        """Changes of a port in the last 24 hours; older ones are dropped."""
+        events = [t for t in self._events.get(port, ()) if t > now - LINK_WINDOW]
+        if events:
+            self._events[port] = events
+        else:
+            self._events.pop(port, None)
+        return len(events)
+
+    def as_dict(self) -> dict[str, list[float]]:
+        return {str(port): [round(t, 1) for t in times] for port, times in self._events.items()}
+
+    @classmethod
+    def from_dict(cls, data: Any, now: float) -> LinkLog:
+        """Restore what was stored; anything that does not look right is left out."""
+        log = cls()
+        if isinstance(data, dict):
+            for key, times in data.items():
+                if not str(key).isdigit() or not isinstance(times, list):
+                    continue
+                kept = [
+                    float(t)
+                    for t in times
+                    if isinstance(t, int | float) and now - LINK_WINDOW < t <= now
+                ]
+                if kept:
+                    log._events[int(key)] = kept
+        return log
+
+
 class RateHistory:
-    """Receive and transmit rate per port: five-minute values for a day, hours for a week."""
+    """Rates per port: five-minute values for a day, hours for a week, two hours for a month."""
 
     def __init__(self) -> None:
         self._tiers = {name: _Tier(*size) for name, size in RANGES.items()}
@@ -88,9 +146,17 @@ class RateHistory:
         """(bucket start, receive, transmit) for a port, oldest first."""
         return self._tiers[range_].series(port)
 
+    def average_total(self, range_: str) -> tuple[float, float] | None:
+        """Mean total (receive, transmit) rate of the whole switch over a range."""
+        return self._tiers[range_].average_total()
+
     def as_dict(self) -> dict[str, Any]:
         """What gets stored. "ports" holds the five-minute values, as in the first version."""
-        return {"ports": self._tiers["24h"].as_dict(), "hourly": self._tiers["7d"].as_dict()}
+        return {
+            "ports": self._tiers["24h"].as_dict(),
+            "hourly": self._tiers["7d"].as_dict(),
+            "two_hourly": self._tiers["30d"].as_dict(),
+        }
 
     @classmethod
     def from_dict(cls, data: Any, now: float) -> RateHistory:
@@ -99,4 +165,5 @@ class RateHistory:
         if isinstance(data, dict):
             history._tiers["24h"].load(data.get("ports"), now)
             history._tiers["7d"].load(data.get("hourly"), now)
+            history._tiers["30d"].load(data.get("two_hourly"), now)
         return history

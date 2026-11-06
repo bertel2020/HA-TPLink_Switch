@@ -97,7 +97,7 @@ Die Integration legt in der Seitenleiste (nur für Administratoren) den Eintrag 
 
 Die **Darstellung** (Palette in der Kopfzeile) bietet drei Farbschemen (Ozean, Wald, Graphit), hell, dunkel oder wie Home Assistant, und drei Schriftgrößen; die Wahl gilt pro Benutzer. Das Panel bekommt nach jeder Abfrage des Switches einen neuen Stand geschickt und fragt nicht selbst nach.
 
-Ports lassen sich im Panel umbenennen (Stift neben dem Port-Namen); der Name wird an der Integration gespeichert. Der Verlauf kommt aus einem eigenen Puffer der Integration (24 Stunden in 5-Minuten-Werten und 7 Tage in Stundenwerten, im `.storage` gesichert), er braucht also weder den Recorder noch die Sensoren; er beginnt mit dem Start der Integration und wird mit dem Switch gelöscht.
+Ports lassen sich im Panel umbenennen (Stift neben dem Port-Namen); der Name wird an der Integration gespeichert. Der Verlauf kommt aus einem eigenen Puffer der Integration (24 Stunden in 5-Minuten-Werten, 7 Tage in Stundenwerten und 30 Tage in Zwei-Stunden-Werten, im `.storage` gesichert), er braucht also weder den Recorder noch die Sensoren; er beginnt mit dem Start der Integration und wird mit dem Switch gelöscht.
 
 Ohne Home Assistant lässt sich das Panel mit Beispieldaten ansehen: `python3 -m http.server 8765` im Repo-Ordner starten und `/scripts/panel-preview/index.html` öffnen (`?dark=1`, `?lang=en`, `?narrow=1`).
 

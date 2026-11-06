@@ -35,6 +35,7 @@ const LOOK_KEY = "tplink_switch_snmp_look";
 const FALLBACK_MS = 60000;
 const STALE_MS = 5 * 60000;
 const MAX_MACS = 50;
+const WOBBLE = 3; // link changes in 24 hours from which a port counts as unstable
 const BROADCAST_STORM = 500; // broadcast packets per second that look like a loop
 
 // Material Design Icons (Apache 2.0)
@@ -46,8 +47,10 @@ const ICON = {
   open: "M14,3V5H17.59L7.76,14.83L9.17,16.24L19,6.41V10H21V3M19,19H5V5H12V3H5C3.89,3 3,3.9 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V12H19V19Z",
   menu: "M3,6H21V8H3V6M3,11H21V13H3V11M3,16H21V18H3V16Z",
   warn: "M13,14H11V10H13M13,18H11V16H13M1,21H23L12,2L1,21Z",
+  info: "M13,9H11V7H13M13,17H11V11H13M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2Z",
   ok: "M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M10,17L5,12L6.41,10.58L10,14.17L17.59,6.58L19,8L10,17Z",
   next: "M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z",
+  close: "M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z",
   edit: "M20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18,2.9 17.35,2.9 16.96,3.29L15.12,5.12L18.87,8.87M3,17.25V21H6.75L17.81,9.93L14.06,6.18L3,17.25Z",
 };
 const icon = (name) => `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${ICON[name]}"/></svg>`;
@@ -88,6 +91,7 @@ class TplinkSwitchPanel extends HTMLElement {
     this._navOpen = false; // the tabs in the burger menu of a narrow screen
     this._lastData = 0;
     this._tipPort = null;
+    this._reveal = false; // scroll the port card into view after the next draw
   }
 
   set hass(hass) {
@@ -335,6 +339,20 @@ class TplinkSwitchPanel extends HTMLElement {
     if (this._tab === "overview" && this._sel === port.n) this._render();
   }
 
+  // mean total rate of the whole switch over 24 h, 7 days and 30 days, for the throughput tile
+  async _loadSummary(sw) {
+    const cached = this._summary?.get(sw.entry_id);
+    if (cached && Date.now() - cached.at < 60000) return;
+    this._summary ||= new Map();
+    this._summary.set(sw.entry_id, { ...cached, at: Date.now() });
+    let data = {};
+    try {
+      data = await this._hass.callWS({ type: `${DOMAIN}/history_summary`, entry_id: sw.entry_id });
+    } catch { /* the tile shows no averages */ }
+    this._summary.set(sw.entry_id, { at: Date.now(), data });
+    if (this._tab === "overview") this._render();
+  }
+
   _chart(sw, port) {
     const h = this._history.get(`${sw.entry_id}:${port.n}:${this._range}`);
     const t = this._t;
@@ -346,7 +364,7 @@ class TplinkSwitchPanel extends HTMLElement {
       const last = xy[xy.length - 1].split(",")[0];
       return `<path class="f" fill="${color}" d="M${xy[0].split(",")[0]},60 L${xy.join(" L")} L${last},60 Z"/><path class="l" stroke="${color}" d="M${xy.join(" L")}"/>`;
     };
-    return `<svg class="spark" viewBox="0 0 300 60" preserveAspectRatio="none" role="img" aria-label="${esc(t(this._range === "7d" ? "history7d" : "history"))}">${path(h.rx, "var(--rx)")}${path(h.tx, "var(--tx)")}</svg>`;
+    return `<svg class="spark" viewBox="0 0 300 60" preserveAspectRatio="none" role="img" aria-label="${esc(t({ "24h": "history", "7d": "history7d", "30d": "history30d" }[this._range]))}">${path(h.rx, "var(--rx)")}${path(h.tx, "var(--tx)")}</svg>`;
   }
 
   // ---- rendering -----------------------------------------------------------------------------
@@ -367,7 +385,7 @@ class TplinkSwitchPanel extends HTMLElement {
     const focus = active && active.id ? { id: active.id, start: active.selectionStart, end: active.selectionEnd } : null;
     const t = this._t;
     const sw = this._switch;
-    if (sw && !sw.ports.some((p) => p.n === this._sel)) this._sel = (sw.ports.find((p) => p.up) || sw.ports[0])?.n ?? null;
+    if (sw && !sw.ports.some((p) => p.n === this._sel)) this._sel = null; // no port is chosen until one is clicked
     root.innerHTML = `<style>${STYLES}</style>${this._header()}<div class="tip" id="tip" role="tooltip" hidden></div><main class="app">${
       this._error && !this._data ? `<div class="card error">${esc(t("loadError", { e: this._error }))}</div>` : !this._data ? `<div class="card empty">${esc(t("loading"))}</div>` : !sw ? `<div class="card empty">${esc(t("noSwitch"))}</div>` : this._switchCard(sw) + this._view(sw)
     }</main>`;
@@ -376,6 +394,10 @@ class TplinkSwitchPanel extends HTMLElement {
     if (this._tab === "overview" && sw) {
       const port = sw.ports.find((p) => p.n === this._sel);
       if (port && port.up) this._loadHistory(sw, port);
+    }
+    if (this._reveal) {
+      this._reveal = false;
+      root.getElementById("portcard")?.scrollIntoView({ block: "nearest", behavior: "smooth" });
     }
     if (focus) {
       const el = root.getElementById(focus.id);
@@ -404,6 +426,7 @@ class TplinkSwitchPanel extends HTMLElement {
       p.lag ? `<span class="tag">${esc(t("lagN", { lag: p.lag }))}</span>` : "",
       p.loop ? `<span class="tag bad">${esc(t(p.loop_blocked ? "loopBlocked" : "loopFound"))}</span>` : "",
       p.up && p.speed > 0 && p.speed < 1000 ? `<span class="tag warn">${esc(t("only100"))}</span>` : "",
+      (p.link_changes || 0) >= WOBBLE ? `<span class="tag warn">${esc(t("linkCount", { n: p.link_changes }))}</span>` : "",
       this._errors(p) ? `<span class="tag bad">${esc(t.count("errorsN", this._errors(p)))}</span>` : "",
     ].join("");
     const when = this._changedAt(sw, p);
@@ -466,10 +489,6 @@ class TplinkSwitchPanel extends HTMLElement {
 
   _switchCard(sw) {
     const t = this._t;
-    const up = sw.ports.filter((p) => p.up).length;
-    const rate = sw.ports.reduce((s, p) => s + this._total(p), 0);
-    const macs = sw.ports.reduce((s, p) => s + p.macs.length, 0);
-    const up_ = this._uptime(sw.uptime);
     const picker =
       this._data.length > 1
         ? `<select class="swpick" data-a="switch" aria-label="${esc(t("switchLabel"))}">${this._data.map((s) => `<option value="${esc(s.entry_id)}" ${s.entry_id === sw.entry_id ? "selected" : ""}>${esc(s.title)}</option>`).join("")}</select>`
@@ -479,13 +498,8 @@ class TplinkSwitchPanel extends HTMLElement {
       <div class="sw-icon">${icon("lan")}</div>
       <div><div class="sw-name">${esc(sw.title)}</div>
         <div class="sw-meta">${status}<span>${esc(sw.description)}</span><span class="mono">${esc(sw.mac)} · ${esc(sw.host)}</span></div></div>
-      <div class="stats">
-        <div class="stat"><b>${up}</b> <span>${esc(t("activePorts", { total: sw.ports.length }))}</span><span class="sub">${esc(t("active"))}</span></div>
-        <div class="stat"><b>${this._num(rate)}</b> <span>Mbit/s</span><span class="sub">${esc(t("throughput"))}</span></div>
-        <div class="stat"><b>${macs}</b> <span>${esc(t("devs"))}</span><span class="sub">${esc(t("devicesLearned"))}</span></div>
-        <div class="stat"><b>${up_.big}</b> <span>${esc(up_.unit)}</span><span class="sub">${esc(t("uptime"))}</span></div>
-        <div class="stat" style="display:flex;gap:8px;align-items:center">${picker}<button class="chip" data-a="details" aria-expanded="${this._details}">${esc(this._details ? t("detailsOpen") : t("detailsClosed"))}</button></div>
-      </div></div>
+      <div class="sw-actions">${picker}<button class="chip" data-a="details" aria-expanded="${this._details}">${esc(this._details ? t("detailsOpen") : t("detailsClosed"))}</button></div>
+      </div>
       ${this._details ? `<div class="details"><div class="kv">
         <div><span>${esc(t("vendor"))}</span><span>${esc(sw.manufacturer || t("noData"))}</span></div><div><span>${esc(t("model"))}</span><span>${esc(sw.model || t("noData"))}</span></div>
         <div><span>${esc(t("poll"))}</span><span>${esc(t("pollValue", { s: sw.interval }))}</span></div><div><span>${esc(t("address"))}</span><span class="mono">${esc(sw.host)}</span></div>
@@ -499,16 +513,47 @@ class TplinkSwitchPanel extends HTMLElement {
     return { overview: () => this._overview(sw), ports: () => this._portsView(sw), devices: () => this._devicesView(sw), diag: () => this._diagView(sw), config: () => this._configView(sw) }[this._tab]();
   }
 
+  // The switch as it looks from the front: a dark housing, the sockets in groups of four in two
+  // rows (odd ports above, even ports below, as on the device) and the LEDs of each port.
   _plate(sw) {
     const odd = sw.ports.filter((p) => p.n % 2 === 1);
     const even = sw.ports.filter((p) => p.n % 2 === 0);
-    const cols = Math.max(odd.length, even.length);
     const t = this._t;
     const jack = (p) => {
       const speed = p.up ? (p.speed >= 1000 ? "1G" : p.speed >= 100 ? "100M" : "10M") : "";
-      return `<button class="port ${this._linkClass(p)} ${this._errors(p) ? "err" : ""} ${p.n === this._sel ? "sel" : ""}" data-a="port" data-v="${p.n}" aria-label="${esc(`${t("port")} ${p.n}, ${this._speedText(p)}`)}"><span class="n">${p.n}</span><span class="jack"></span><span class="v">${speed}</span></button>`;
+      const sel = p.n === this._sel;
+      return `<button class="port ${this._linkClass(p)} ${this._errors(p) ? "err" : ""} ${sel ? "sel" : ""}" data-a="port" data-v="${p.n}" aria-pressed="${sel}" aria-label="${esc(`${t("port")} ${p.n}, ${this._speedText(p)}`)}"><span class="n">${p.n}</span><span class="rj"><i class="led link"></i><i class="led act ${p.up && this._total(p) > 0 ? "on" : ""}"></i></span><span class="v">${speed}</span></button>`;
     };
-    return `<div class="plate" style="--cols:${cols}"><div class="plate-row">${odd.map(jack).join("")}</div><div class="plate-row">${even.map(jack).join("")}</div></div>`;
+    const row = (ports) => {
+      const groups = [];
+      for (let i = 0; i < ports.length; i += 4) groups.push(`<div class="grp">${ports.slice(i, i + 4).map(jack).join("")}</div>`);
+      return `<div class="plate-row">${groups.join("")}</div>`;
+    };
+    return `<div class="chassis"><div class="badge-plate"><b>${esc(sw.manufacturer || t("title"))}</b><span>${esc(sw.model || sw.title)}</span><div class="leds"><i class="led ${sw.last_update_success ? "on" : "red"}"></i>${esc(t("ledPower"))}</div></div><div class="plate">${row(odd)}${row(even)}</div></div>`;
+  }
+
+  // the numbers of the whole switch, below its picture
+  _stats(sw) {
+    const t = this._t;
+    const up = sw.ports.filter((p) => p.up).length;
+    const rx = sw.ports.reduce((s, p) => s + (p.rx_rate || 0), 0);
+    const tx = sw.ports.reduce((s, p) => s + (p.tx_rate || 0), 0);
+    const macs = sw.ports.reduce((s, p) => s + p.macs.length, 0);
+    const slow = sw.ports.filter((p) => p.up && p.speed > 0 && p.speed < 1000).length;
+    const errs = sw.ports.filter((p) => this._errors(p)).length;
+    const upt = this._uptime(sw.uptime);
+    this._loadSummary(sw);
+    const avg = this._summary?.get(sw.entry_id)?.data || {};
+    const avgLine = ["24h", "7d", "30d"].filter((r) => avg[r]).map((r) => `${esc(t("avg"))} ${esc(t(`range${r}`))} ${this._num(avg[r][0] + avg[r][1])}`).join(" · ");
+    const tile = (label, big, unit, extra = "", cls = "") => `<div class="tile ${cls}"><span class="lbl">${esc(label)}</span><span class="big">${big}${unit ? ` <small>${esc(unit)}</small>` : ""}</span>${extra ? `<span class="sub">${extra}</span>` : ""}</div>`;
+    return `<div class="statgrid">${[
+      tile(`${t("ports")} ${t("active")}`, up, t("activePorts", { total: sw.ports.length })),
+      tile(t("throughput"), this._num(rx + tx), "Mbit/s", `${esc(t("receive"))} ${this._num(rx)} · ${esc(t("send"))} ${this._num(tx)}${avgLine ? `<br>${avgLine}` : ""}`),
+      tile(t("devicesLearned"), macs, t("devs")),
+      tile(t("uptime"), upt.big, upt.unit),
+      tile(t("statErrors"), errs, "", "", errs ? "bad" : ""),
+      tile(t("statSlow"), slow, "", "", slow ? "warn" : ""),
+    ].join("")}</div>`;
   }
 
   // the RMON counters that are not zero, as "CRC 5 · Kollisionen 2"; oversize packets are
@@ -592,7 +637,8 @@ class TplinkSwitchPanel extends HTMLElement {
     const arp = sw.ports.filter((p) => p.arp_illegal > 0);
     const mirrored = (sw.mirror || []).filter((m) => m.monitor != null);
     const day = Date.now() - 86400000;
-    const flips = sw.ports.filter((p) => (this._changedAt(sw, p) ?? 0) > day);
+    const wobbly = sw.ports.filter((p) => (p.link_changes || 0) >= WOBBLE);
+    const flips = sw.ports.filter((p) => (p.link_changes || 0) < WOBBLE && (this._changedAt(sw, p) ?? 0) > day);
     const note = (cls, ic, title, text) => `<div class="issue ${cls}">${icon(ic)}<div><b>${esc(title)}</b><br>${esc(text)}</div></div>`;
     const issues = [
       loops.length ? note("bad", "warn", t.count("loopPorts", loops.length), t("loopPortsText", { ports: loops.map((p) => `${t("port")} ${p.n}`).join(", ") })) : "",
@@ -604,19 +650,20 @@ class TplinkSwitchPanel extends HTMLElement {
       stp.length ? note("warn", "warn", t.count("stpPorts", stp.length), t("stpPortsText", { ports: stp.map((p) => `${t("port")} ${p.n}`).join(", ") })) : "",
       secFull.length ? note("warn", "warn", t.count("secFullPorts", secFull.length), t("secFullPortsText", { ports: secFull.map((p) => `${t("port")} ${p.n}`).join(", ") })) : "",
       fixed.length ? note("warn", "warn", t.count("fixedPorts", fixed.length), t("fixedPortsText", { ports: fixed.map((p) => `${t("port")} ${p.n} (${t("mode_" + p.mode)})`).join(", ") })) : "",
-      flips.length ? note("warn", "warn", t.count("linkChanges", flips.length), t("linkChangesText", { ports: flips.map((p) => `${t("port")} ${p.n}`).join(", ") })) : "",
-      !errs.length && !slow.length && !flips.length && !loud.length && !loops.length && !fixed.length && !secFull.length && !stp.length && !arp.length && !mirrored.length ? note("ok", "ok", t("allFine"), t("allFineText")) : "",
+      wobbly.length ? note("warn", "warn", t.count("wobblyPorts", wobbly.length), t("wobblyPortsText", { ports: wobbly.map((p) => `${t("port")} ${p.n} (${p.link_changes}×)`).join(", ") })) : "",
+      flips.length ? note("info", "info", t.count("linkChanges", flips.length), t("linkChangesText", { ports: flips.map((p) => `${t("port")} ${p.n}`).join(", ") })) : "",
+      !errs.length && !slow.length && !wobbly.length && !loud.length && !loops.length && !fixed.length && !secFull.length && !stp.length && !arp.length && !mirrored.length ? note("ok", "ok", t("allFine"), t("allFineText")) : "",
     ].join("");
     return `<section class="card"><div class="card-h"><h2>${esc(t("faceplate"))}</h2>${live}<span class="grow"></span><span class="sub">${esc(t("clickPort"))}</span></div>
       <div class="face">${this._plate(sw)}<div class="legend">
         <span><i style="border-color:var(--g1000);background:color-mix(in srgb,var(--g1000) 28%,transparent)"></i>${esc(t("l1000"))}</span>
         <span><i style="border-color:var(--g100);background:color-mix(in srgb,var(--g100) 28%,transparent)"></i>${esc(t("l100"))}</span>
         <span><i style="border-color:var(--gdown);background:color-mix(in srgb,var(--gdown) 25%,transparent)"></i>${esc(t("noLink"))}</span>
-        <span><i style="border:0;border-radius:50%;width:8px;height:8px;background:var(--bad);vertical-align:0"></i>${esc(t("errorsSinceStart"))}</span></div></div></section>
+        <span><i style="border:0;border-radius:50%;width:8px;height:8px;background:var(--bad);vertical-align:0"></i>${esc(t("errorsSinceStart"))}</span></div></div>${this._stats(sw)}</section>
       ${this._detail(sw)}
       <div class="twocol">
         <section class="card"><div class="card-h"><h2>${esc(t("mostLoad"))}</h2><span class="grow"></span><span class="sub">${esc(t("mostLoadSub"))}</span></div>
-          <div class="toplist">${top.map((p) => `<div class="toprow"><span>${esc(t("port"))} ${p.n}<span class="sub"> ${esc(this._portLabel(p))}</span></span><span class="b"><i style="width:${(this._total(p) / max) * 100}%"></i></span><span class="mono" style="text-align:right">${this._num(this._total(p))}</span></div>`).join("") || `<span class="sub">${esc(t("noData"))}</span>`}</div></section>
+          <div class="toplist">${top.map((p) => `<button class="toprow" data-a="goto" data-v="${p.n}" title="${esc(t("showPort"))}"><span>${esc(t("port"))} ${p.n}<span class="sub"> ${esc(this._portLabel(p))}</span></span><span class="b"><i style="width:${(this._total(p) / max) * 100}%"></i></span><span class="mono" style="text-align:right">${this._num(this._total(p))}</span></button>`).join("") || `<span class="sub">${esc(t("noData"))}</span>`}</div></section>
         <section class="card"><div class="card-h"><h2>${esc(t("notes"))}</h2></div><div class="issues">${issues}</div></section>
       </div>`;
   }
@@ -651,15 +698,15 @@ class TplinkSwitchPanel extends HTMLElement {
     const title = this._editing
       ? `<div class="nameedit"><b>${esc(t("port"))} ${p.n}</b><input id="portname" maxlength="40" value="${esc(p.name)}" placeholder="${esc(t("portName"))}" aria-label="${esc(t("portName"))}">${sw.can_write ? `<label class="check"><input type="checkbox" id="toswitch"> ${esc(t("alsoAtSwitch"))}</label>` : ""}<button class="chip" data-a="save">${esc(t("save"))}</button><button class="chip" data-a="cancel">${esc(t("cancel"))}</button></div>`
       : `<h3>${esc(t("port"))} ${p.n}${p.name ? " · " + esc(p.name) : ""} <button class="rowbtn" data-a="rename" title="${esc(t("rename"))}" aria-label="${esc(t("rename"))}">${icon("edit")}</button>${this._toggleButton(sw, p)}
-          ${p.admin_up === false ? `<span class="tag bad">${esc(t("switchedOff"))}</span>` : ""}<span class="tag ${p.up ? "ok" : ""}">${p.up ? esc(t("link")) + " " + esc(this._speedText(p)) : esc(t("noLink"))}</span>${p.up && p.speed > 0 && p.speed < 1000 ? `<span class="tag warn">${esc(t("only100"))}</span>` : ""}${this._errors(p) ? `<span class="tag bad">${esc(t.count("errorsN", this._errors(p)))}</span>` : ""}</h3>`;
+          ${p.admin_up === false ? `<span class="tag bad">${esc(t("switchedOff"))}</span>` : ""}<span class="tag ${p.up ? "ok" : ""}">${p.up ? esc(t("link")) + " " + esc(this._speedText(p)) : esc(t("noLink"))}</span>${p.up && p.speed > 0 && p.speed < 1000 ? `<span class="tag warn">${esc(t("only100"))}</span>` : ""}${this._errors(p) ? `<span class="tag bad">${esc(t.count("errorsN", this._errors(p)))}</span>` : ""}<button class="rowbtn" data-a="deselect" title="${esc(t("closePort"))}" aria-label="${esc(t("closePort"))}" style="margin-left:auto">${icon("close")}</button></h3>`;
     const macs = p.macs.slice(0, MAX_MACS);
     const macList = macs.length
       ? `<div class="maclist">${macs.map((m) => `<div><span>${m.name ? esc(m.name) : `<span class="muted">${esc(t("unknown"))}</span>`}</span><span class="mono muted">${esc(m.mac)}</span></div>`).join("")}${p.macs.length > MAX_MACS ? `<div><span class="muted">${esc(t("moreN", { n: p.macs.length - MAX_MACS }))}</span></div>` : ""}</div>`
       : "";
-    return `<section class="card"><div class="pd">
-      <div>${title}${this._notice ? `<div class="notice" role="alert">${esc(this._notice)}</div>` : ""}<div class="histhead"><span class="sub">${esc(t(this._range === "7d" ? "history7d" : "history"))}</span><span class="rangepick" role="group" aria-label="${esc(t("historyRange"))}"><button class="chip small" data-a="range" data-v="24h" aria-pressed="${this._range === "24h"}">${esc(t("range24h"))}</button><button class="chip small" data-a="range" data-v="7d" aria-pressed="${this._range === "7d"}">${esc(t("range7d"))}</button></span></div>
+    return `<section class="card" id="portcard"><div class="pd">
+      <div>${title}${this._notice ? `<div class="notice" role="alert">${esc(this._notice)}</div>` : ""}<div class="histhead"><span class="sub">${esc(t({ "24h": "history", "7d": "history7d", "30d": "history30d" }[this._range]))}</span><span class="rangepick" role="group" aria-label="${esc(t("historyRange"))}"><button class="chip small" data-a="range" data-v="24h" aria-pressed="${this._range === "24h"}">${esc(t("range24h"))}</button><button class="chip small" data-a="range" data-v="7d" aria-pressed="${this._range === "7d"}">${esc(t("range7d"))}</button><button class="chip small" data-a="range" data-v="30d" aria-pressed="${this._range === "30d"}">${esc(t("range30d"))}</button></span></div>
         ${p.up ? this._chart(sw, p) : `<div class="nodata">${esc(t("noLink"))}</div>`}
-        ${this._changedAt(sw, p) ? `<div class="sub" style="margin-top:6px">${esc(t("linkChangedAgo", { when: this._ago(this._changedAt(sw, p)) }))}</div>` : ""}
+        ${this._changedAt(sw, p) ? `<div class="sub" style="margin-top:6px">${esc(t("linkChangedAgo", { when: this._ago(this._changedAt(sw, p)) }))}${p.link_changes ? " · " + esc(t("linkCount", { n: p.link_changes })) : ""}</div>` : ""}
         <div class="lg"><span><i style="background:var(--rx)"></i>${esc(t("receive"))} ${this._num(p.rx_rate)} Mbit/s${p.rx_util != null ? ` (${esc(this._util(p.rx_util))})` : ""}</span><span><i style="background:var(--tx)"></i>${esc(t("send"))} ${this._num(p.tx_rate)} Mbit/s${p.tx_util != null ? ` (${esc(this._util(p.tx_util))})` : ""}</span></div></div>
       <div><div class="sub" style="margin-bottom:6px">${esc(p.macs.length ? t("devicesAtPort") + " (" + p.macs.length + ")" : t("noDevices"))}</div>${macList}</div>
     </div></section>`;
@@ -736,7 +783,7 @@ class TplinkSwitchPanel extends HTMLElement {
     shadow.getElementById("ptb").innerHTML = rows
       .map((p) => {
         const names = p.macs.slice(0, 2).map((m) => esc(m.name || m.mac)).join(", ");
-        return `<tr class="row ${p.up ? "" : "down"}"><td><span class="pn">${esc(t("port"))} ${p.n}<small>${esc(p.name || (p.up ? "" : t("free")))}</small></span></td>
+        return `<tr class="row link ${p.up ? "" : "down"}" data-a="goto" data-v="${p.n}" tabindex="0" title="${esc(t("showOnOverview"))}"><td><span class="pn">${esc(t("port"))} ${p.n}<small>${esc(p.name || (p.up ? "" : t("free")))}</small></span></td>
         <td>${p.up ? `<span class="tag ok">${esc(t("linked"))}</span>` : `<span class="tag">${esc(t("noLink"))}</span>`}</td>
         <td class="num">${p.up ? `<span class="tag ${p.speed < 1000 ? "warn" : ""} mono">${p.speed} Mbit/s</span>` : "–"}</td>
         <td class="num">${bar(p, p.rx_rate, "var(--rx)", p.rx_util)}</td><td class="num">${bar(p, p.tx_rate, "var(--tx)", p.tx_util)}</td>
@@ -765,7 +812,7 @@ class TplinkSwitchPanel extends HTMLElement {
     const rows = this._deviceRows(sw);
     const shadow = this.shadowRoot;
     shadow.getElementById("dtb").innerHTML = rows
-      .map((d) => `<tr class="row"><td>${d.name ? esc(d.name) : `<span class="muted">${esc(t("unknown"))}</span>`}</td><td class="mono">${esc(d.mac)}</td><td>${esc(d.manufacturer || "–")}</td>
+      .map((d) => `<tr class="row link" data-a="goto" data-v="${d.port.n}" tabindex="0" title="${esc(t("showOnOverview"))}"><td>${d.name ? esc(d.name) : `<span class="muted">${esc(t("unknown"))}</span>`}</td><td class="mono">${esc(d.mac)}</td><td>${esc(d.manufacturer || "–")}</td>
         <td><span class="tag acc">${esc(t("port"))} ${d.port.n}</span> <span class="sub">${esc(d.port.name)}</span></td></tr>`)
       .join("");
     shadow.getElementById("dempty").hidden = rows.length > 0;
@@ -953,8 +1000,9 @@ class TplinkSwitchPanel extends HTMLElement {
           window.dispatchEvent(new CustomEvent("location-changed"));
           return;
         case "details": this._details = !this._details; break;
-        case "port": this._sel = +v; this._editing = false; this._notice = null; break;
-        case "goto": this._sel = +v; this._tab = "overview"; this._editing = false; break;
+        case "port": this._sel = this._sel === +v ? null : +v; this._editing = false; this._notice = null; this._reveal = this._sel != null; break;
+        case "deselect": this._sel = null; this._editing = false; this._notice = null; break;
+        case "goto": this._sel = +v; this._tab = "overview"; this._editing = false; this._notice = null; this._reveal = true; break;
         case "filter": this._filter = v; break;
         case "dfilter": this._dfilter = v; break;
         case "rename": this._editing = true; break;
@@ -994,6 +1042,11 @@ class TplinkSwitchPanel extends HTMLElement {
         this._menuOpen = false;
         this._render();
         this.shadowRoot.getElementById("lookBtn")?.focus();
+        return;
+      }
+      // a table row that opens a port acts on Enter like a button
+      if (event.key === "Enter" && event.target.matches?.("tr.link")) {
+        event.target.click();
         return;
       }
       if (event.target.id !== "portname") return;

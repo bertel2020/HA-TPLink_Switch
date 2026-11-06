@@ -11,7 +11,7 @@ All notable changes to this integration are recorded here.
 - **Clickable rows:** In "Most traffic", on the Ports page and in the devices list, a click on the whole row opens the port.
 - **Unstable link detected:** The integration counts each port's link changes over the last 24 hours (it survives a restart of Home Assistant). From 3 changes the panel warns in orange with the count ("Port 1 (6×)"); one or two changes, usually a device switched off and on, show only as a calm info line. The port card names the count.
 - **Manufacturer, model and versions:** Besides TP-Link's MIB the integration reads the standard ENTITY-MIB; if the description says "JetStream" the manufacturer is shown as TP-Link even when sysObjectID says otherwise.
-- **30 days and averages:** The port history can also show the last 30 days (two-hour values), and the throughput tile shows the mean total rate over 24 hours, 7 days and 30 days.
+- **Charts in the tiles, 30 days:** One period (24 hours, 7 days or 30 days) above the tiles drives the charts of active ports, throughput and learned MAC addresses (with minimum, mean and maximum or peak) and the history of the selected port. The pointer over a chart shows the same time in all charts. The history of ports and MAC addresses starts with this version.
 
 ## 0.9.0 – 2026-11-05
 

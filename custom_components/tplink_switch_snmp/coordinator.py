@@ -279,6 +279,11 @@ class SwitchCoordinator(DataUpdateCoordinator[SwitchData]):
             dt_util.utcnow().timestamp(),
             {number: (port.rx_rate, port.tx_rate) for number, port in ports.items() if port.up},
         )
+        self.history.add_counts(
+            stamp,
+            sum(1 for port in ports.values() if port.up),
+            sum(len(port.macs) for port in ports.values()),
+        )
         self._store.async_delay_save(self._stored, HISTORY_SAVE_DELAY)
 
         if self._info is None:

@@ -9,6 +9,8 @@ from typing import Any
 # 30 days in two-hour values
 RANGES = {"24h": (300, 86400), "7d": (3600, 604800), "30d": (7200, 2592000)}
 BUCKET, KEEP = RANGES["24h"]
+# keys of the counts, kept like ports (the value is stored as "receive")
+COUNT_ACTIVE, COUNT_MACS = 1, 2
 
 
 class _Tier:
@@ -48,20 +50,15 @@ class _Tier:
     def series(self, port: int) -> list[tuple[float, float, float]]:
         return [(t, rx, tx) for t, rx, tx, _ in self._ports.get(port, ())]
 
-    def average_total(self) -> tuple[float, float] | None:
-        """Mean of the summed receive and transmit rate of all ports, or None without values."""
+    def total_series(self) -> list[tuple[float, float, float]]:
+        """(bucket start, summed receive, summed transmit) over all ports, oldest first."""
         sums: dict[float, list[float]] = {}
         for values in self._ports.values():
             for t, rx, tx, _ in values:
                 total = sums.setdefault(t, [0.0, 0.0])
                 total[0] += rx
                 total[1] += tx
-        if not sums:
-            return None
-        return (
-            sum(v[0] for v in sums.values()) / len(sums),
-            sum(v[1] for v in sums.values()) / len(sums),
-        )
+        return [(t, rx, tx) for t, (rx, tx) in sorted(sums.items())]
 
     def as_dict(self) -> dict[str, list[list[float]]]:
         return {
@@ -136,6 +133,7 @@ class RateHistory:
 
     def __init__(self) -> None:
         self._tiers = {name: _Tier(*size) for name, size in RANGES.items()}
+        self._counts = {name: _Tier(*size) for name, size in RANGES.items()}
 
     def add(self, now: float, rates: dict[int, tuple[float | None, float | None]]) -> None:
         """Add the rates of one poll. A poll without both rates (a counter reset) adds nothing."""
@@ -146,9 +144,21 @@ class RateHistory:
         """(bucket start, receive, transmit) for a port, oldest first."""
         return self._tiers[range_].series(port)
 
-    def average_total(self, range_: str) -> tuple[float, float] | None:
-        """Mean total (receive, transmit) rate of the whole switch over a range."""
-        return self._tiers[range_].average_total()
+    def total_series(self, range_: str) -> list[tuple[float, float, float]]:
+        """The rates of the whole switch: (bucket start, receive, transmit), oldest first."""
+        return self._tiers[range_].total_series()
+
+    def add_counts(self, now: float, active_ports: int, macs: int) -> None:
+        """Add how many ports have a link and how many MAC addresses the switch has learned."""
+        for tier in self._counts.values():
+            tier.add(
+                now,
+                {COUNT_ACTIVE: (float(active_ports), 0.0), COUNT_MACS: (float(macs), 0.0)},
+            )
+
+    def count_series(self, which: int, range_: str) -> list[tuple[float, float]]:
+        """(bucket start, value) of the active ports (COUNT_ACTIVE) or the MAC addresses."""
+        return [(t, v) for t, v, _ in self._counts[range_].series(which)]
 
     def as_dict(self) -> dict[str, Any]:
         """What gets stored. "ports" holds the five-minute values, as in the first version."""
@@ -156,6 +166,7 @@ class RateHistory:
             "ports": self._tiers["24h"].as_dict(),
             "hourly": self._tiers["7d"].as_dict(),
             "two_hourly": self._tiers["30d"].as_dict(),
+            "counts": {name: tier.as_dict() for name, tier in self._counts.items()},
         }
 
     @classmethod
@@ -166,4 +177,8 @@ class RateHistory:
             history._tiers["24h"].load(data.get("ports"), now)
             history._tiers["7d"].load(data.get("hourly"), now)
             history._tiers["30d"].load(data.get("two_hourly"), now)
+            counts = data.get("counts")
+            if isinstance(counts, dict):
+                for name, tier in history._counts.items():
+                    tier.load(counts.get(name), now)
         return history

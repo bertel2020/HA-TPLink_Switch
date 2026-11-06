@@ -80,6 +80,7 @@ class TplinkSwitchPanel extends HTMLElement {
     this._notice = null;
     this._history = new Map(); // port and range -> {at, rx, tx}
     this._range = "24h";
+    this._plots = {};
     this._timer = null;
     this._loading = false;
     this._unsub = null;
@@ -339,7 +340,8 @@ class TplinkSwitchPanel extends HTMLElement {
     if (this._tab === "overview" && this._sel === port.n) this._render();
   }
 
-  // mean total rate of the whole switch over 24 h, 7 days and 30 days, for the throughput tile
+  // the rates of the whole switch, the active ports and the learned MAC addresses over 24 h,
+  // 7 days and 30 days, for the charts in the tiles
   async _loadSummary(sw) {
     const cached = this._summary?.get(sw.entry_id);
     if (cached && Date.now() - cached.at < 60000) return;
@@ -348,24 +350,91 @@ class TplinkSwitchPanel extends HTMLElement {
     let data = {};
     try {
       data = await this._hass.callWS({ type: `${DOMAIN}/history_summary`, entry_id: sw.entry_id });
-    } catch { /* the tile shows no averages */ }
+    } catch { /* the tiles show no charts */ }
     this._summary.set(sw.entry_id, { at: Date.now(), data });
     if (this._tab === "overview") this._render();
+  }
+
+  // A chart with a cursor: series is [{color, pts: [{t, v}]}], the same time axis for all plots.
+  // The plot is remembered by id so that the pointer over any plot shows the same time in all.
+  _plot(id, series, t0, t1, bucket, { height = 52, zero = true, fmt, cls = "" }) {
+    const all = series.flatMap((s) => s.pts.map((p) => p.v));
+    if (!all.length) return `<div class="nodata" style="height:${height}px">${esc(this._t("noHistory"))}</div>`;
+    let lo = zero ? 0 : Math.min(...all);
+    let hi = Math.max(...all);
+    if (!zero) {
+      const pad = (hi - lo) * 0.15 || 1;
+      lo -= pad;
+      hi += pad;
+    } else hi = Math.max(0.01, hi) * 1.15;
+    const x = (t) => Math.min(1, Math.max(0, (t - t0) / (t1 - t0)));
+    const y = (v) => 1 - (v - lo) / (hi - lo);
+    const paths = series.map((s) => {
+      if (!s.pts.length) return "";
+      const xy = s.pts.map((p) => `${(x(p.t) * 300).toFixed(1)},${(2 + y(p.v) * (height - 4)).toFixed(1)}`);
+      const first = xy[0].split(",")[0];
+      const last = xy[xy.length - 1].split(",")[0];
+      return `<path class="f" fill="${s.color}" d="M${first},${height} L${xy.join(" L")} L${last},${height} Z"/><path class="l" stroke="${s.color}" d="M${xy.join(" L")}"/>`;
+    }).join("");
+    this._plots[id] = { t0, t1, bucket, height, fmt, lo, hi, series };
+    const dots = series.map((s) => `<b class="pdot" style="background:${s.color}"></b>`).join("");
+    return `<div class="plot ${cls}" data-p="${id}"><svg class="spark" style="height:${height}px" viewBox="0 0 300 ${height}" preserveAspectRatio="none" role="img" aria-label="${esc(this._t(id === "port" ? this._rangeKey() : "statRange"))}">${paths}</svg><i class="pcur"></i>${dots}<div class="ptip"></div></div>`;
+  }
+
+  _rangeKey() { return { "24h": "history", "7d": "history7d", "30d": "history30d" }[this._range]; }
+
+  _when(ms) {
+    const d = new Date(ms);
+    const lang = this._hass?.locale?.language;
+    const time = d.toLocaleTimeString(lang, { hour: "2-digit", minute: "2-digit" });
+    return this._range === "24h" ? time : `${d.toLocaleDateString(lang, { day: "2-digit", month: "2-digit" })}, ${time}`;
+  }
+
+  // Shows the cursor at the time under the pointer (or hides it); x is a share of the width.
+  _hoverAt(source, share) {
+    const root = this.shadowRoot;
+    const src = this._plots[source];
+    const time = share == null || !src ? null : src.t0 + share * (src.t1 - src.t0);
+    root.querySelectorAll(".plot[data-p]").forEach((el) => {
+      const plot = this._plots[el.dataset.p];
+      const cur = el.querySelector(".pcur");
+      const tip = el.querySelector(".ptip");
+      const dots = el.querySelectorAll(".pdot");
+      const hide = () => { cur.style.display = tip.style.display = "none"; dots.forEach((d) => (d.style.display = "none")); };
+      if (!plot || time == null) return hide();
+      const near = plot.series.map((s) => s.pts.reduce((best, p) => (best == null || Math.abs(p.t - time) < Math.abs(best.t - time) ? p : best), null));
+      const first = near[0];
+      if (!first || Math.abs(first.t - time) > plot.bucket * 1.5) return hide();
+      const w = el.clientWidth;
+      const px = Math.min(1, Math.max(0, (first.t - plot.t0) / (plot.t1 - plot.t0))) * w;
+      cur.style.display = tip.style.display = "block";
+      cur.style.left = `${px}px`;
+      near.forEach((p, i) => {
+        if (!p) { dots[i].style.display = "none"; return; }
+        dots[i].style.display = "block";
+        dots[i].style.left = `${px}px`;
+        dots[i].style.top = `${2 + (1 - (p.v - plot.lo) / (plot.hi - plot.lo)) * (plot.height - 4)}px`;
+      });
+      tip.innerHTML = `<span>${esc(this._when(first.t))}</span> ${near.map((p) => (p ? esc(plot.fmt(p.v)) : "")).join(" · ")}`;
+      const half = tip.offsetWidth / 2;
+      tip.style.left = `${Math.max(half, Math.min(w - half, px))}px`;
+    });
   }
 
   _chart(sw, port) {
     const h = this._history.get(`${sw.entry_id}:${port.n}:${this._range}`);
     const t = this._t;
     if (!h || !h.rx || (!h.rx.length && !h.tx.length)) return `<div class="nodata">${esc(t("noHistory"))}</div>`;
-    const max = Math.max(0.01, ...h.rx.map((p) => p.v), ...h.tx.map((p) => p.v)) * 1.15;
-    const path = (pts, color) => {
-      if (!pts.length) return "";
-      const xy = pts.map((p) => `${(Math.max(0, (p.t - h.t0) / (h.t1 - h.t0)) * 300).toFixed(1)},${(60 - (p.v / max) * 56).toFixed(1)}`);
-      const last = xy[xy.length - 1].split(",")[0];
-      return `<path class="f" fill="${color}" d="M${xy[0].split(",")[0]},60 L${xy.join(" L")} L${last},60 Z"/><path class="l" stroke="${color}" d="M${xy.join(" L")}"/>`;
-    };
-    return `<svg class="spark" viewBox="0 0 300 60" preserveAspectRatio="none" role="img" aria-label="${esc(t({ "24h": "history", "7d": "history7d", "30d": "history30d" }[this._range]))}">${path(h.rx, "var(--rx)")}${path(h.tx, "var(--tx)")}</svg>`;
+    const bucket = this._bucket();
+    const fmt = (v) => `${this._num(v)} Mbit/s`;
+    return this._plot("port", [{ color: "var(--rx)", pts: h.rx }, { color: "var(--tx)", pts: h.tx }], h.t0, h.t1, bucket, {
+      height: 96,
+      fmt,
+      cls: "big",
+    });
   }
+
+  _bucket() { return { "24h": 300, "7d": 3600, "30d": 7200 }[this._range] * 1000; }
 
   // ---- rendering -----------------------------------------------------------------------------
 
@@ -532,7 +601,7 @@ class TplinkSwitchPanel extends HTMLElement {
     return `<div class="chassis"><div class="badge-plate"><b>${esc(sw.manufacturer || t("title"))}</b><span>${esc(sw.model || sw.title)}</span><div class="leds"><i class="led ${sw.last_update_success ? "on" : "red"}"></i>${esc(t("ledPower"))}</div></div><div class="plate">${row(odd)}${row(even)}</div></div>`;
   }
 
-  // the numbers of the whole switch, below its picture
+  // the numbers of the whole switch, below its picture; three of them with a chart of the period
   _stats(sw) {
     const t = this._t;
     const up = sw.ports.filter((p) => p.up).length;
@@ -543,13 +612,26 @@ class TplinkSwitchPanel extends HTMLElement {
     const errs = sw.ports.filter((p) => this._errors(p)).length;
     const upt = this._uptime(sw.uptime);
     this._loadSummary(sw);
-    const avg = this._summary?.get(sw.entry_id)?.data || {};
-    const avgLine = ["24h", "7d", "30d"].filter((r) => avg[r]).map((r) => `${esc(t("avg"))} ${esc(t(`range${r}`))} ${this._num(avg[r][0] + avg[r][1])}`).join(" · ");
-    const tile = (label, big, unit, extra = "", cls = "") => `<div class="tile ${cls}"><span class="lbl">${esc(label)}</span><span class="big">${big}${unit ? ` <small>${esc(unit)}</small>` : ""}</span>${extra ? `<span class="sub">${extra}</span>` : ""}</div>`;
-    return `<div class="statgrid">${[
-      tile(`${t("ports")} ${t("active")}`, up, t("activePorts", { total: sw.ports.length })),
-      tile(t("throughput"), this._num(rx + tx), "Mbit/s", `${esc(t("receive"))} ${this._num(rx)} · ${esc(t("send"))} ${this._num(tx)}${avgLine ? `<br>${avgLine}` : ""}`),
-      tile(t("devicesLearned"), macs, t("devs")),
+    this._plots = {};
+    const range = this._summary?.get(sw.entry_id)?.data?.[this._range];
+    const chart = (id, kind, color, opts) => {
+      if (!range) return "";
+      const pts = range[kind].map(([at, ...v]) => ({ t: at * 1000, v: v.reduce((a, b) => a + b, 0) }));
+      const values = pts.map((p) => p.v);
+      const avg = values.length ? values.reduce((a, b) => a + b, 0) / values.length : 0;
+      const stat = (label, value) => `<span>${esc(label)} <b>${esc(value)}</b></span>`;
+      const foot = !values.length ? "" : opts.peak
+        ? `${stat(t("avg"), this._num(avg))}${stat(t("peak"), `${this._num(Math.max(...values))} Mbit/s`)}`
+        : `${stat(t("statMin"), this._num(Math.min(...values), 0))}${stat(t("avg"), this._num(avg, 1))}${stat(t("statMax"), this._num(Math.max(...values), 0))}`;
+      return `${this._plot(id, [{ color, pts }], range.start * 1000, range.end * 1000, range.bucket * 1000, { zero: !!opts.peak, fmt: opts.fmt })}
+        <div class="ax"><span>${esc(t(`ago${this._range}`))}</span><span>${esc(t("now"))}</span></div><div class="k">${foot}</div>`;
+    };
+    const tile = (label, big, unit, extra = "", cls = "", plot = "") => `<div class="tile ${cls}"><span class="lbl">${esc(label)}</span><span class="big">${big}${unit ? ` <small>${esc(unit)}</small>` : ""}</span>${extra ? `<span class="sub">${extra}</span>` : ""}${plot}</div>`;
+    const picker = `<div class="rangebar" role="group" aria-label="${esc(t("statRange"))}"><span class="sub">${esc(t("statRange"))}</span>${["24h", "7d", "30d"].map((r) => `<button class="chip small" data-a="range" data-v="${r}" aria-pressed="${this._range === r}">${esc(t(`range${r}`))}</button>`).join("")}</div>`;
+    return `${picker}<div class="statgrid">${[
+      tile(`${t("ports")} ${t("active")}`, up, t("activePorts", { total: sw.ports.length }), "", "", chart("active", "active", "var(--rx)", { fmt: (v) => `${Math.round(v)} ${t("activeShort")}` })),
+      tile(t("throughput"), this._num(rx + tx), "Mbit/s", `${esc(t("receive"))} ${this._num(rx)} · ${esc(t("send"))} ${this._num(tx)}`, "", chart("throughput", "throughput", "var(--g1000)", { peak: true, fmt: (v) => `${this._num(v)} Mbit/s` })),
+      tile(t("devicesLearned"), macs, t("devs"), "", "", chart("macs", "macs", "var(--tx)", { fmt: (v) => `${Math.round(v)} ${t("devs")}` })),
       tile(t("uptime"), upt.big, upt.unit),
       tile(t("statErrors"), errs, "", "", errs ? "bad" : ""),
       tile(t("statSlow"), slow, "", "", slow ? "warn" : ""),
@@ -704,7 +786,7 @@ class TplinkSwitchPanel extends HTMLElement {
       ? `<div class="maclist">${macs.map((m) => `<div><span>${m.name ? esc(m.name) : `<span class="muted">${esc(t("unknown"))}</span>`}</span><span class="mono muted">${esc(m.mac)}</span></div>`).join("")}${p.macs.length > MAX_MACS ? `<div><span class="muted">${esc(t("moreN", { n: p.macs.length - MAX_MACS }))}</span></div>` : ""}</div>`
       : "";
     return `<section class="card" id="portcard"><div class="pd">
-      <div>${title}${this._notice ? `<div class="notice" role="alert">${esc(this._notice)}</div>` : ""}<div class="histhead"><span class="sub">${esc(t({ "24h": "history", "7d": "history7d", "30d": "history30d" }[this._range]))}</span><span class="rangepick" role="group" aria-label="${esc(t("historyRange"))}"><button class="chip small" data-a="range" data-v="24h" aria-pressed="${this._range === "24h"}">${esc(t("range24h"))}</button><button class="chip small" data-a="range" data-v="7d" aria-pressed="${this._range === "7d"}">${esc(t("range7d"))}</button><button class="chip small" data-a="range" data-v="30d" aria-pressed="${this._range === "30d"}">${esc(t("range30d"))}</button></span></div>
+      <div>${title}${this._notice ? `<div class="notice" role="alert">${esc(this._notice)}</div>` : ""}<div class="histhead"><span class="sub">${esc(t({ "24h": "history", "7d": "history7d", "30d": "history30d" }[this._range]))}</span></div>
         ${p.up ? this._chart(sw, p) : `<div class="nodata">${esc(t("noLink"))}</div>`}
         ${this._changedAt(sw, p) ? `<div class="sub" style="margin-top:6px">${esc(t("linkChangedAgo", { when: this._ago(this._changedAt(sw, p)) }))}${p.link_changes ? " · " + esc(t("linkCount", { n: p.link_changes })) : ""}</div>` : ""}
         <div class="lg"><span><i style="background:var(--rx)"></i>${esc(t("receive"))} ${this._num(p.rx_rate)} Mbit/s${p.rx_util != null ? ` (${esc(this._util(p.rx_util))})` : ""}</span><span><i style="background:var(--tx)"></i>${esc(t("send"))} ${this._num(p.tx_rate)} Mbit/s${p.tx_util != null ? ` (${esc(this._util(p.tx_util))})` : ""}</span></div></div>
@@ -1016,7 +1098,13 @@ class TplinkSwitchPanel extends HTMLElement {
     });
     const tileOf = (event) => event.target.closest?.(".port[data-v]");
     root.addEventListener("mouseover", (event) => this._setTip(tileOf(event) ? Number(tileOf(event).dataset.v) : null));
-    root.addEventListener("mouseleave", () => this._setTip(null));
+    root.addEventListener("mouseleave", () => { this._setTip(null); this._hoverAt(null); });
+    root.addEventListener("mousemove", (event) => {
+      const plot = event.composedPath().find((n) => n.classList?.contains("plot"));
+      if (!plot) return this._hoverAt(null);
+      const box = plot.getBoundingClientRect();
+      this._hoverAt(plot.dataset.p, (event.clientX - box.left) / box.width);
+    });
     root.addEventListener("focusin", (event) => this._setTip(tileOf(event) ? Number(tileOf(event).dataset.v) : null));
     root.addEventListener("focusout", () => this._setTip(null));
     root.addEventListener("change", (event) => {

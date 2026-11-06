@@ -7,7 +7,14 @@ from homeassistant.core import HomeAssistant
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.tplink_switch_snmp.const import DOMAIN
-from custom_components.tplink_switch_snmp.history import BUCKET, KEEP, RANGES, RateHistory
+from custom_components.tplink_switch_snmp.history import (
+    BUCKET,
+    COUNT_ACTIVE,
+    COUNT_MACS,
+    KEEP,
+    RANGES,
+    RateHistory,
+)
 
 NOW = 1_800_000_000.0  # any time; the buckets are computed from it
 START = NOW // BUCKET * BUCKET
@@ -217,23 +224,20 @@ async def test_the_history_is_removed_with_the_switch(
     assert _key(entry) not in hass_storage
 
 
-def test_average_total_sums_ports_per_value_and_survives_storage() -> None:
+def test_total_series_sums_ports_and_survives_storage() -> None:
     history = RateHistory()
     history.add(NOW, {1: (10.0, 2.0), 2: (5.0, 1.0)})
-    assert history.average_total("30d") == (15.0, 3.0)
+    assert history.total_series("30d") == [(NOW // 7200 * 7200, 15.0, 3.0)]
     restored = RateHistory.from_dict(history.as_dict(), NOW)
-    assert restored.average_total("30d") == (15.0, 3.0)
-    assert RateHistory().average_total("7d") is None
+    assert restored.total_series("30d") == history.total_series("30d")
+    assert RateHistory().total_series("7d") == []
 
 
-def test_link_log_counts_the_changes_of_the_last_day() -> None:
-    from custom_components.tplink_switch_snmp.history import LinkLog
-
-    log = LinkLog()
-    log.add(1000.0, 3)
-    log.add(2000.0, 3, 2)
-    assert log.count(2000.0, 3) == 3
-    assert log.count(2000.0, 4) == 0
-    assert log.count(1000.0 + 86400 + 1, 3) == 2  # the first one is older than a day
-    restored = LinkLog.from_dict({"3": [2000.0, "x"], "a": [1.0]}, 3000.0)
-    assert restored.count(3000.0, 3) == 1
+def test_counts_are_averaged_and_survive_storage() -> None:
+    history = RateHistory()
+    history.add_counts(NOW, 10, 40)
+    history.add_counts(NOW + 30, 12, 50)
+    assert history.count_series(COUNT_ACTIVE, "24h") == [(START, 11.0)]
+    assert history.count_series(COUNT_MACS, "24h") == [(START, 45.0)]
+    restored = RateHistory.from_dict(history.as_dict(), NOW)
+    assert restored.count_series(COUNT_MACS, "30d") == history.count_series(COUNT_MACS, "30d")

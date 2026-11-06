@@ -14,7 +14,7 @@ import probatio
 
 from .const import CONF_PORT_NAMES, DOMAIN, PORT_NAME_MAX
 from .coordinator import SwitchConfigEntry
-from .history import RANGES
+from .history import COUNT_ACTIVE, COUNT_MACS, RANGES
 from .model import manufacturer
 from .vendor import vendor_of
 
@@ -218,16 +218,25 @@ def ws_history(hass: HomeAssistant, connection: websocket_api.ActiveConnection, 
 def ws_history_summary(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
 ) -> None:
-    """The mean total rate of the whole switch over 24 hours, 7 days and 30 days."""
+    """Rates of the whole switch, active ports and MAC addresses over 24 hours, 7 days, 30 days."""
     entry = hass.config_entries.async_get_entry(msg["entry_id"])
     if entry is None or entry.domain != DOMAIN or entry.state is not ConfigEntryState.LOADED:
         connection.send_error(msg["id"], "not_found", "switch not found")
         return
     history = entry.runtime_data.history
+    now = time.time()
     result = {}
-    for name in RANGES:
-        mean = history.average_total(name)
-        result[name] = None if mean is None else [round(mean[0], 3), round(mean[1], 3)]
+    for name, (bucket, keep) in RANGES.items():
+        result[name] = {
+            "start": now - keep,
+            "end": now,
+            "bucket": bucket,
+            "throughput": [
+                [t, round(rx, 3), round(tx, 3)] for t, rx, tx in history.total_series(name)
+            ],
+            "active": [[t, v] for t, v in history.count_series(COUNT_ACTIVE, name)],
+            "macs": [[t, v] for t, v in history.count_series(COUNT_MACS, name)],
+        }
     connection.send_result(msg["id"], result)
 
 

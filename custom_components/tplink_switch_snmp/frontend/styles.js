@@ -61,7 +61,7 @@ nav { display: flex; gap: 2px; flex-wrap: wrap; }
 .sw-meta .on { color: var(--ok); font-weight: 500; display: inline-flex; align-items: center; gap: 6px; }
 .sw-meta .off { color: var(--bad); font-weight: 500; display: inline-flex; align-items: center; gap: 6px; }
 .sw-actions { margin-left: auto; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-.statgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(128px, 1fr)); gap: 12px; padding: 0 20px 20px; }
+.statgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; padding: 0 20px 20px; }
 .tile { background: var(--soft); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; display: grid; gap: 2px; align-content: start; min-width: 0; }
 .tile .lbl { color: var(--muted); font-size: max(10.5px, calc(12px * var(--fs))); }
 .tile .big { font-size: max(10.5px, calc(22px * var(--fs))); font-weight: 500; line-height: 1.25; }
@@ -125,6 +125,16 @@ nav { display: flex; gap: 2px; flex-wrap: wrap; }
 .nodata { height: 96px; display: grid; place-items: center; background: var(--soft); border: 1px dashed var(--line); border-radius: 10px; color: var(--muted); font-size: max(10.5px, calc(12px * var(--fs))); text-align: center; padding: 0 12px; }
 .notice { margin: 4px 0 8px; padding: 8px 12px; border-radius: 10px; background: var(--bad-soft); color: var(--bad); font-size: max(10.5px, calc(13px * var(--fs))); }
 .chip[disabled] { opacity: .5; cursor: not-allowed; }
+.rangebar { display: flex; align-items: center; gap: 6px; padding: 0 20px 10px; flex-wrap: wrap; }
+.plot { position: relative; margin-top: 8px; cursor: crosshair; }
+.plot .spark { height: 52px; }
+.plot .pcur { position: absolute; top: 0; bottom: 0; border-left: 1px solid var(--muted); pointer-events: none; display: none; }
+.plot .pdot { position: absolute; width: 8px; height: 8px; border-radius: 50%; margin: -4px 0 0 -4px; pointer-events: none; display: none; }
+.plot .ptip { position: absolute; bottom: calc(100% + 6px); transform: translateX(-50%); background: var(--surface); border: 1px solid var(--input-line); border-radius: 8px; padding: 2px 8px; font-size: max(10.5px, calc(12px * var(--fs))); white-space: nowrap; pointer-events: none; display: none; z-index: 3; box-shadow: 0 2px 6px var(--shadow-c); }
+.plot .ptip span { color: var(--muted); }
+.tile .ax { display: flex; justify-content: space-between; font-size: max(10.5px, calc(11px * var(--fs))); color: var(--muted); }
+.tile .k { display: flex; justify-content: space-between; gap: 8px; font-size: max(10.5px, calc(12px * var(--fs))); margin-top: 6px; padding-top: 6px; border-top: 1px solid var(--line); color: var(--muted); }
+.tile .k b { font-weight: 500; color: var(--text); }
 .histhead { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 4px 0 10px; flex-wrap: wrap; }
 .rangepick { display: inline-flex; gap: 6px; }
 .lg { display: flex; gap: 14px; font-size: max(10.5px, calc(12px * var(--fs))); color: var(--muted); margin-top: 6px; flex-wrap: wrap; }

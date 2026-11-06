@@ -11,7 +11,7 @@ Alle nennenswerten Änderungen an dieser Integration werden hier festgehalten.
 - **Zeilen anklickbar:** In „Meiste Last“, auf der Seite Ports und bei den Geräten öffnet ein Klick auf die ganze Zeile den Port.
 - **Wackelnder Link erkannt:** Die Integration zählt die Link-Wechsel jedes Ports der letzten 24 Stunden (auch nach einem Neustart von Home Assistant). Ab 3 Wechseln warnt das Panel orange mit der Anzahl („Port 1 (6×)“); ein oder zwei Wechsel, meist ein aus- und wieder eingeschaltetes Gerät, erscheinen nur noch als ruhige Info. Die Portkarte nennt die Anzahl.
 - **Hersteller, Modell und Versionen:** Zusätzlich zur TP-Link-MIB liest die Integration die Standard-ENTITY-MIB; trägt die Beschreibung „JetStream“, wird als Hersteller TP-Link angezeigt, auch wenn sysObjectID anderes sagt.
-- **30 Tage und Mittelwerte:** Der Verlauf eines Ports zeigt auch die letzten 30 Tage (Zwei-Stunden-Werte), und die Durchsatz-Kachel nennt den mittleren Gesamtdurchsatz der letzten 24 Stunden, 7 und 30 Tage.
+- **Diagramme in den Kacheln, 30 Tage:** Ein Zeitraum (24 Stunden, 7 oder 30 Tage) über den Kacheln steuert die Diagramme für aktive Ports, Durchsatz und gelernte MAC-Adressen (mit Minimum, Mittel und Maximum bzw. Spitze) sowie den Verlauf des gewählten Ports. Fährt man über ein Diagramm, zeigen alle dieselbe Uhrzeit. Der Verlauf von Ports und MAC-Adressen beginnt mit dieser Version.
 
 ## 0.9.0 – 2026-11-05
 

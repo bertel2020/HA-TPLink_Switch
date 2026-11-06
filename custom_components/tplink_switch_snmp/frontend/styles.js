@@ -171,11 +171,11 @@ td.num, th.num { text-align: right; }
 th[aria-sort="ascending"] .thbtn::after { content: " ▲"; font-size: .8em; }
 th[aria-sort="descending"] .thbtn::after { content: " ▼"; font-size: .8em; }
 th[aria-sort]:not([aria-sort="none"]) { color: var(--text); }
-table.diag { min-width: 980px; }
-table.diag .grp th { padding: 8px 12px 2px; background: var(--soft); border-bottom: 0; font-size: max(10px, calc(10px * var(--fs))); letter-spacing: .06em; }
-table.diag .grp th + th { border-left: 1px solid var(--line); }
-table.diag .grp th.num { text-align: center; }
-table.diag tr:not(.grp) th { padding-top: 2px; }
+table.diag { min-width: 0; }
+table.diag .ghead th { padding: 8px 12px 2px; background: var(--soft); border-bottom: 0; font-size: max(10px, calc(10px * var(--fs))); letter-spacing: .06em; }
+table.diag .ghead th + th { border-left: 1px solid var(--line); }
+table.diag .ghead th.num { text-align: center; }
+table.diag tr:not(.ghead) th { padding-top: 2px; }
 table.diag .stick { position: sticky; left: 0; z-index: 1; background: var(--surface); }
 table.diag th.stick { background: var(--soft); }
 table.diag tr.row:hover td.stick { background: var(--soft); }
@@ -183,7 +183,7 @@ table.diag tr.row:hover td.stick { background: var(--soft); }
 td.zero { color: var(--muted); opacity: .55; }
 td.hot { font-weight: 600; } td.hot.warn { color: var(--warn); } td.hot.bad { color: var(--bad); }
 .volv { min-width: 5.5em; text-align: right; }
-table.diag .bar .b { width: 44px; }
+table.diag .bar .b { width: 30px; } table.diag .bar { gap: 6px; } table.diag td, table.diag th { padding-left: 8px; padding-right: 8px; } table.diag td.l, table.diag th.stick { padding-left: 20px; }
 .rowbtn { all: unset; cursor: pointer; color: var(--muted); border-radius: 6px; padding: 4px; display: inline-flex; }
 .rowbtn:hover { color: var(--accent); background: var(--accent-soft); }
 .empty { padding: 36px; text-align: center; color: var(--muted); }

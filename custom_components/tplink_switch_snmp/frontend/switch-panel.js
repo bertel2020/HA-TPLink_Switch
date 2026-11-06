@@ -1061,7 +1061,7 @@ class TplinkSwitchPanel extends HTMLElement {
       .join("");
     return `<section class="card"><div class="card-h"><h2>${esc(t("errorCounters"))}</h2><span class="grow"></span><span class="sub">${esc(t("sinceStart"))}</span></div>
       <div class="tablewrap"><table class="diag"><thead>
-        <tr class="grp"><th class="stick"></th><th class="num" colspan="2">${esc(t("grpErrors"))}</th><th class="num" colspan="4">${esc(t("grpPackets"))}</th><th class="num" colspan="2">${esc(t("grpDiscards"))}</th><th class="num" colspan="2">${esc(t("grpVolume"))}</th><th></th></tr>
+        <tr class="ghead"><th class="stick"></th><th class="num" colspan="2">${esc(t("grpErrors"))}</th><th class="num" colspan="4">${esc(t("grpPackets"))}</th><th class="num" colspan="2">${esc(t("grpDiscards"))}</th><th class="num" colspan="2">${esc(t("grpVolume"))}</th><th></th></tr>
         <tr>${this._head("diag", "n", t("port"), "stick")}${h("rxe", t("rx"))}${h("txe", t("tx"))}${h("rxp", t("rx"))}${h("txp", t("tx"))}${h("bc", "Broadcast")}${h("mc", "Multicast")}${h("rxd", t("rx"))}${h("txd", t("tx"))}${h("rxb", t("rx"))}${h("txb", t("tx"))}${this._head("diag", "state", t("assessment"), "", -1)}</tr></thead>
       <tbody>${body}</tbody></table></div></section>`;
   }

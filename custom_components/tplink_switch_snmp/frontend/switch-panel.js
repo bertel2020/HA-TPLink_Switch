@@ -85,7 +85,7 @@ class TplinkSwitchPanel extends HTMLElement {
     this._loading = false;
     this._unsub = null;
     this._subscribing = false;
-    this._sort = { ports: { key: "n", dir: 1 }, devices: { key: "port", dir: 1 } };
+    this._sort = { ports: { key: "n", dir: 1 }, devices: { key: "port", dir: 1 }, diag: { key: "n", dir: 1 } };
     this._look = { ...DEFAULTS };
     this._lookKey = null;
     this._menuOpen = false;
@@ -864,10 +864,10 @@ class TplinkSwitchPanel extends HTMLElement {
   }
 
   // A column header that sorts the table; a second click turns the order around.
-  _head(table, key, label, cls = "") {
+  _head(table, key, label, cls = "", first = 1) {
     const sort = this._sort[table];
     const aria = sort.key === key ? (sort.dir > 0 ? "ascending" : "descending") : "none";
-    return `<th class="${cls}" aria-sort="${aria}"><button class="thbtn" data-a="sort" data-table="${table}" data-v="${key}">${esc(label)}</button></th>`;
+    return `<th class="${cls}" aria-sort="${aria}"><button class="thbtn" data-a="sort" data-table="${table}" data-v="${key}" data-first="${first}">${esc(label)}</button></th>`;
   }
 
   _sorted(rows, table, values) {
@@ -1000,14 +1000,43 @@ class TplinkSwitchPanel extends HTMLElement {
     setTimeout(() => URL.revokeObjectURL(url), 10000);
   }
 
+  // Errors, packet rates, discards and volume per port: grouped columns, every one sortable.
   _diagView(sw) {
     const t = this._t;
-    const rows = sw.ports.filter((p) => p.up || this._errors(p));
+    const rows = this._sorted(sw.ports.filter((p) => p.up || this._errors(p)), "diag", {
+      n: (p) => p.n,
+      rxe: (p) => p.rx_errors || 0,
+      txe: (p) => p.tx_errors || 0,
+      rxp: (p) => p.rx_pps || 0,
+      txp: (p) => p.tx_pps || 0,
+      bc: (p) => p.rx_bcast_pps || 0,
+      mc: (p) => p.rx_mcast_pps || 0,
+      rxd: (p) => p.rx_discards || 0,
+      txd: (p) => p.tx_discards || 0,
+      rxb: (p) => p.rx_bytes || 0,
+      txb: (p) => p.tx_bytes || 0,
+      state: (p) => (this._errors(p) > 5 ? 1 : 0),
+    });
+    const maxRx = Math.max(1, ...rows.map((p) => p.rx_bytes || 0));
+    const maxTx = Math.max(1, ...rows.map((p) => p.tx_bytes || 0));
+    const h = (key, label) => this._head("diag", key, label, "num", -1);
+    // a zero is quiet, anything else is in colour
+    const count = (v, level = "warn") => {
+      const n = v || 0;
+      return `<td class="num mono ${n ? "hot " + level : "zero"}">${n.toLocaleString(this._lang)}</td>`;
+    };
+    const rate = (v) => `<td class="num mono ${v ? "" : "zero"}">${this._num(v, 1)}</td>`;
+    const vol = (v, max, color) => `<td class="num"><span class="bar"><span class="b"><i style="width:${Math.min(100, ((v || 0) / max) * 100)}%;background:${color}"></i></span><span class="mono volv">${esc(this._bytes(v))}</span></span></td>`;
+    const body = rows
+      .map((p) => `<tr class="row link" data-a="goto" data-v="${p.n}" tabindex="0" title="${esc(t("showOnOverview"))}"><td class="stick"><span class="pn nowrap">${esc(t("port"))} ${p.n}<small>${esc(p.name || (p.up ? "" : t("free")))}</small></span></td>
+        ${count(p.rx_errors, "bad")}${count(p.tx_errors, "bad")}${rate(p.rx_pps)}${rate(p.tx_pps)}${rate(p.rx_bcast_pps)}${rate(p.rx_mcast_pps)}${count(p.rx_discards)}${count(p.tx_discards)}${vol(p.rx_bytes, maxRx, "var(--rx)")}${vol(p.tx_bytes, maxTx, "var(--tx)")}
+        <td>${this._errors(p) > 5 ? `<span class="tag warn">${esc(t(this._assess(p)))}</span>` : `<span class="tag ok">${esc(t("fine"))}</span>`}</td></tr>`)
+      .join("");
     return `<section class="card"><div class="card-h"><h2>${esc(t("errorCounters"))}</h2><span class="grow"></span><span class="sub">${esc(t("sinceStart"))}</span></div>
-      <div class="tablewrap"><table><thead><tr><th>${esc(t("port"))}</th><th class="num">${esc(t("rxErrors"))}</th><th class="num">${esc(t("txErrors"))}</th><th class="num">${esc(t("pps"))}</th><th class="num">${esc(t("txPps"))}</th><th class="num">${esc(t("bcast"))}</th><th class="num">${esc(t("mcast"))}</th><th class="num">${esc(t("rxDiscards"))}</th><th class="num">${esc(t("txDiscards"))}</th><th class="num">${esc(t("rxTotal"))}</th><th class="num">${esc(t("txTotal"))}</th><th>${esc(t("assessment"))}</th></tr></thead><tbody>
-      ${rows.map((p) => `<tr class="row"><td><span class="pn">${esc(t("port"))} ${p.n}<small>${esc(p.name)}</small></span></td><td class="num mono">${p.rx_errors}</td><td class="num mono">${p.tx_errors}</td><td class="num mono">${this._num(p.rx_pps, 1)}</td><td class="num mono">${this._num(p.tx_pps, 1)}</td><td class="num mono">${this._num(p.rx_bcast_pps, 1)}</td><td class="num mono">${this._num(p.rx_mcast_pps, 1)}</td><td class="num mono">${p.rx_discards}</td><td class="num mono">${p.tx_discards}</td><td class="num mono">${esc(this._bytes(p.rx_bytes))}</td><td class="num mono">${esc(this._bytes(p.tx_bytes))}</td>
-        <td>${this._errors(p) > 5 ? `<span class="tag warn">${esc(t(this._assess(p)))}</span>` : `<span class="tag">${esc(t("fine"))}</span>`}</td></tr>`).join("")}
-      </tbody></table></div></section>`;
+      <div class="tablewrap"><table class="diag"><thead>
+        <tr class="grp"><th class="stick"></th><th class="num" colspan="2">${esc(t("grpErrors"))}</th><th class="num" colspan="4">${esc(t("grpPackets"))}</th><th class="num" colspan="2">${esc(t("grpDiscards"))}</th><th class="num" colspan="2">${esc(t("grpVolume"))}</th><th></th></tr>
+        <tr>${this._head("diag", "n", t("port"), "stick")}${h("rxe", t("rx"))}${h("txe", t("tx"))}${h("rxp", t("rx"))}${h("txp", t("tx"))}${h("bc", "Broadcast")}${h("mc", "Multicast")}${h("rxd", t("rx"))}${h("txd", t("tx"))}${h("rxb", t("rx"))}${h("txb", t("tx"))}${this._head("diag", "state", t("assessment"), "", -1)}</tr></thead>
+      <tbody>${body}</tbody></table></div></section>`;
   }
 
   // ---- configuration of the switch -----------------------------------------------------------
@@ -1117,7 +1146,7 @@ class TplinkSwitchPanel extends HTMLElement {
       switch (el.dataset.a) {
         case "sort": {
           const sort = this._sort[el.dataset.table];
-          sort.dir = sort.key === v ? -sort.dir : 1;
+          sort.dir = sort.key === v ? -sort.dir : Number(el.dataset.first) || 1;
           sort.key = v;
           break;
         }

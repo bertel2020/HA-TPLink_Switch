@@ -599,7 +599,18 @@ class TplinkSwitchPanel extends HTMLElement {
       for (let i = 0; i < ports.length; i += 4) groups.push(`<div class="grp">${ports.slice(i, i + 4).map(jack).join("")}</div>`);
       return `<div class="plate-row">${groups.join("")}</div>`;
     };
-    return `<div class="chassis"><div class="badge-plate"><b>${esc(sw.manufacturer || t("title"))}</b><span>${esc(sw.model || sw.title)}</span><div class="leds"><i class="led ${sw.last_update_success ? "on" : "red"}"></i>${esc(t("ledPower"))}</div></div><div class="plate">${row(odd)}${row(even)}</div></div>`;
+    const upt = this._uptime(sw.uptime);
+    return `<div class="chassis"><div class="badge-plate"><b>${esc(sw.manufacturer || t("title"))}</b><span>${esc(sw.model || sw.title)}</span><span class="upt">${esc(t("uptime"))} <em>${esc(`${upt.big} ${upt.unit}`)}</em></span><div class="leds"><i class="led ${sw.last_update_success ? "on" : "red"}"></i>${esc(t("ledPower"))}</div></div><div class="plate">${row(odd)}${row(even)}</div></div>`;
+  }
+
+  // errors and slow links as chips below the picture: green when there are none, else with the ports
+  _status(sw) {
+    const t = this._t;
+    const errs = sw.ports.filter((p) => this._errors(p));
+    const slow = sw.ports.filter((p) => p.up && p.speed > 0 && p.speed < 1000);
+    const list = (ps) => ps.map((p) => p.n).join(", ");
+    const chip = (cls, text) => `<span class="tag ${cls}"><i class="dot"></i>${text}</span>`;
+    return `<div class="statusline">${errs.length ? chip("bad", `<b>${esc(t.count("errorPorts", errs.length))}</b>: ${esc(list(errs))}`) : chip("ok", esc(t("noErrors")))}${slow.length ? chip("warn", `<b>${esc(t.count("slowPortsShort", slow.length))}</b>: ${esc(list(slow))}`) : ""}</div>`;
   }
 
   // the numbers of the whole switch, below its picture; three of them with a chart of the period
@@ -609,9 +620,6 @@ class TplinkSwitchPanel extends HTMLElement {
     const rx = sw.ports.reduce((s, p) => s + (p.rx_rate || 0), 0);
     const tx = sw.ports.reduce((s, p) => s + (p.tx_rate || 0), 0);
     const macs = sw.ports.reduce((s, p) => s + p.macs.length, 0);
-    const slow = sw.ports.filter((p) => p.up && p.speed > 0 && p.speed < 1000).length;
-    const errs = sw.ports.filter((p) => this._errors(p)).length;
-    const upt = this._uptime(sw.uptime);
     this._loadSummary(sw);
     this._plots = {};
     const range = this._summary?.get(sw.entry_id)?.data?.[this._range];
@@ -633,9 +641,6 @@ class TplinkSwitchPanel extends HTMLElement {
       tile(`${t("ports")} ${t("active")}`, up, t("activePorts", { total: sw.ports.length }), "", "", chart("active", "active", "var(--rx)", { fmt: (v) => `${Math.round(v)} ${t("activeShort")}` })),
       tile(t("throughput"), this._num(rx + tx), "Mbit/s", `${esc(t("receive"))} ${this._num(rx)} · ${esc(t("send"))} ${this._num(tx)}`, "", chart("throughput", "throughput", "var(--g1000)", { peak: true, fmt: (v) => `${this._num(v)} Mbit/s` })),
       tile(t("devicesLearned"), macs, t("devs"), "", "", chart("macs", "macs", "var(--tx)", { fmt: (v) => `${Math.round(v)} ${t("devs")}` })),
-      tile(t("uptime"), upt.big, upt.unit),
-      tile(t("statErrors"), errs, "", "", errs ? "bad" : ""),
-      tile(t("statSlow"), slow, "", "", slow ? "warn" : ""),
     ].join("")}</div>`;
   }
 
@@ -742,7 +747,7 @@ class TplinkSwitchPanel extends HTMLElement {
         <span><i style="border-color:var(--g1000);background:color-mix(in srgb,var(--g1000) 28%,transparent)"></i>${esc(t("l1000"))}</span>
         <span><i style="border-color:var(--g100);background:color-mix(in srgb,var(--g100) 28%,transparent)"></i>${esc(t("l100"))}</span>
         <span><i style="border-color:var(--gdown);background:color-mix(in srgb,var(--gdown) 25%,transparent)"></i>${esc(t("noLink"))}</span>
-        <span><i style="border:0;border-radius:50%;width:8px;height:8px;background:var(--bad);vertical-align:0"></i>${esc(t("errorsSinceStart"))}</span></div></div>${this._stats(sw)}</section>
+        <span><i style="border:0;border-radius:50%;width:8px;height:8px;background:var(--bad);vertical-align:0"></i>${esc(t("errorsSinceStart"))}</span></div>${this._status(sw)}</div>${this._stats(sw)}</section>
       ${this._detail(sw)}
       <div class="twocol">
         <section class="card"><div class="card-h"><h2>${esc(t("mostLoad"))}</h2><span class="grow"></span><span class="sub">${esc(t("mostLoadSub"))}</span></div>

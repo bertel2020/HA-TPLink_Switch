@@ -83,6 +83,9 @@ nav { display: flex; gap: 2px; flex-wrap: wrap; }
 .led.on { background: #3ddc84; box-shadow: 0 0 6px #3ddc84; } .led.amber { background: #ffb020; box-shadow: 0 0 6px #ffb020; }
 .led.red { background: #ff5a4d; box-shadow: 0 0 6px #ff5a4d; }
 .badge-plate .leds { display: flex; gap: 6px; align-items: center; font-size: max(10.5px, calc(9px * var(--fs))); letter-spacing: .06em; color: #8f99a5; }
+.badge-plate .upt { color: #8f99a5; } .badge-plate .upt em { font-style: normal; color: #c8d0d9; font-weight: 500; white-space: nowrap; }
+.statusline { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+.statusline .tag { font-size: max(10.5px, calc(13px * var(--fs))); padding: 3px 11px; border-radius: 14px; } .statusline .tag b { font-weight: 500; }
 .plate { flex: 1; min-width: 0; display: grid; gap: 6px; align-content: center; }
 .plate-row { display: flex; gap: 12px; }
 .grp { flex: 1; display: flex; gap: 4px; min-width: 0; }

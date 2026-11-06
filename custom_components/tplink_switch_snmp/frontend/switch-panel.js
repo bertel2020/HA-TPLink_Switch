@@ -2,32 +2,25 @@
 // commands of the integration (websocket_api.py) and the history of the port rate sensors.
 // Its parts are loaded with the query string of this file, so an update loads every part new.
 const V = new URL(import.meta.url).search;
-let parts;
-try {
-  parts = await Promise.all([
-    import(`./styles.js${V}`),
-    import(`./texts.js${V}`),
-    import(`./theme.js${V}`),
-    import(`./csv.js${V}`),
-  ]);
-} catch (err) {
-  // Without its parts the panel cannot work; say so instead of staying blank.
-  console.error("tplink_switch_snmp: the panel could not load its parts", err);
-  customElements.define(
-    "tplink-switch-panel",
-    class extends HTMLElement {
-      set hass(_value) {
-        this.textContent = `Switch panel: could not load its files (${err?.message || err}). Reload the page with Ctrl+Shift+R.`;
-        this.style.cssText = "display:block;padding:24px;font:14px sans-serif;color:var(--primary-text-color)";
-      }
-      set narrow(_value) {}
-      set panel(_value) {}
-    },
-  );
-  throw err;
-}
-const [{ STYLES }, { translator }, theme, { csvNumber, csvText }] = parts;
-const { applyAppearance, cleanPrefs, DEFAULTS, MODES, SCHEMES, SIZES, tokens } = theme;
+// The parts are loaded without a top-level await: Home Assistant creates the element as soon as this
+// module has run, so the element has to be defined at once or the first visit stays blank.
+let STYLES, translator, csvNumber, csvText, applyAppearance, cleanPrefs, DEFAULTS, MODES, SCHEMES, SIZES, tokens;
+let loaded = false;
+let loadError = null;
+const ready = Promise.all([import(`./styles.js${V}`), import(`./texts.js${V}`), import(`./theme.js${V}`), import(`./csv.js${V}`)]).then(
+  ([styles, texts, theme, csv]) => {
+    ({ STYLES } = styles);
+    ({ translator } = texts);
+    ({ applyAppearance, cleanPrefs, DEFAULTS, MODES, SCHEMES, SIZES, tokens } = theme);
+    ({ csvNumber, csvText } = csv);
+    loaded = true;
+  },
+  (err) => {
+    // Without its parts the panel cannot work; say so instead of staying blank.
+    console.error("tplink_switch_snmp: the panel could not load its parts", err);
+    loadError = err;
+  },
+);
 
 const DOMAIN = "tplink_switch_snmp";
 const LOOK_KEY = "tplink_switch_snmp_look";
@@ -64,8 +57,10 @@ class TplinkSwitchPanel extends HTMLElement {
     this.attachShadow({ mode: "open" });
     this._listen();
     this._hass = null;
-    this._t = translator("en");
-    this._lang = "en";
+    this._t = null;
+    this._lang = "";
+    this._started = false;
+    this._pending = false;
     this._data = null;
     this._error = null;
     this._tab = "overview";
@@ -86,18 +81,49 @@ class TplinkSwitchPanel extends HTMLElement {
     this._unsub = null;
     this._subscribing = false;
     this._sort = { ports: { key: "n", dir: 1 }, devices: { key: "port", dir: 1 }, diag: { key: "n", dir: 1 } };
-    this._look = { ...DEFAULTS };
+    this._look = null;
     this._lookKey = null;
     this._menuOpen = false;
     this._navOpen = false; // the tabs in the burger menu of a narrow screen
     this._lastData = 0;
     this._tipPort = null;
     this._reveal = false; // scroll the port card into view after the next draw
+    this._adopt();
+  }
+
+  // Home Assistant may have set a property before the element was defined: it then sits on the
+  // object itself and hides the setter, so it is handed to the setter again.
+  _adopt() {
+    for (const key of ["hass", "narrow", "panel"]) {
+      if (Object.prototype.hasOwnProperty.call(this, key)) {
+        const value = this[key];
+        delete this[key];
+        this[key] = value;
+      }
+    }
   }
 
   set hass(hass) {
-    const first = !this._hass;
     this._hass = hass;
+    if (!loaded) {
+      // the parts are still loading (first visit): start as soon as they are there
+      if (!this._pending) {
+        this._pending = true;
+        ready.then(() => {
+          this._pending = false;
+          if (loadError) {
+            this.textContent = `Switch panel: could not load its files (${loadError?.message || loadError}). Reload the page with Ctrl+Shift+R.`;
+            this.style.cssText = "display:block;padding:24px;font:14px sans-serif;color:var(--primary-text-color)";
+          } else if (this._hass) {
+            this.hass = this._hass;
+            if (this.isConnected) this._load();
+          }
+        });
+      }
+      return;
+    }
+    const first = !this._started;
+    this._started = true;
     const lang = hass.language || "en";
     if (first) {
       try {
@@ -440,6 +466,7 @@ class TplinkSwitchPanel extends HTMLElement {
   // ---- rendering -----------------------------------------------------------------------------
 
   _render() {
+    if (!this._started) return; // the parts are not loaded yet
     try {
       this._draw();
     } catch (err) {

@@ -14,6 +14,11 @@ All notable changes to this integration are recorded here.
 - **Manufacturer, model and versions:** Besides TP-Link's MIB the integration reads the standard ENTITY-MIB; if the description says "JetStream" the manufacturer is shown as TP-Link even when sysObjectID says otherwise.
 - **Charts in the tiles, 30 days:** One period (24 hours, 7 days or 30 days) above the tiles drives the charts of active ports, throughput and learned MAC addresses (with minimum, mean and maximum or peak) and the history of the selected port. The pointer over a chart shows the same time in all charts. The history of ports and MAC addresses starts with this version.
 
+### Fixed
+
+- **Panel does not load on the first visit:** After the first open the panel stayed empty and appeared only after switching to another page and back. It waited for its parts before it registered with Home Assistant. Now it registers at once and starts as soon as the parts are there.
+- **"Errors and volume" table:** All columns are sortable, the columns are grouped, values above zero are coloured, the data volume shows bars, the port column stays in place when scrolling and a click on a row opens the port.
+
 ## 0.9.0 – 2026-11-05
 
 ### New

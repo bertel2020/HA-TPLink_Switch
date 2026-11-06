@@ -86,45 +86,74 @@ class _Tier:
         self.prune(int(now // self.bucket * self.bucket))
 
 
-LINK_WINDOW = 86400  # a link change counts for 24 hours
+LINK_WINDOW = 86400  # the link changes of the last 24 hours decide if a port is unstable
+LINK_KEEP = 2592000  # the link changes are kept for 30 days
+LINK_MAX = 300  # per port, so a port that flaps all day cannot fill the store
 
 
 class LinkLog:
-    """When the link of each port changed during the last day (a change is up or down)."""
+    """When the link of each port went up or down, and at which speed, for 30 days.
 
-    def __init__(self) -> None:
-        self._events: dict[int, list[float]] = {}
+    An event is [time, 1 or 0 for link or no link, speed in Mbit/s]. "since" is when the
+    recording began: before that nothing is known about the links.
+    """
 
-    def add(self, now: float, port: int, times: int = 1) -> None:
-        self._events.setdefault(port, []).extend([now] * times)
+    def __init__(self, since: float | None = None) -> None:
+        self.since = since
+        self._events: dict[int, list[list[float]]] = {}
+
+    def add(self, now: float, port: int, up: bool, speed: int, flap: bool = False) -> None:
+        """Record a change. A flap (down and up again between two polls) is two events."""
+        if self.since is None:
+            self.since = now
+        events = self._events.setdefault(port, [])
+        if flap:
+            events.append([now, 0 if up else 1, 0])
+        events.append([now, 1 if up else 0, speed if up else 0])
+        del events[:-LINK_MAX]
+
+    def events(self, now: float, port: int, keep: float = LINK_KEEP) -> list[list[float]]:
+        """The events of a port within the last `keep` seconds, oldest first."""
+        return [e for e in self._events.get(port, ()) if e[0] > now - keep]
 
     def count(self, now: float, port: int) -> int:
-        """Changes of a port in the last 24 hours; older ones are dropped."""
-        events = [t for t in self._events.get(port, ()) if t > now - LINK_WINDOW]
-        if events:
-            self._events[port] = events
+        """Changes of a port in the last 24 hours; events older than 30 days are dropped."""
+        kept = self.events(now, port)
+        if kept:
+            self._events[port] = kept
         else:
             self._events.pop(port, None)
-        return len(events)
+        return sum(1 for e in kept if e[0] > now - LINK_WINDOW)
 
-    def as_dict(self) -> dict[str, list[float]]:
-        return {str(port): [round(t, 1) for t in times] for port, times in self._events.items()}
+    def as_dict(self) -> dict[str, Any]:
+        return {
+            "since": self.since,
+            "ports": {
+                str(port): [[round(t, 1), int(u), int(sp)] for t, u, sp in events]
+                for port, events in self._events.items()
+            },
+        }
 
     @classmethod
     def from_dict(cls, data: Any, now: float) -> LinkLog:
         """Restore what was stored; anything that does not look right is left out."""
-        log = cls()
-        if isinstance(data, dict):
-            for key, times in data.items():
-                if not str(key).isdigit() or not isinstance(times, list):
+        data = data if isinstance(data, dict) else {}
+        since = data.get("since")
+        log = cls(float(since) if isinstance(since, int | float) and since <= now else now)
+        ports = data.get("ports")
+        for key, rows in (ports if isinstance(ports, dict) else {}).items():
+            if not str(key).isdigit() or not isinstance(rows, list):
+                continue
+            kept: list[list[float]] = []
+            for row in rows:
+                try:
+                    t, up, speed = (float(x) for x in row)
+                except (TypeError, ValueError):
                     continue
-                kept = [
-                    float(t)
-                    for t in times
-                    if isinstance(t, int | float) and now - LINK_WINDOW < t <= now
-                ]
-                if kept:
-                    log._events[int(key)] = kept
+                if now - LINK_KEEP < t <= now and up in (0, 1):
+                    kept.append([t, up, speed])
+            if kept:
+                log._events[int(key)] = kept[-LINK_MAX:]
         return log
 
 

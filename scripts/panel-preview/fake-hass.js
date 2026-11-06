@@ -40,7 +40,7 @@ function snapshot() {
 // the integration's own 24 hour history: five-minute values, for ports that have a link
 function history(port, range = "24h") {
   const sample = SAMPLE[port];
-  const bucket = range === "7d" ? 3600 : 300, count = range === "7d" ? 168 : 288;
+  const bucket = { "24h": 300, "7d": 3600, "30d": 7200 }[range], count = { "24h": 288, "7d": 168, "30d": 360 }[range];
   const end = Date.now() / 1000, start = end - bucket * count;
   let seed = port * 7919;
   const points = !sample ? [] : Array.from({ length: count }, (_, i) => {
@@ -48,7 +48,12 @@ function history(port, range = "24h") {
     const r = () => { seed = (seed * 9301 + 49297) % 233280; return 0.3 + (seed / 233280) * 1.5; };
     return [Math.floor(start / bucket) * bucket + i * bucket, +(sample[2] * r()).toFixed(3), +(sample[3] * r()).toFixed(3)];
   });
-  return { start, end, bucket, points };
+  // link events: [time, 1 up / 0 down, speed]; a few per port with a link, the range decides how far back
+  const h = 3600, back = (hours) => end - hours * h;
+  const events = !sample ? [] : [[back(14), 0, 0], [back(13.9), 1, sample[1]], ...(port === 12 ? [[back(9.5), 1, 100], [back(3), 0, 0], [back(2.95), 1, sample[1]]] : [])]
+    .concat(range !== "24h" ? [[back(60), 0, 0], [back(59.5), 1, sample[1]], [back(130), 0, 0], [back(129), 1, sample[1]]] : [])
+    .concat(range === "30d" ? [[back(400), 0, 0], [back(399), 1, sample[1]]] : []).sort((a, b) => a[0] - b[0]);
+  return { start, end, bucket, points, link: { since: end - (range === "30d" ? 20 : 40) * 86400, up: !!sample, speed: sample ? sample[1] : 0, events } };
 }
 
 export function makeHass({ dark = false, language = "de", pushEvery = 5000 } = {}) {

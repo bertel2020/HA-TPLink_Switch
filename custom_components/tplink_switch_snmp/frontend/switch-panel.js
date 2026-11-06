@@ -333,6 +333,7 @@ class TplinkSwitchPanel extends HTMLElement {
         t1: res.end * 1000,
         rx: res.points.map(([t, rx]) => ({ t: t * 1000, v: rx })),
         tx: res.points.map(([t, , tx]) => ({ t: t * 1000, v: tx })),
+        link: res.link || null,
       });
     } catch {
       this._history.set(key, { at: Date.now(), rx: [], tx: [], t0: Date.now() - 86400000, t1: Date.now() });
@@ -462,7 +463,7 @@ class TplinkSwitchPanel extends HTMLElement {
     this._showTip();
     if (this._tab === "overview" && sw) {
       const port = sw.ports.find((p) => p.n === this._sel);
-      if (port && port.up) this._loadHistory(sw, port);
+      if (port) this._loadHistory(sw, port); // also without a link: the band shows when it was there
     }
     if (this._reveal) {
       this._reveal = false;
@@ -773,6 +774,68 @@ class TplinkSwitchPanel extends HTMLElement {
     await this._load();
   }
 
+  // How long a duration is, in the two largest units that fit: "2 Std.", "4 Min.", "3 Tage".
+  _dur(ms) {
+    const t = this._t;
+    const m = Math.round(ms / 60000);
+    if (m >= 2880) return `${Math.round(m / 1440)} ${t("days")}`;
+    if (m >= 120) return `${Math.round(m / 60)} ${t("hours")}`;
+    return `${Math.max(m, 1)} ${t("minutes")}`;
+  }
+
+  // The link of a port over the shown range as a band that shares the time axis of the chart:
+  // green with 1 Gbit/s, orange slower, grey without a link, hatched before the recording began.
+  // Below it the events (newest first); four rows show, the rest scrolls.
+  _linkHistory(sw, p) {
+    const t = this._t;
+    const h = this._history.get(`${sw.entry_id}:${p.n}:${this._range}`);
+    const link = h?.link;
+    if (!link) return "";
+    const now = h.t1;
+    const t0 = h.t0;
+    const span = now - t0;
+    const events = (link.events || []).map(([at, up, speed]) => ({ at: at * 1000, up: !!up, speed })).filter((e) => e.at >= t0).sort((a, b) => a.at - b.at);
+    const known = Math.min(Math.max(link.since ? link.since * 1000 : t0, t0), now);
+    const kind = (up, speed) => (!up ? "d" : speed > 0 && speed < 1000 ? "s" : "u");
+    // the state when the range began: the opposite of the first change, else the current state
+    let state = events.length ? { up: !events[0].up, speed: events[0].up ? 0 : 1000 } : { up: !!link.up, speed: link.speed };
+    const segs = [];
+    if (known > t0) segs.push({ from: t0, to: known, cls: "x" });
+    let from = known;
+    for (const e of events) {
+      if (e.at > from) segs.push({ from, to: e.at, cls: kind(state.up, state.speed) });
+      from = Math.max(from, e.at);
+      state = e;
+    }
+    segs.push({ from, to: now, cls: kind(state.up, state.speed) });
+    const title = { u: t("l1000"), s: t("slowerLink"), d: t("noLink"), x: t("notRecorded") };
+    const band = segs
+      .filter((s) => s.to > s.from)
+      .map((s) => `<i class="${s.cls}" style="width:${(((s.to - s.from) / span) * 100).toFixed(3)}%" title="${esc(`${title[s.cls]} · ${this._when(s.from)} – ${this._when(s.to)}`)}"></i>`)
+      .join("");
+    const total = segs.filter((s) => s.cls !== "x").reduce((n, s) => n + (s.to - s.from), 0);
+    const online = segs.filter((s) => s.cls === "u" || s.cls === "s").reduce((n, s) => n + (s.to - s.from), 0);
+    const pct = total > 0 ? Math.min(100, (online / total) * 100) : null;
+    const outages = events.filter((e) => !e.up).length;
+    const slow = events.filter((e) => e.up && e.speed > 0 && e.speed < 1000).length;
+    const chips = [
+      pct != null ? `<span class="tag ${pct >= 99.9 ? "ok" : ""}">${esc(t("onlinePct", { p: this._num(pct, 1) }))}</span>` : "",
+      outages ? `<span class="tag bad">${esc(t.count("outagesN", outages))}</span>` : "",
+      slow ? `<span class="tag warn">${esc(t("slowN", { n: slow }))}</span>` : "",
+    ].join("");
+    const ticks = [0, 0.25, 0.5, 0.75].map((f) => `<span>${esc(this._when(t0 + span * f))}</span>`).join("") + `<span>${esc(t("now"))}</span>`;
+    const rows = [...events].reverse().map((e, i, all) => {
+      // how long a gap lasted: until the next event of the other kind, or until now
+      const next = events[events.length - 1 - i + 1];
+      const label = e.up ? t("linkUp", { speed: e.speed >= 1000 ? t("l1000") : e.speed >= 100 ? t("l100") : t("l10") }) : t("linkDown");
+      const dur = !e.up ? ` · ${this._dur((next ? next.at : now) - e.at)}` : "";
+      return `<div class="${e.up ? (e.speed > 0 && e.speed < 1000 ? "s" : "u") : "d"}"><i></i><span>${esc(label)}${esc(dur)}</span><span class="sub mono" title="${esc(this._when(e.at))}">${esc(this._ago(e.at))}</span></div>`;
+    });
+    return `<div class="lh"><div class="lh-head"><span><b>${esc(t("link"))}</b> <span class="sub">${esc(t("availability"))}</span></span><span class="chips">${chips}</span></div>
+      <div class="band" role="img" aria-label="${esc(t("link"))}">${band}</div><div class="axis">${ticks}</div>
+      ${rows.length ? `<div class="ev">${rows.join("")}</div>` : `<div class="sub">${esc(t("noLinkEvents"))}</div>`}</div>`;
+  }
+
   _detail(sw) {
     const t = this._t;
     const p = sw.ports.find((x) => x.n === this._sel);
@@ -788,6 +851,7 @@ class TplinkSwitchPanel extends HTMLElement {
     return `<section class="card" id="portcard"><div class="pd">
       <div>${title}${this._notice ? `<div class="notice" role="alert">${esc(this._notice)}</div>` : ""}<div class="histhead"><span class="sub">${esc(t({ "24h": "history", "7d": "history7d", "30d": "history30d" }[this._range]))}</span></div>
         ${p.up ? this._chart(sw, p) : `<div class="nodata">${esc(t("noLink"))}</div>`}
+        ${this._linkHistory(sw, p)}
         ${this._changedAt(sw, p) ? `<div class="sub" style="margin-top:6px">${esc(t("linkChangedAgo", { when: this._ago(this._changedAt(sw, p)) }))}${p.link_changes ? " · " + esc(t("linkCount", { n: p.link_changes })) : ""}</div>` : ""}
         <div class="lg"><span><i style="background:var(--rx)"></i>${esc(t("receive"))} ${this._num(p.rx_rate)} Mbit/s${p.rx_util != null ? ` (${esc(this._util(p.rx_util))})` : ""}</span><span><i style="background:var(--tx)"></i>${esc(t("send"))} ${this._num(p.tx_rate)} Mbit/s${p.tx_util != null ? ` (${esc(this._util(p.tx_util))})` : ""}</span></div></div>
       <div><div class="sub" style="margin-bottom:6px">${esc(p.macs.length ? t("devicesAtPort") + " (" + p.macs.length + ")" : t("noDevices"))}</div>${macList}</div>

@@ -155,7 +155,7 @@ class SwitchCoordinator(DataUpdateCoordinator[SwitchData]):
         self.write_key: tuple[bool, str] = (False, "")
         self.selection: object = None  # which entities the options asked for, set by the setup
         self.history = RateHistory()
-        self.link_log = LinkLog()
+        self.link_log = LinkLog(dt_util.utcnow().timestamp())
         self._failing_since: datetime | None = None
         self._info: dict[str, str | None] | None = None
         self._store: Store[dict] = Store(hass, 1, f"{DOMAIN}.{entry.entry_id}.history")
@@ -344,7 +344,13 @@ class SwitchCoordinator(DataUpdateCoordinator[SwitchData]):
             if old is None or old.last_change == port.last_change:
                 continue
             # a link that went down and up between two polls changed twice
-            self.link_log.add(dt_util.utcnow().timestamp(), number, 1 if port.up != old.up else 2)
+            self.link_log.add(
+                dt_util.utcnow().timestamp(),
+                number,
+                port.up,
+                port.speed,
+                flap=port.up == old.up,
+            )
             self.hass.bus.async_fire(
                 EVENT_LINK_CHANGED,
                 {

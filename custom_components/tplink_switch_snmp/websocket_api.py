@@ -195,7 +195,9 @@ def ws_history(hass: HomeAssistant, connection: websocket_api.ActiveConnection, 
         return
     now = time.time()
     bucket, keep = RANGES[msg["range"]]
-    series = entry.runtime_data.history.series(msg["port"], msg["range"])
+    coordinator = entry.runtime_data
+    series = coordinator.history.series(msg["port"], msg["range"])
+    port = coordinator.data.ports.get(msg["port"]) if coordinator.data else None
     connection.send_result(
         msg["id"],
         {
@@ -203,6 +205,13 @@ def ws_history(hass: HomeAssistant, connection: websocket_api.ActiveConnection, 
             "end": now,
             "bucket": bucket,
             "points": [[t, round(rx, 3), round(tx, 3)] for t, rx, tx in series],
+            # when the link went up or down, for the band under the chart
+            "link": {
+                "since": coordinator.link_log.since,
+                "up": port.up if port else None,
+                "speed": port.speed if port else 0,
+                "events": coordinator.link_log.events(now, msg["port"], keep),
+            },
         },
     )
 

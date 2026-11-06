@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mockup Link-Historie</title>
+<style>
+  :root { --bg:#f4f6f9; --surface:#fff; --soft:#f5f7f9; --line:#e1e5ea; --text:#1b1f24; --muted:#5b6270; --accent:#0a6aa8; --accent-soft:#eaf3fa;
+    --up:#2e9b57; --slow:#d98a1e; --down:#cfd5dc; --bad:#a1261b; --bad-soft:#fdecea; --ok:#1e6b34; --ok-soft:#e6f4ea; --warn:#8a4b00; --warn-soft:#fff1de; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#14181d; --surface:#1d232a; --soft:#232a32; --line:#2f3740; --text:#e7eaee; --muted:#9aa3af; --accent:#5aaee6; --accent-soft:#1d3447;
+    --up:#4fbf7a; --slow:#e8a547; --down:#3a434d; --bad:#ff8a80; --bad-soft:#3a1f1c; --ok:#7fd69a; --ok-soft:#1c3324; --warn:#f0b86b; --warn-soft:#3a2c14; } }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 24px 16px 48px; background: var(--bg); color: var(--text); font: 14px/1.45 system-ui, sans-serif; }
+  .wrap { max-width: 900px; margin: 0 auto; display: grid; gap: 28px; }
+  h1 { font-size: 20px; margin: 0; } p.lead { margin: 4px 0 0; color: var(--muted); }
+  .label { font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin: 0 0 8px; }
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 1px 3px rgb(0 0 0 / 8%); padding: 16px 20px 20px; }
+  .sub { color: var(--muted); font-size: 12px; } .mono { font: 12px ui-monospace, Menlo, monospace; }
+  .chart { height: 70px; border-radius: 10px; border: 1px solid var(--line); background: var(--soft); display: grid; place-items: center; color: var(--muted); font-size: 12px; }
+
+  /* A: Statusband unter dem Diagramm, gleiche Zeitachse */
+  .lh { margin-top: 10px; display: grid; gap: 6px; }
+  .lh-head { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; align-items: baseline; }
+  .lh-head b { font-weight: 500; }
+  .band { position: relative; height: 14px; border-radius: 7px; background: var(--down); overflow: hidden; display: flex; }
+  .band i { display: block; height: 100%; }
+  .band .u { background: var(--up); } .band .s { background: var(--slow); } .band .d { background: var(--down); }
+  .band i + i { box-shadow: -1px 0 0 var(--surface); }
+  .axis { display: flex; justify-content: space-between; color: var(--muted); font: 11px ui-monospace, Menlo, monospace; }
+  .chips { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 2px; }
+  .tag { display: inline-flex; gap: 6px; align-items: center; padding: 1px 9px; border-radius: 10px; font-size: 12px; background: var(--soft); color: var(--muted); border: 1px solid var(--line); }
+  .tag.bad { background: var(--bad-soft); color: var(--bad); border-color: transparent; } .tag.ok { background: var(--ok-soft); color: var(--ok); border-color: transparent; }
+  .tag.warn { background: var(--warn-soft); color: var(--warn); border-color: transparent; }
+  .ev { display: grid; gap: 0; margin-top: 8px; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+  .ev div { display: grid; grid-template-columns: 14px 1fr auto; gap: 10px; align-items: center; padding: 6px 12px; border-top: 1px solid var(--line); font-size: 13px; }
+  .ev div:first-child { border-top: 0; } .ev i { width: 10px; height: 10px; border-radius: 50%; }
+  .ev .u i { background: var(--up); } .ev .d i { background: var(--down); border: 2px solid var(--muted); } .ev .s i { background: var(--slow); }
+
+  /* B: 7 Tage, eine Zeile pro Tag */
+  .days { display: grid; gap: 5px; margin-top: 10px; }
+  .day { display: grid; grid-template-columns: 52px 1fr 64px; gap: 10px; align-items: center; }
+  .day .band { height: 10px; border-radius: 5px; }
+  .day span:last-child { text-align: right; }
+  .ticks { display: grid; grid-template-columns: 52px 1fr 64px; gap: 10px; }
+  .ticks .axis { grid-column: 2; }
+  .legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12px; color: var(--muted); margin-top: 8px; }
+  .legend i { display: inline-block; width: 12px; height: 8px; border-radius: 3px; margin-right: 6px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div><h1>Link-Historie im Portkärtchen</h1><p class="lead">Mockup: unter dem Verlaufsdiagramm zeigt ein schmales Band, wann der Link oben war. Es nutzt dieselbe Zeitachse wie das Diagramm, damit Lastspitzen und Ausfälle direkt übereinander liegen.</p></div>
+
+  <div>
+    <p class="label">A · 24 Stunden (Standard)</p>
+    <div class="card">
+      <div class="chart">Verlaufsdiagramm Empfang / Senden</div>
+      <div class="lh">
+        <div class="lh-head"><span><b>Link</b> <span class="sub">Verfügbarkeit 24 Std.</span></span>
+          <span class="chips"><span class="tag ok">99,2 % online</span><span class="tag bad">2 Ausfälle</span><span class="tag warn">1× nur 100 Mbit/s</span></span></div>
+        <div class="band" role="img" aria-label="Link-Verlauf der letzten 24 Stunden">
+          <i class="u" style="width:31%"></i><i class="d" style="width:1.2%"></i><i class="u" style="width:22%"></i><i class="s" style="width:2.5%"></i><i class="u" style="width:25%"></i><i class="d" style="width:.6%"></i><i class="u" style="width:17.7%"></i>
+        </div>
+        <div class="axis"><span>−24 Std.</span><span>−18</span><span>−12</span><span>−6</span><span>jetzt</span></div>
+        <div class="ev">
+          <div class="d"><i></i><span>Link weg</span><span class="sub mono">vor 14 Std. · 4 Min.</span></div>
+          <div class="u"><i></i><span>Link da, 1 Gbit/s</span><span class="sub mono">vor 14 Std.</span></div>
+          <div class="s"><i></i><span>Link da, nur 100 Mbit/s</span><span class="sub mono">vor 9 Std. · 30 Min.</span></div>
+          <div class="d"><i></i><span>Link weg</span><span class="sub mono">vor 3 Std. · 1 Min.</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <p class="label">B · 7 Tage: eine Zeile pro Tag</p>
+    <div class="card">
+      <div class="chart">Verlaufsdiagramm 7 Tage</div>
+      <div class="lh-head" style="margin-top:10px"><span><b>Link</b> <span class="sub">Verfügbarkeit 7 Tage</span></span><span class="chips"><span class="tag ok">99,8 % online</span><span class="tag">3 Ausfälle</span></span></div>
+      <div class="days">
+        <div class="day"><span class="sub">Heute</span><div class="band"><i class="u" style="width:58%"></i><i class="d" style="width:1%"></i><i class="u" style="width:41%"></i></div><span class="sub mono">99 %</span></div>
+        <div class="day"><span class="sub">Do</span><div class="band"><i class="u" style="width:100%"></i></div><span class="sub mono">100 %</span></div>
+        <div class="day"><span class="sub">Mi</span><div class="band"><i class="u" style="width:100%"></i></div><span class="sub mono">100 %</span></div>
+        <div class="day"><span class="sub">Di</span><div class="band"><i class="u" style="width:34%"></i><i class="d" style="width:2%"></i><i class="u" style="width:64%"></i></div><span class="sub mono">98 %</span></div>
+        <div class="day"><span class="sub">Mo</span><div class="band"><i class="u" style="width:100%"></i></div><span class="sub mono">100 %</span></div>
+        <div class="day"><span class="sub">So</span><div class="band"><i class="u" style="width:100%"></i></div><span class="sub mono">100 %</span></div>
+        <div class="day"><span class="sub">Sa</span><div class="band"><i class="u" style="width:100%"></i></div><span class="sub mono">100 %</span></div>
+      </div>
+      <div class="ticks"><span></span><div class="axis"><span>0 Uhr</span><span>6</span><span>12</span><span>18</span><span>24</span></div></div>
+      <div class="legend"><span><i style="background:var(--up)"></i>1 Gbit/s</span><span><i style="background:var(--slow)"></i>100 Mbit/s</span><span><i style="background:var(--down)"></i>kein Link</span></div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

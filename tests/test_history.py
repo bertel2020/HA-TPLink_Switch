@@ -13,6 +13,7 @@ from custom_components.tplink_switch_snmp.history import (
     COUNT_MACS,
     KEEP,
     RANGES,
+    LinkLog,
     RateHistory,
 )
 
@@ -241,3 +242,27 @@ def test_counts_are_averaged_and_survive_storage() -> None:
     assert history.count_series(COUNT_MACS, "24h") == [(START, 45.0)]
     restored = RateHistory.from_dict(history.as_dict(), NOW)
     assert restored.count_series(COUNT_MACS, "30d") == history.count_series(COUNT_MACS, "30d")
+
+
+def test_link_log_records_changes_with_speed_and_counts_the_last_day() -> None:
+    log = LinkLog(NOW - 5 * 86400)
+    log.add(NOW - 2 * 86400, 3, True, 1000)
+    log.add(NOW - 100, 3, False, 0)
+    log.add(NOW - 50, 3, True, 100, flap=True)  # down and up again between two polls
+    assert log.count(NOW, 3) == 3  # the one two days ago is older than 24 hours
+    assert log.count(NOW, 4) == 0
+    assert [e[1:] for e in log.events(NOW, 3, 86400)] == [[0, 0], [0, 0], [1, 100]]
+    assert len(log.events(NOW, 3)) == 4
+
+
+def test_link_log_survives_storage_and_ignores_bad_rows() -> None:
+    log = LinkLog(NOW - 86400)
+    log.add(NOW - 60, 1, False, 0)
+    restored = LinkLog.from_dict(log.as_dict(), NOW)
+    assert restored.since == NOW - 86400
+    assert restored.events(NOW, 1) == [[NOW - 60, 0, 0]]
+    broken = {"since": "x", "ports": {"1": [[NOW - 60, 2, 0], ["a"], [NOW - 40, 1, 1000]], "b": []}}
+    odd = LinkLog.from_dict(broken, NOW)
+    assert odd.since == NOW
+    assert odd.events(NOW, 1) == [[NOW - 40, 1, 1000]]
+    assert LinkLog.from_dict(None, NOW).events(NOW, 1) == []

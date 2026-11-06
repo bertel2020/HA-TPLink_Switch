@@ -265,6 +265,8 @@ async def test_history_returns_the_collected_rates(
     assert len(result["points"]) == 1
     t, rx, tx = result["points"][0]
     assert rx > 0 and t <= result["end"]
+    assert result["link"]["up"] is True and result["link"]["events"] == []
+    assert result["link"]["since"] <= result["end"]
 
 
 async def test_history_of_a_port_without_data(

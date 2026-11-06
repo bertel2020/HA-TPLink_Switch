@@ -181,7 +181,20 @@ th[aria-sort]:not([aria-sort="none"]) { color: var(--text); }
 .toprow .b i { display: block; height: 100%; background: var(--accent); border-radius: 4px; }
 .issues { padding: 6px 20px 16px; display: grid; gap: 8px; }
 .issue { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border-radius: 10px; font-size: max(10.5px, calc(13px * var(--fs))); }
-.issue.warn { background: var(--warn-soft); color: var(--warn); } .issue.bad { background: var(--bad-soft, var(--warn-soft)); color: var(--bad); } .issue.info { background: var(--neutral-soft); color: var(--tag-text); } .issue.ok { background: var(--ok-soft); color: var(--ok); }
+.issue.warn { background: var(--warn-soft); color: var(--warn); } .issue.bad { background: var(--bad-soft, var(--warn-soft)); color: var(--bad); } .lh { margin-top: 12px; display: grid; gap: 6px; }
+.lh-head { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; align-items: baseline; }
+.lh-head b { font-weight: 500; } .chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.band { height: 14px; border-radius: 7px; background: var(--gdown); overflow: hidden; display: flex; }
+.band i { display: block; height: 100%; min-width: 2px; }
+.band i + i { box-shadow: -1px 0 0 var(--surface); }
+.band .u { background: var(--g1000); } .band .s { background: var(--g100); } .band .d { background: var(--gdown); }
+.band .x { background: repeating-linear-gradient(135deg, var(--soft) 0 4px, var(--line) 4px 6px); }
+.lh .axis { display: flex; justify-content: space-between; color: var(--muted); font: max(10.5px, calc(10px * var(--fs))) ui-monospace, SFMono-Regular, Menlo, monospace; }
+.ev { border: 1px solid var(--line); border-radius: 10px; overflow-y: auto; max-height: 128px; }
+.ev > div { display: grid; grid-template-columns: 14px 1fr auto; gap: 10px; align-items: center; padding: 6px 12px; border-top: 1px solid var(--line-2); font-size: max(10.5px, calc(13px * var(--fs))); }
+.ev > div:first-child { border-top: 0; } .ev > div i { width: 10px; height: 10px; border-radius: 50%; }
+.ev .u i { background: var(--g1000); } .ev .s i { background: var(--g100); } .ev .d i { background: var(--soft); border: 2px solid var(--muted); }
+.issue.info { background: var(--neutral-soft); color: var(--tag-text); } .issue.ok { background: var(--ok-soft); color: var(--ok); }
 .issue svg { width: 18px; height: 18px; margin-top: 1px; }
 .lookwrap { position: relative; }
 .icon-btn { width: 40px; height: 40px; border-radius: 50%; display: inline-grid; place-items: center; color: var(--muted); border: 0; background: none; cursor: pointer; }

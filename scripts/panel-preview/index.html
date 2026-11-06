@@ -7,7 +7,7 @@
 <style>html, body { margin: 0; height: 100%; }</style></head>
 <body>
 <script type="module">
-  import { makeHass } from "./fake-hass.js";
+  const { makeHass } = await import(`./fake-hass.js?v=${Date.now()}`);
   const params = new URLSearchParams(location.search);
   await import(`/custom_components/tplink_switch_snmp/frontend/switch-panel.js?v=${Date.now()}`);
   const panel = document.createElement("tplink-switch-panel");

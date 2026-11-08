@@ -1059,8 +1059,22 @@ class TplinkSwitchPanel extends HTMLElement {
         ${count(p.rx_errors, "bad")}${count(p.tx_errors, "bad")}${rate(p.rx_pps)}${rate(p.tx_pps)}${rate(p.rx_bcast_pps)}${rate(p.rx_mcast_pps)}${count(p.rx_discards)}${count(p.tx_discards)}${vol(p.rx_bytes, maxRx, "var(--rx)")}${vol(p.tx_bytes, maxTx, "var(--tx)")}
         <td>${this._errors(p) > 5 ? `<span class="tag warn">${esc(t(this._assess(p)))}</span>` : `<span class="tag ok">${esc(t("fine"))}</span>`}</td></tr>`)
       .join("");
+    // on a phone every port is a card instead of a row of twelve columns
+    const cell = (label, value, cls = "") => `<div><span class="sub">${esc(label)}</span><span class="mono ${cls}">${value}</span></div>`;
+    const num = (v, level) => (v ? `<b class="hot ${level}">${(v || 0).toLocaleString(this._lang)}</b>` : `<span class="zero">0</span>`);
+    const cards = rows
+      .map((p) => `<div class="dcard link" data-a="goto" data-v="${p.n}" tabindex="0" role="button" title="${esc(t("showOnOverview"))}">
+        <div class="dc-h"><span class="pn">${esc(t("port"))} ${p.n}<small>${esc(p.name || (p.up ? "" : t("free")))}</small></span>${this._errors(p) > 5 ? `<span class="tag warn">${esc(t(this._assess(p)))}</span>` : `<span class="tag ok">${esc(t("fine"))}</span>`}</div>
+        <div class="dc-g"><span class="dc-t">${esc(t("grpErrors"))}</span>${cell(t("rx"), num(p.rx_errors, "bad"))}${cell(t("tx"), num(p.tx_errors, "bad"))}
+          <span class="dc-t">${esc(t("grpDiscards"))}</span>${cell(t("rx"), num(p.rx_discards, "warn"))}${cell(t("tx"), num(p.tx_discards, "warn"))}
+          <span class="dc-t">${esc(t("grpPackets"))}</span>${cell(t("rx"), this._num(p.rx_pps, 1))}${cell(t("tx"), this._num(p.tx_pps, 1))}${cell("Broadcast", this._num(p.rx_bcast_pps, 1))}${cell("Multicast", this._num(p.rx_mcast_pps, 1))}
+          <span class="dc-t">${esc(t("grpVolume"))}</span>${cell(t("rx"), esc(this._bytes(p.rx_bytes)))}${cell(t("tx"), esc(this._bytes(p.tx_bytes)))}</div></div>`)
+      .join("");
+    const opts = [["n", t("port")], ["rxe", `${t("grpErrors")} ${t("rx")}`], ["txe", `${t("grpErrors")} ${t("tx")}`], ["rxd", `${t("grpDiscards")} ${t("rx")}`], ["txd", `${t("grpDiscards")} ${t("tx")}`], ["rxp", `${t("grpPackets")} ${t("rx")}`], ["txp", `${t("grpPackets")} ${t("tx")}`], ["rxb", `${t("grpVolume")} ${t("rx")}`], ["txb", `${t("grpVolume")} ${t("tx")}`]];
+    const picker = `<div class="dsort"><label class="sub" for="dsort">${esc(t("sortBy"))}</label><select id="dsort" class="swpick" data-a="diagsort">${opts.map(([k, l]) => `<option value="${k}" ${this._sort.diag.key === k ? "selected" : ""}>${esc(l)}</option>`).join("")}</select></div>`;
     return `<section class="card"><div class="card-h"><h2>${esc(t("errorCounters"))}</h2><span class="grow"></span><span class="sub">${esc(t("sinceStart"))}</span></div>
-      <div class="tablewrap"><table class="diag"><thead>
+      ${picker}<div class="dcards">${cards}</div>
+      <div class="tablewrap dtable"><table class="diag"><thead>
         <tr class="ghead"><th class="stick"></th><th class="num" colspan="2">${esc(t("grpErrors"))}</th><th class="num" colspan="4">${esc(t("grpPackets"))}</th><th class="num" colspan="2">${esc(t("grpDiscards"))}</th><th class="num" colspan="2">${esc(t("grpVolume"))}</th><th></th></tr>
         <tr>${this._head("diag", "n", t("port"), "stick")}${h("rxe", t("rx"))}${h("txe", t("tx"))}${h("rxp", t("rx"))}${h("txp", t("tx"))}${h("bc", "Broadcast")}${h("mc", "Multicast")}${h("rxd", t("rx"))}${h("txd", t("tx"))}${h("rxb", t("rx"))}${h("txb", t("tx"))}${this._head("diag", "state", t("assessment"), "", -1)}</tr></thead>
       <tbody>${body}</tbody></table></div></section>`;
@@ -1233,6 +1247,13 @@ class TplinkSwitchPanel extends HTMLElement {
     root.addEventListener("focusin", (event) => this._setTip(tileOf(event) ? Number(tileOf(event).dataset.v) : null));
     root.addEventListener("focusout", () => this._setTip(null));
     root.addEventListener("change", (event) => {
+      if (event.target.dataset?.a === "diagsort") {
+        const sort = this._sort.diag;
+        sort.key = event.target.value;
+        sort.dir = sort.key === "n" ? 1 : -1;
+        this._render();
+        return;
+      }
       if (event.target.dataset?.a === "switch") {
         this._entry = event.target.value;
         this._sel = null;
@@ -1258,7 +1279,7 @@ class TplinkSwitchPanel extends HTMLElement {
         return;
       }
       // a table row that opens a port acts on Enter like a button
-      if (event.key === "Enter" && event.target.matches?.("tr.link")) {
+      if (event.key === "Enter" && event.target.matches?.("tr.link, .dcard")) {
         event.target.click();
         return;
       }

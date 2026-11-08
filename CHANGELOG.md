@@ -17,7 +17,7 @@ Alle nennenswerten Änderungen an dieser Integration werden hier festgehalten.
 ### Behoben
 
 - **Panel lädt beim ersten Aufruf nicht:** Das Panel blieb nach dem ersten Öffnen leer und erschien erst nach einem Wechsel auf eine andere Seite und zurück. Es wartete beim Laden auf seine Teile, bevor es sich bei Home Assistant anmeldete. Jetzt meldet es sich sofort an und startet, sobald die Teile da sind.
-- **Tabelle „Fehler und Volumen“:** Alle Spalten sind sortierbar, die Spalten sind gruppiert, Werte über null sind farbig, die Datenmenge zeigt Balken, die Port-Spalte bleibt beim Scrollen stehen und ein Klick auf die Zeile öffnet den Port.
+- **Tabelle „Fehler und Volumen“:** Alle Spalten sind sortierbar, die Spalten sind gruppiert, Werte über null sind farbig, die Datenmenge zeigt Balken, die Port-Spalte bleibt beim Scrollen stehen und ein Klick auf die Zeile öffnet den Port. Auf dem Handy erscheint pro Port eine Karte, sortiert über eine Auswahlliste.
 
 ## 0.9.0 – 2026-11-05
 

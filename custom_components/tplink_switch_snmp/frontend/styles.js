@@ -184,6 +184,17 @@ td.zero { color: var(--muted); opacity: .55; }
 td.hot { font-weight: 600; } td.hot.warn { color: var(--warn); } td.hot.bad { color: var(--bad); }
 .volv { min-width: 5.5em; text-align: right; }
 table.diag .bar .b { width: 30px; } table.diag .bar { gap: 6px; } table.diag td, table.diag th { padding-left: 8px; padding-right: 8px; } table.diag td.l, table.diag th.stick { padding-left: 20px; }
+.dcards, .dsort { display: none; }
+.dcard { padding: 12px 16px; border-top: 1px solid var(--line-2); cursor: pointer; }
+.dcard:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px; }
+.dc-h { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 8px; }
+.dc-g { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 16px; }
+.dc-g > div { display: flex; justify-content: space-between; gap: 8px; }
+.dc-t { grid-column: 1 / -1; font-size: max(10px, calc(10px * var(--fs))); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin-top: 4px; }
+.dc-g .zero { color: var(--muted); opacity: .55; }
+.dc-g .hot { font-weight: 600; } .dc-g .hot.warn { color: var(--warn); } .dc-g .hot.bad { color: var(--bad); }
+.dsort label { white-space: nowrap; }
+.dsort { align-items: center; gap: 10px; padding: 10px 16px; border-bottom: 1px solid var(--line); }
 .rowbtn { all: unset; cursor: pointer; color: var(--muted); border-radius: 6px; padding: 4px; display: inline-flex; }
 .rowbtn:hover { color: var(--accent); background: var(--accent-soft); }
 .empty { padding: 36px; text-align: center; color: var(--muted); }
@@ -235,6 +246,9 @@ tr.unused td, tr.unused .badge { color: var(--muted); } tr.unused .mono { opacit
 .vlegend { display: flex; gap: 18px; flex-wrap: wrap; align-items: center; padding: 12px 20px; border-top: 1px solid var(--line); color: var(--muted); font-size: max(10.5px, calc(12px * var(--fs))); }
 .vlegend .vt { display: inline-block; width: 14px; height: 14px; vertical-align: -3px; margin-right: 6px; }
 @media (max-width: 700px) {
+  .dtable { display: none; }
+  .dcards { display: block; }
+  .dsort { display: flex; }
   table.diag td.l, table.diag th.stick { padding-left: 12px; padding-right: 8px; }
   table.diag .pn { display: block; max-width: 88px; overflow: hidden; text-overflow: ellipsis; font-size: calc(14px * var(--fs)); }
   table.diag .pn small { overflow: hidden; text-overflow: ellipsis; }

@@ -58,7 +58,8 @@ def test_a_poll_without_both_rates_adds_nothing() -> None:
     history = RateHistory()
     history.add(NOW, {1: (None, None), 2: (5.0, None), 3: (None, 5.0)})
 
-    assert history.as_dict() == {"ports": {}, "hourly": {}}
+    stored = history.as_dict()
+    assert (stored["ports"], stored["hourly"], stored["two_hourly"]) == ({}, {}, {})
 
 
 def test_the_clock_going_back_keeps_what_is_there() -> None:
@@ -101,7 +102,8 @@ def test_restoring_drops_what_is_too_old_or_broken() -> None:
 
 def test_restoring_garbage_gives_an_empty_history() -> None:
     for garbage in (None, [], "text", {"ports": 5}):
-        assert RateHistory.from_dict(garbage, NOW).as_dict() == {"ports": {}, "hourly": {}}
+        stored = RateHistory.from_dict(garbage, NOW).as_dict()
+        assert (stored["ports"], stored["hourly"], stored["two_hourly"]) == ({}, {}, {})
 
 
 # ---- the hourly values for a week

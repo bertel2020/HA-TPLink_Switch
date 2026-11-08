@@ -122,7 +122,8 @@ async def test_device_info_comes_from_the_switch(hass: HomeAssistant, snmp, entr
 
 
 async def test_unknown_maker_is_left_empty(hass: HomeAssistant, snmp, entry) -> None:
-    system = {**SYSTEM, OID_SYS_OBJECT_ID: "1.3.6.1.4.1.9.1.1"}
+    # neither sysObjectID nor sysDescr names a maker
+    system = {**SYSTEM, OID_SYS_OBJECT_ID: "1.3.6.1.4.1.9.1.1", OID_SYS_DESCR: b"Managed switch"}
     snmp.get.side_effect = lambda *oids: {o: system[o] for o in oids if o in system}
     await _setup(hass, entry)
 
@@ -191,6 +192,7 @@ async def test_the_entity_mib_names_maker_model_and_versions(
     system = {
         **SYSTEM,
         OID_SYS_OBJECT_ID: "1.3.6.1.4.1.9.1.1",
+        OID_SYS_DESCR: b"Managed switch",
         "1.3.6.1.2.1.47.1.1.1.1.12.1": b"ACME",
         "1.3.6.1.2.1.47.1.1.1.1.13.1": b"AS-24",
         "1.3.6.1.2.1.47.1.1.1.1.8.1": b"2.0",

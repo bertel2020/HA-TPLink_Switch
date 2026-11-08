@@ -235,6 +235,12 @@ tr.unused td, tr.unused .badge { color: var(--muted); } tr.unused .mono { opacit
 .vlegend { display: flex; gap: 18px; flex-wrap: wrap; align-items: center; padding: 12px 20px; border-top: 1px solid var(--line); color: var(--muted); font-size: max(10.5px, calc(12px * var(--fs))); }
 .vlegend .vt { display: inline-block; width: 14px; height: 14px; vertical-align: -3px; margin-right: 6px; }
 @media (max-width: 700px) {
+  table.diag td.l, table.diag th.stick { padding-left: 12px; padding-right: 8px; }
+  table.diag .pn { display: block; max-width: 88px; overflow: hidden; text-overflow: ellipsis; font-size: calc(14px * var(--fs)); }
+  table.diag .pn small { overflow: hidden; text-overflow: ellipsis; }
+  table.diag .ghead th.num { text-align: left; }
+  table.diag td, table.diag th { padding-top: 8px; padding-bottom: 8px; }
+  table.diag td.stick { box-shadow: 1px 0 0 var(--line-2); }
   .lookwrap { align-self: stretch; }
   .icon-btn { width: auto; padding: 0 14px; gap: 10px; border-radius: 20px; display: inline-flex; align-items: center; }
   .btnlabel { display: inline; font-weight: 500; }

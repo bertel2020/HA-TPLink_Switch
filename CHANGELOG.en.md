@@ -17,7 +17,7 @@ All notable changes to this integration are recorded here.
 ### Fixed
 
 - **Panel does not load on the first visit:** After the first open the panel stayed empty and appeared only after switching to another page and back. It waited for its parts before it registered with Home Assistant. Now it registers at once and starts as soon as the parts are there.
-- **"Errors and volume" table:** All columns are sortable, the columns are grouped, values above zero are coloured, the data volume shows bars, the port column stays in place when scrolling and a click on a row opens the port. On a phone every port is a card, sorted with a drop-down.
+- **"Errors and volume" table:** All columns are sortable, the columns are grouped, values above zero are coloured, the data volume shows bars, the port column stays in place when scrolling and a click on a row opens the port. On a phone every port is a card, sorted with a drop-down. The panel remembers the sort order of the tables in the browser.
 
 ## 0.9.0 – 2026-11-05
 

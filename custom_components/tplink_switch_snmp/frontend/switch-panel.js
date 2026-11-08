@@ -24,6 +24,13 @@ const ready = Promise.all([import(`./styles.js${V}`), import(`./texts.js${V}`), 
 
 const DOMAIN = "tplink_switch_snmp";
 const LOOK_KEY = "tplink_switch_snmp_look";
+const SORT_KEY = "tplink_switch_snmp_sort";
+// the columns each table can be sorted by: a stored choice with anything else is ignored
+const SORT_COLUMNS = {
+  ports: ["n", "status", "speed", "rx", "tx", "errors", "devs"],
+  devices: ["name", "mac", "vendor", "port"],
+  diag: ["n", "rxe", "txe", "rxp", "txp", "bc", "mc", "rxd", "txd", "rxb", "txb", "state"],
+};
 // The server pushes every poll. This slow check only matters if the subscription is lost.
 const FALLBACK_MS = 60000;
 const STALE_MS = 5 * 60000;
@@ -91,6 +98,27 @@ class TplinkSwitchPanel extends HTMLElement {
     this._adopt();
   }
 
+  // the sort order of each table is kept in the browser
+  _loadSort() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(SORT_KEY));
+      for (const [table, columns] of Object.entries(SORT_COLUMNS)) {
+        const one = saved?.[table];
+        if (one && columns.includes(one.key) && (one.dir === 1 || one.dir === -1)) this._sort[table] = { key: one.key, dir: one.dir };
+      }
+    } catch {
+      // nothing stored or storage blocked: the default order stays
+    }
+  }
+
+  _saveSort() {
+    try {
+      localStorage.setItem(SORT_KEY, JSON.stringify(this._sort));
+    } catch {
+      // storage blocked: the order holds until the page is closed
+    }
+  }
+
   // Home Assistant may have set a property before the element was defined: it then sits on the
   // object itself and hides the setter, so it is handed to the setter again.
   _adopt() {
@@ -126,6 +154,7 @@ class TplinkSwitchPanel extends HTMLElement {
     this._started = true;
     const lang = hass.language || "en";
     if (first) {
+      this._loadSort();
       try {
         this._look = cleanPrefs(JSON.parse(localStorage.getItem(LOOK_KEY)));
       } catch {
@@ -1189,6 +1218,7 @@ class TplinkSwitchPanel extends HTMLElement {
           const sort = this._sort[el.dataset.table];
           sort.dir = sort.key === v ? -sort.dir : Number(el.dataset.first) || 1;
           sort.key = v;
+          this._saveSort();
           break;
         }
         case "csv": {
@@ -1251,6 +1281,7 @@ class TplinkSwitchPanel extends HTMLElement {
         const sort = this._sort.diag;
         sort.key = event.target.value;
         sort.dir = sort.key === "n" ? 1 : -1;
+        this._saveSort();
         this._render();
         return;
       }

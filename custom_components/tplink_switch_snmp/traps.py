@@ -81,7 +81,8 @@ class TrapReceiver:
         assert self._engine is not None
         if community not in self._communities:
             index = f"c{len(self._communities)}"
-            config.add_v1_system(self._engine, index, community)
+            # the context name tells the callback which community the trap came with
+            config.add_v1_system(self._engine, index, community, contextName=index)
             self._communities[community] = index
         key = (address, community)
         self._handlers[key] = handler
@@ -102,10 +103,14 @@ class TrapReceiver:
     ) -> None:
         _domain, source = engine.message_dispatcher.get_transport_info(state_reference)
         address = str(source[0])
-        # pysnmp has already dropped traps with an unknown community; find which one this was.
+        # pysnmp has already dropped traps with an unknown community; the context name says
+        # which of the registered ones this was.
+        community = next(
+            (name for name, index in self._communities.items() if index == str(context_name)), None
+        )
         trap = next((str(value) for name, value in var_binds if str(name) == OID_SNMP_TRAP), None)
-        for (known, _community), handler in list(self._handlers.items()):
-            if known == address:
+        for (known, known_community), handler in list(self._handlers.items()):
+            if known == address and known_community == community:
                 _LOGGER.debug("Trap %s from %s", trap, address)
                 handler(trap)
                 return

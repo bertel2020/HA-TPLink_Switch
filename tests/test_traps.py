@@ -280,3 +280,14 @@ async def test_an_alarm_trap_fires_an_event(hass: HomeAssistant, snmp, entry) ->
         "switch": "TL-SG3424",
         "alarm": "cpu_load",
     }
+
+
+async def test_a_trap_needs_the_community_of_its_own_switch(receiver) -> None:
+    mine, other = MagicMock(), MagicMock()
+    receiver.add("127.0.0.1", "mine", mine)
+    receiver.add("192.168.79.99", "other", other)
+
+    await _send(receiver.port, "other")  # a known community, but of the other switch
+
+    mine.assert_not_called()
+    other.assert_not_called()

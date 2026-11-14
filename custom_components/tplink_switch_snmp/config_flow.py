@@ -238,7 +238,10 @@ class SwitchOptionsFlow(OptionsFlow):
     async def async_step_init(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         if user_input is not None:
             # The options also hold the port names, which are not part of this form.
-            options = {**self.config_entry.options, **user_input}
+            options = {**self.config_entry.options}
+            # A field left empty is not in the answer; it must not keep its old value.
+            options.pop(CONF_WRITE_COMMUNITY, None)
+            options.update(user_input)
             options[CONF_SCAN_INTERVAL] = int(options[CONF_SCAN_INTERVAL])
             if CONF_PROTECTED_PORTS in options:
                 options[CONF_PROTECTED_PORTS] = sorted(

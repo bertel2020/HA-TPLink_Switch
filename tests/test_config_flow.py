@@ -278,3 +278,18 @@ async def test_all_entities_by_default(hass: HomeAssistant, snmp, entry) -> None
     entry.add_to_hass(hass)
     assert selected_ports(entry) is None
     assert "devices" in selected_groups(entry)
+
+
+async def test_an_emptied_write_community_is_not_kept(hass: HomeAssistant, snmp, entry) -> None:
+    entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        entry, options={"allow_write": True, "write_community": "private", "port_names": {"1": "NAS"}}
+    )
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    await hass.config_entries.options.async_configure(
+        result["flow_id"], {"scan_interval": 60, "allow_write": False}
+    )
+
+    assert "write_community" not in entry.options
+    assert entry.options["port_names"] == {"1": "NAS"}

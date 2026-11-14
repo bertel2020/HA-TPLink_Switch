@@ -303,22 +303,27 @@ async def ws_set_port_name(
 ) -> None:
     """Give a port a name of your own; an empty name removes it."""
     entry = hass.config_entries.async_get_entry(msg["entry_id"])
-    if entry is None or entry.domain != DOMAIN:
+    if entry is None or entry.domain != DOMAIN or entry.state is not ConfigEntryState.LOADED:
         connection.send_error(msg["id"], "not_found", "switch not found")
         return
-    names = dict(entry.options.get(CONF_PORT_NAMES, {}))
+    coordinator = entry.runtime_data
+    if msg["port"] not in coordinator.data.ports:
+        connection.send_error(msg["id"], "not_found", "port not found")
+        return
     name = msg["name"].strip()
+    if msg["to_switch"]:
+        # at the switch first: a name that could not be written is not kept either
+        try:
+            await coordinator.async_set_port_alias(msg["port"], name)
+        except HomeAssistantError as err:
+            connection.send_error(msg["id"], "write_failed", str(err))
+            return
+    names = dict(entry.options.get(CONF_PORT_NAMES, {}))
     if name:
         names[str(msg["port"])] = name
     else:
         names.pop(str(msg["port"]), None)
     hass.config_entries.async_update_entry(entry, options={**entry.options, CONF_PORT_NAMES: names})
-    if msg["to_switch"]:
-        try:
-            await entry.runtime_data.async_set_port_alias(msg["port"], name)
-        except HomeAssistantError as err:
-            connection.send_error(msg["id"], "write_failed", str(err))
-            return
     connection.send_result(msg["id"], {"name": name})
 
 

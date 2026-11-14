@@ -509,3 +509,63 @@ async def test_switching_ports_is_for_admins_only(
 
     assert msg["success"] is False and msg["error"]["code"] == "unauthorized"
     snmp.set.assert_not_awaited()
+
+
+async def test_a_name_that_could_not_be_written_is_not_kept(
+    hass: HomeAssistant, hass_ws_client, snmp, entry
+) -> None:
+    await _setup(hass, entry, **WRITE)
+    snmp.set.side_effect = SnmpError("timeout")
+
+    msg = await _ws(
+        hass,
+        hass_ws_client,
+        {
+            "type": "tplink_switch_snmp/set_port_name",
+            "entry_id": entry.entry_id,
+            "port": 1,
+            "name": "NAS",
+            "to_switch": True,
+        },
+    )
+
+    assert msg["success"] is False and msg["error"]["code"] == "write_failed"
+    assert "port_names" not in entry.options or entry.options["port_names"] == {}
+
+
+async def test_naming_checks_the_switch_and_the_port(
+    hass: HomeAssistant, hass_ws_client, snmp, entry
+) -> None:
+    await _setup(hass, entry, **WRITE)
+    base = {"type": "tplink_switch_snmp/set_port_name", "name": "NAS", "to_switch": True}
+
+    unknown_port = await _ws(hass, hass_ws_client, {**base, "entry_id": entry.entry_id, "port": 777})
+    await hass.config_entries.async_unload(entry.entry_id)
+    unloaded = await _ws(hass, hass_ws_client, {**base, "entry_id": entry.entry_id, "port": 1})
+
+    assert unknown_port["error"]["code"] == "not_found"
+    assert unloaded["error"]["code"] == "not_found"
+    assert "port_names" not in entry.options
+    snmp.set.assert_not_awaited()
+
+
+async def test_switching_writing_off_removes_what_it_added(
+    hass: HomeAssistant, snmp, entry
+) -> None:
+    from homeassistant.helpers import entity_registry as er
+
+    def writers() -> list[str]:
+        registry = er.async_get(hass)
+        return [
+            e.unique_id
+            for e in er.async_entries_for_config_entry(registry, entry.entry_id)
+            if e.domain in ("switch", "button")
+        ]
+
+    await _setup(hass, entry, **WRITE)
+    assert writers()
+
+    hass.config_entries.async_update_entry(entry, options={"allow_write": False})
+    await hass.async_block_till_done()
+
+    assert writers() == []

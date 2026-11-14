@@ -53,8 +53,13 @@ def async_remove_unwanted(hass: HomeAssistant, entry: SwitchConfigEntry) -> None
     """Remove the entities from the registry that the options no longer ask for."""
     registry = er.async_get(hass)
     groups = selected_groups(entry)
+    coordinator = entry.runtime_data
     for reg in er.async_entries_for_config_entry(registry, entry.entry_id):
-        if reg.unique_id.endswith("_uptime"):
+        if reg.unique_id.endswith(("_save_config", "_reboot")):
+            unwanted = not coordinator.can_act  # only there while writing is on
+        elif (match := _PORT_ID.search(reg.unique_id)) and match[2] == "enabled":
+            unwanted = not coordinator.can_write or not wants_port(entry, int(match[1]))
+        elif reg.unique_id.endswith("_uptime"):
             unwanted = "uptime" not in groups
         elif reg.unique_id.endswith("_stp_changes"):
             unwanted = "stp" not in groups

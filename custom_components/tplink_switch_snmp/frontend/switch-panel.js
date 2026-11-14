@@ -509,6 +509,8 @@ class TplinkSwitchPanel extends HTMLElement {
     const root = this.shadowRoot;
     const active = root.activeElement;
     const focus = active && active.id ? { id: active.id, start: active.selectionStart, end: active.selectionEnd } : null;
+    // a poll redraws everything: keep what is being typed
+    const typed = this._editing ? { name: root.getElementById("portname")?.value, toSwitch: root.getElementById("toswitch")?.checked } : null;
     const t = this._t;
     const sw = this._switch;
     if (sw && !sw.ports.some((p) => p.n === this._sel)) this._sel = null; // no port is chosen until one is clicked
@@ -516,6 +518,12 @@ class TplinkSwitchPanel extends HTMLElement {
       this._error && !this._data ? `<div class="card error">${esc(t("loadError", { e: this._error }))}</div>` : !this._data ? `<div class="card empty">${esc(t("loading"))}</div>` : !sw ? `<div class="card empty">${esc(t("noSwitch"))}</div>` : this._switchCard(sw) + this._view(sw)
     }</main>`;
     this._bind();
+    if (typed) {
+      const name = root.getElementById("portname");
+      if (name && typed.name != null) name.value = typed.name;
+      const toSwitch = root.getElementById("toswitch");
+      if (toSwitch && typed.toSwitch != null) toSwitch.checked = typed.toSwitch;
+    }
     this._showTip();
     if (this._tab === "overview" && sw) {
       const port = sw.ports.find((p) => p.n === this._sel);
@@ -1334,13 +1342,18 @@ class TplinkSwitchPanel extends HTMLElement {
     const sw = this._switch;
     const input = this.shadowRoot.getElementById("portname");
     if (!sw || !input) return;
+    let failure = null;
     try {
       await this._hass.callWS({ type: `${DOMAIN}/set_port_name`, entry_id: sw.entry_id, port: this._sel, name: input.value, to_switch: !!this.shadowRoot.getElementById("toswitch")?.checked });
     } catch (err) {
-      this._error = err?.message || String(err);
+      failure = this._t("writeFailed", { e: err?.message || String(err) });
     }
     this._editing = false;
     await this._load();
+    if (failure) {
+      this._notice = failure; // after the load, which would redraw without it
+      this._render();
+    }
   }
 }
 

@@ -65,11 +65,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: SwitchConfigEntry) -> bo
     coordinator.selection = selection_key(entry)
     entry.runtime_data = coordinator
     entry.async_on_unload(coordinator.clear_issue)
+    # The panel subscribes once per connection; every poll of every loaded switch reaches it,
+    # also of a switch that was reloaded or added after the subscription.
+    entry.async_on_unload(coordinator.async_add_listener(lambda: websocket_api.async_notify(hass)))
     entry.async_on_unload(entry.add_update_listener(_options_updated))
     async_remove_unwanted(hass, entry)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     await _async_setup_traps(hass, entry, coordinator)
     await async_register_panel(hass)
+    websocket_api.async_notify(hass)  # a reloaded switch is new to the panels that are open
     return True
 
 
@@ -138,6 +142,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: SwitchConfigEntry) -> b
     """Unload a switch."""
     unloaded = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unloaded:
+        await entry.runtime_data.async_flush()
         entry.runtime_data.client.close()
         remaining = [e for e in hass.config_entries.async_loaded_entries(DOMAIN) if e is not entry]
         if not remaining:

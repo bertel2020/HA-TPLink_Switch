@@ -326,3 +326,52 @@ async def test_history_with_an_unknown_range_is_refused(
     msg = await client.receive_json()
 
     assert msg["success"] is False and msg["error"]["code"] == "invalid_format"
+
+
+async def test_subscribe_survives_a_reload_of_the_switch(
+    hass: HomeAssistant, hass_ws_client, snmp, entry
+) -> None:
+    await _setup(hass, entry)
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id({"type": "tplink_switch_snmp/subscribe"})
+    assert (await client.receive_json())["success"]
+
+    await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done()
+    assert (await client.receive_json())["type"] == "event"  # the reloaded switch is announced
+
+    await entry.runtime_data.async_refresh()
+    event = await client.receive_json()  # and so is each poll of the new coordinator
+
+    assert event["event"]["switches"][0]["entry_id"] == entry.entry_id
+
+
+async def test_removing_a_switch_leaves_no_history_behind(
+    hass: HomeAssistant, snmp, entry, hass_storage
+) -> None:
+    from datetime import timedelta
+
+    from homeassistant.util import dt as dt_util
+    from pytest_homeassistant_custom_component.common import async_fire_time_changed
+
+    await _setup(hass, entry)
+    key = f"tplink_switch_snmp.{entry.entry_id}.history"
+
+    await hass.config_entries.async_remove(entry.entry_id)
+    await hass.async_block_till_done()
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=400))
+    await hass.async_block_till_done()
+
+    assert key not in hass_storage
+
+
+async def test_unloading_a_switch_keeps_its_history(
+    hass: HomeAssistant, snmp, entry, hass_storage
+) -> None:
+    await _setup(hass, entry)
+    key = f"tplink_switch_snmp.{entry.entry_id}.history"
+    assert key not in hass_storage  # the delayed write has not happened yet
+
+    await hass.config_entries.async_unload(entry.entry_id)
+
+    assert key in hass_storage

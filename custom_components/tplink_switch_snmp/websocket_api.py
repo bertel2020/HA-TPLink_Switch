@@ -19,6 +19,16 @@ from .model import manufacturer
 from .vendor import vendor_of
 
 
+SUBSCRIBERS = f"{DOMAIN}_subscribers"
+
+
+@callback
+def async_notify(hass: HomeAssistant) -> None:
+    """Tell every open panel that a switch has new data."""
+    for send in list(hass.data.get(SUBSCRIBERS, ())):
+        send()
+
+
 @callback
 def async_register(hass: HomeAssistant) -> None:
     """Register the commands once."""
@@ -160,18 +170,18 @@ def ws_subscribe(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
 ) -> None:
     """Send the snapshot each time a switch has been polled, so the panel does not poll."""
-    entries = hass.config_entries.async_loaded_entries(DOMAIN)
 
     @callback
     def send() -> None:
         connection.send_message(websocket_api.event_message(msg["id"], _snapshot(hass)))
 
-    unsubscribers = [entry.runtime_data.async_add_listener(send) for entry in entries]
+    subscribers: list = hass.data.setdefault(SUBSCRIBERS, [])
+    subscribers.append(send)
 
     @callback
     def unsubscribe() -> None:
-        for remove in unsubscribers:
-            remove()
+        if send in subscribers:
+            subscribers.remove(send)
 
     connection.subscriptions[msg["id"]] = unsubscribe
     connection.send_result(msg["id"])

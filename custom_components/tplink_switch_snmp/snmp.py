@@ -201,7 +201,11 @@ class SnmpClient:
         """Write one value: a whole number or text."""
         auth = build_auth(self._config, write=True)
         target = await self._get_target()
-        typed = Integer32(value) if isinstance(value, int) else OctetString(value)
+        try:
+            # text goes out as UTF-8, which is what text() reads back
+            typed = Integer32(value) if isinstance(value, int) else OctetString(value.encode("utf-8"))
+        except UnicodeError as err:
+            raise SnmpError(f"cannot encode the value: {err}") from err
         error, status, index, _ = await set_cmd(
             self._engine, auth, target, self._context, ObjectType(ObjectIdentity(oid), typed)
         )

@@ -321,6 +321,10 @@ class SwitchCoordinator(DataUpdateCoordinator[SwitchData]):
                 self._fire_alarm_event("stp_topology_change")
         return data
 
+    async def async_flush(self) -> None:
+        """Write the history now and drop the delayed write, so nothing is written after unload."""
+        await self._store.async_save(self._stored())
+
     def _stored(self) -> dict[str, Any]:
         """What is kept on disk: the rates and the link changes of the last day."""
         return {**self.history.as_dict(), "link_changes": self.link_log.as_dict()}

@@ -151,3 +151,27 @@ async def test_v1_walks_with_getnext() -> None:
     ):
         assert await client.walk(prefix) == {"1": 1}
     assert walk is not None
+
+
+async def test_set_writes_text_as_utf8() -> None:
+    client = SnmpClient(
+        MagicMock(),
+        "192.168.79.15",
+        161,
+        {"version": "2c", "community": "homeassistant", "write_community": "private"},
+    )
+    client._target = MagicMock()
+    sent = []
+
+    async def set_cmd(_engine, _auth, _target, _context, object_type):
+        sent.append(object_type[1])
+        return None, 0, 0, []
+
+    with (
+        patch.object(module, "set_cmd", set_cmd),
+        patch.object(module, "ObjectIdentity", lambda oid: oid),
+        patch.object(module, "ObjectType", lambda oid, value: (oid, value)),
+    ):
+        await client.set("1.3.6.1.2.1.31.1.1.1.18.1", "Büro €")
+
+    assert bytes(sent[0].asOctets()) == "Büro €".encode()

@@ -207,7 +207,9 @@ class SnmpClient:
         target = await self._get_target()
         try:
             # text goes out as UTF-8, which is what text() reads back
-            typed = Integer32(value) if isinstance(value, int) else OctetString(value.encode("utf-8"))
+            typed = (
+                Integer32(value) if isinstance(value, int) else OctetString(value.encode("utf-8"))
+            )
         except UnicodeError as err:
             raise SnmpError(f"cannot encode the value: {err}") from err
         error, status, index, _ = await set_cmd(

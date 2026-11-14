@@ -217,9 +217,7 @@ async def test_other_entities_are_left_alone(hass: HomeAssistant, snmp, entry) -
     assert len(er.async_entries_for_config_entry(er.async_get(hass), entry.entry_id)) == before
 
 
-async def test_device_info_is_asked_again_after_a_timeout(
-    hass: HomeAssistant, snmp, entry
-) -> None:
+async def test_device_info_is_asked_again_after_a_timeout(hass: HomeAssistant, snmp, entry) -> None:
     from custom_components.tplink_switch_snmp.snmp import SnmpNoAnswer
 
     answer = snmp.get.side_effect

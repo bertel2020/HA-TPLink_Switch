@@ -539,7 +539,9 @@ async def test_naming_checks_the_switch_and_the_port(
     await _setup(hass, entry, **WRITE)
     base = {"type": "tplink_switch_snmp/set_port_name", "name": "NAS", "to_switch": True}
 
-    unknown_port = await _ws(hass, hass_ws_client, {**base, "entry_id": entry.entry_id, "port": 777})
+    unknown_port = await _ws(
+        hass, hass_ws_client, {**base, "entry_id": entry.entry_id, "port": 777}
+    )
     await hass.config_entries.async_unload(entry.entry_id)
     unloaded = await _ws(hass, hass_ws_client, {**base, "entry_id": entry.entry_id, "port": 1})
 

@@ -18,7 +18,6 @@ from .history import COUNT_ACTIVE, COUNT_MACS, RANGES
 from .model import manufacturer
 from .vendor import vendor_of
 
-
 SUBSCRIBERS = f"{DOMAIN}_subscribers"
 
 

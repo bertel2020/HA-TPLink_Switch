@@ -49,7 +49,11 @@ class TrapReceiver:
             sock.close()
             raise
         # Creating the engine loads MIB data from disk, so keep it off the event loop.
-        engine = await asyncio.get_running_loop().run_in_executor(None, SnmpEngine)
+        try:
+            engine = await asyncio.get_running_loop().run_in_executor(None, SnmpEngine)
+        except BaseException:
+            sock.close()
+            raise
         try:
             config.add_transport(
                 engine, udp.DOMAIN_NAME, udp.UdpTransport().open_server_mode(sock=sock)

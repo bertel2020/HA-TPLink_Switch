@@ -53,28 +53,29 @@ async def async_setup_entry(hass: HomeAssistant, entry: SwitchConfigEntry) -> bo
     write_community = entry.options.get(CONF_WRITE_COMMUNITY, "") if allow_write else ""
     config = {**entry.data, CONF_WRITE_COMMUNITY: write_community}
     client = SnmpClient(engine, entry.data[CONF_HOST], entry.data[CONF_PORT], config)
-    coordinator = SwitchCoordinator(hass, entry, client)
-    coordinator.write_key = (allow_write, write_community)
-    await async_load_vendors()
-    await coordinator.async_load_history()
     try:
+        coordinator = SwitchCoordinator(hass, entry, client)
+        coordinator.write_key = (allow_write, write_community)
+        await async_load_vendors()
+        await coordinator.async_load_history()
         await coordinator.async_config_entry_first_refresh()
+        coordinator.selection = selection_key(entry)
+        entry.runtime_data = coordinator
+        entry.async_on_unload(coordinator.clear_issue)
+        # The panel subscribes once per connection; every poll of every loaded switch reaches it,
+        # also of a switch that was reloaded or added after the subscription.
+        entry.async_on_unload(coordinator.async_add_listener(lambda: websocket_api.async_notify(hass)))
+        entry.async_on_unload(entry.add_update_listener(_options_updated))
+        async_remove_unwanted(hass, entry)
+        await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+        await _async_setup_traps(hass, entry, coordinator)
+        await async_register_panel(hass)
+        websocket_api.async_notify(hass)  # a reloaded switch is new to the panels that are open
+        return True
     except Exception:
+        # a setup that fails at any step leaves no engine behind
         engine.close_dispatcher()
         raise
-    coordinator.selection = selection_key(entry)
-    entry.runtime_data = coordinator
-    entry.async_on_unload(coordinator.clear_issue)
-    # The panel subscribes once per connection; every poll of every loaded switch reaches it,
-    # also of a switch that was reloaded or added after the subscription.
-    entry.async_on_unload(coordinator.async_add_listener(lambda: websocket_api.async_notify(hass)))
-    entry.async_on_unload(entry.add_update_listener(_options_updated))
-    async_remove_unwanted(hass, entry)
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    await _async_setup_traps(hass, entry, coordinator)
-    await async_register_panel(hass)
-    websocket_api.async_notify(hass)  # a reloaded switch is new to the panels that are open
-    return True
 
 
 async def _resolve(hass: HomeAssistant, host: str) -> str:

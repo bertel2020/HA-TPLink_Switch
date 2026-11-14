@@ -282,3 +282,20 @@ async def test_port_entities_carry_their_port_number(hass: HomeAssistant, snmp, 
     assert hass.states.get(_entity(hass, "sensor", "port1_speed")).attributes["port"] == 1
     macs = hass.states.get(_entity(hass, "sensor", "port1_macs"))
     assert macs.attributes["port"] == 1 and macs.attributes["mac_addresses"]
+
+
+async def test_a_failing_setup_closes_the_engine(hass: HomeAssistant, snmp, entry) -> None:
+    from unittest.mock import MagicMock, patch
+
+    engine = MagicMock()
+    entry.add_to_hass(hass)
+    with (
+        patch("custom_components.tplink_switch_snmp.SnmpEngine", return_value=engine),
+        patch(
+            "custom_components.tplink_switch_snmp.async_register_panel",
+            side_effect=RuntimeError("boom"),
+        ),
+    ):
+        assert not await hass.config_entries.async_setup(entry.entry_id)
+
+    engine.close_dispatcher.assert_called_once()

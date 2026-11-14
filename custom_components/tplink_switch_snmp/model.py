@@ -158,6 +158,21 @@ class UptimeTracker:
         return (self._wraps * TICKS_WRAP + ticks) // 100
 
 
+def rebooted(last_ticks: int | None, ticks: int, elapsed: float) -> bool:
+    """Whether sysUpTime says the switch restarted since the last reading, elapsed seconds ago.
+
+    Without a restart it advanced by the time that passed. A restart leaves it at the time since
+    the restart, so far behind that, also when the switch was down long enough to have come
+    back with a larger value than before. A drop from just below the limit is the wrap.
+    """
+    if last_ticks is None:
+        return False
+    if ticks < last_ticks and last_ticks > TICKS_WRAP - WRAP_WINDOW:
+        return False
+    tolerance = (10 + elapsed * 0.01) * 100  # jitter of the poll and a little drift
+    return ticks + tolerance < last_ticks + elapsed * 100
+
+
 _VERSION = re.compile(r"^v?\d+(\.\d+)*$")
 
 

@@ -93,10 +93,11 @@ from .model import (
     build_ports,
     maker_from_description,
     manufacturer,
+    rebooted,
     split_hardware,
     text,
 )
-from .snmp import SnmpClient, SnmpError
+from .snmp import SnmpClient, SnmpError, SnmpNoAnswer
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -158,6 +159,7 @@ class SwitchCoordinator(DataUpdateCoordinator[SwitchData]):
         self.link_log = LinkLog(dt_util.utcnow().timestamp())
         self._failing_since: datetime | None = None
         self._info: dict[str, str | None] | None = None
+        self._info_complete = False
         self._store: Store[dict] = Store(hass, 1, f"{DOMAIN}.{entry.entry_id}.history")
         self._last_poll: float | None = None
         self._uptime = UptimeTracker()
@@ -192,9 +194,13 @@ class SwitchCoordinator(DataUpdateCoordinator[SwitchData]):
         if manufacturer(object_id) == "TP-Link":
             wanted |= {"hardware": OID_TPLINK_HARDWARE, "firmware": OID_TPLINK_FIRMWARE}
         info: dict[str, str | None] = {}
+        self._info_complete = True
         for key, oid in wanted.items():
             try:
                 value = (await self.client.get(oid)).get(oid)
+            except SnmpNoAnswer:
+                self._info_complete = False  # not known to be missing: ask again at the next poll
+                value = None
             except SnmpError:
                 value = None
             info[key] = text(value).strip() or None if value is not None else None
@@ -242,7 +248,10 @@ class SwitchCoordinator(DataUpdateCoordinator[SwitchData]):
 
         previous = self.data.ports if self.data else None
         elapsed = now - self._last_poll if self._last_poll is not None else 0
-        add_rates(ports, previous, elapsed, 32 if self._v1 else 64)
+        ticks = int(system.get(OID_SYS_UPTIME, 0))
+        restarted = rebooted(self._last_ticks, ticks, elapsed)
+        # A restart resets the counters too: the change since the last poll is no rate.
+        add_rates(ports, None if restarted else previous, elapsed, 32 if self._v1 else 64)
         add_error_details(ports, await self._read_extras(RMON_TABLES))
         stp_changes, stp_root_port = add_stp(
             ports, await self._read_extras(STP_TABLES), tables["base_port"]
@@ -265,10 +274,9 @@ class SwitchCoordinator(DataUpdateCoordinator[SwitchData]):
             add_arp(ports, extras)
         self._last_poll = now
 
-        ticks = int(system.get(OID_SYS_UPTIME, 0))
         self._stamp_link_changes(ports, ticks)
         # A reboot resets every ifLastChange: that is no event worth reporting.
-        if previous and self._last_ticks is not None and ticks >= self._last_ticks:
+        if previous and self._last_ticks is not None and not restarted:
             self._fire_link_events(ports, previous)
         self._last_ticks = ticks
         stamp = dt_util.utcnow().timestamp()
@@ -286,7 +294,7 @@ class SwitchCoordinator(DataUpdateCoordinator[SwitchData]):
         )
         self._store.async_delay_save(self._stored, HISTORY_SAVE_DELAY)
 
-        if self._info is None:
+        if self._info is None or not self._info_complete:
             self._info = await self._read_info(
                 text(system.get(OID_SYS_OBJECT_ID, "")), text(system.get(OID_SYS_DESCR, b""))
             )

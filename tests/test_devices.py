@@ -215,3 +215,31 @@ async def test_other_entities_are_left_alone(hass: HomeAssistant, snmp, entry) -
     await hass.async_block_till_done()
 
     assert len(er.async_entries_for_config_entry(er.async_get(hass), entry.entry_id)) == before
+
+
+async def test_device_info_is_asked_again_after_a_timeout(
+    hass: HomeAssistant, snmp, entry
+) -> None:
+    from custom_components.tplink_switch_snmp.snmp import SnmpNoAnswer
+
+    answer = snmp.get.side_effect
+    calls = 0
+
+    async def flaky(*oids):
+        nonlocal calls
+        calls += 1
+        if calls == 3:  # one of the values read once, at the first poll
+            raise SnmpNoAnswer("timeout")
+        return answer(*oids)
+
+    snmp.get.side_effect = flaky
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    coordinator = entry.runtime_data
+    assert coordinator._info_complete is False
+
+    await coordinator.async_refresh()
+
+    assert coordinator._info_complete is True
+    assert coordinator.data.location == "Technikraum"

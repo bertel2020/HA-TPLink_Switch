@@ -234,3 +234,16 @@ def test_packet_counters_that_wrap_at_32_bit():
     model.add_rates(new, old, 1.0, counter_bits=32)
     # old total: 2**32 - 100 + 150, new total: 900 + 150: the counter gained 1000 packets
     assert new[1].rx_pps == 1000.0
+
+
+def test_a_restart_is_told_from_the_uptime() -> None:
+    day = 86400 * 100
+    # one poll later the uptime has advanced by the time that passed
+    assert not model.rebooted(158 * day, 158 * day + 3000, 30)
+    assert not model.rebooted(None, 5, 30)
+    # a restart leaves it at the time since the restart
+    assert model.rebooted(158 * day, 500, 30)
+    # also when the switch was down so long that it came back above the last value
+    assert model.rebooted(3 * day, 5 * day, 10 * 86400)
+    # the wrap of the 32 bit counter is not a restart
+    assert not model.rebooted(2**32 - 1000, 2000, 30)

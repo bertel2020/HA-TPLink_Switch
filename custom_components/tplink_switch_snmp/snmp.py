@@ -69,6 +69,10 @@ class SnmpError(Exception):
     """The switch did not answer or refused the request."""
 
 
+class SnmpNoAnswer(SnmpError):
+    """The request got no answer at all (a timeout), so nothing is known about the value."""
+
+
 def build_auth(config: Mapping[str, Any], *, write: bool = False) -> CommunityData | UsmUserData:
     """The SNMP credentials of a config entry: a community or a v3 user.
 
@@ -158,7 +162,7 @@ class SnmpClient:
             *(ObjectType(ObjectIdentity(oid)) for oid in oids),
         )
         if error:
-            raise SnmpError(str(error))
+            raise SnmpNoAnswer(str(error))
         if status:
             raise SnmpError(f"{status.prettyPrint()} at {index}")
         return {

@@ -2,6 +2,26 @@
 
 All notable changes to this integration are recorded here.
 
+## 0.11.0 – 2026-11-14
+
+### Fixed
+
+- **Panel after a reload:** The panel kept no live updates after a switch was reloaded (changed options, a restart of Home Assistant with the panel open, a switch added later) and fell back to polling once a minute. Every switch now reaches the open panels itself.
+- **Port names:** Names with umlauts and other special characters are written to the switch as UTF-8 (umlauts arrived garbled, a "€" ended in "Unknown error"). A name that cannot be written is no longer kept in Home Assistant, and renaming checks that the switch is loaded and has the port.
+- **Port name in the panel:** What you type is no longer lost when the panel refreshes meanwhile, and a rename that fails shows its error.
+- **Removed or reloaded switch:** Removing a switch leaves no history file behind, and a reload no longer loses the last minutes of the history.
+- **Writing switched off:** The port switches and the buttons for saving the configuration and restarting are removed instead of staying behind as unavailable entities.
+- **Restart of the switch:** A restart is told from the uptime, also after a long outage. The ports no longer all count as changed (no link events, no entries in the link history), and an SNMP v1 switch no longer shows a made-up rate after it.
+- **Device information:** Location, model and versions are read again at the next poll if the first request got no answer, instead of staying empty until a reload.
+- **Setup errors:** A setup that fails at any step closes its SNMP connection, and the trap port is released if its engine cannot be created.
+- **Options:** An emptied write community is dropped instead of keeping its old value.
+- **Traps:** A trap is only accepted with the community of the switch it came from, not with any registered community.
+
+### Changed
+
+- English is the default language of the README and the changelog (German: `README.de.md`, `CHANGELOG.de.md`), and `strings.json` is the English source of the translations.
+- The release notes end with a note on how to support the project.
+
 ## 0.10.0 – 2026-11-08
 
 ### New

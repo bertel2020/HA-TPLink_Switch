@@ -2,6 +2,26 @@
 
 Alle nennenswerten Änderungen an dieser Integration werden hier festgehalten.
 
+## 0.11.0 – 2026-11-14
+
+### Behoben
+
+- **Panel nach einem Neuladen:** Das Panel bekam keine Live-Updates mehr, wenn ein Switch neu geladen wurde (geänderte Optionen, Neustart von Home Assistant bei offenem Panel, später hinzugefügter Switch), und fragte nur noch einmal pro Minute ab. Jetzt erreicht jeder Switch die offenen Panels selbst.
+- **Portnamen:** Namen mit Umlauten und anderen Sonderzeichen gehen als UTF-8 an den Switch (Umlaute kamen verstümmelt an, ein „€“ endete in „Unbekannter Fehler“). Ein Name, der sich nicht schreiben ließ, bleibt nicht mehr in Home Assistant stehen, und das Umbenennen prüft, ob der Switch geladen ist und den Port hat.
+- **Portname im Panel:** Was man tippt, geht nicht mehr verloren, wenn sich das Panel zwischendurch aktualisiert, und ein fehlgeschlagenes Umbenennen zeigt seinen Fehler.
+- **Entfernter oder neu geladener Switch:** Beim Entfernen bleibt keine History-Datei zurück, und ein Neuladen verliert die letzten Minuten des Verlaufs nicht mehr.
+- **Schreiben ausgeschaltet:** Die Port-Schalter und die Buttons zum Speichern der Konfiguration und zum Neustart werden entfernt, statt als nicht verfügbare Entitäten zurückzubleiben.
+- **Neustart des Switches:** Ein Neustart wird an der Laufzeit erkannt, auch nach einem langen Ausfall. Die Ports gelten danach nicht mehr alle als geändert (keine Link-Ereignisse, keine Einträge in der Link-Historie), und ein SNMP-v1-Switch zeigt danach keine erfundene Rate mehr.
+- **Geräteinformationen:** Standort, Modell und Versionen werden beim nächsten Poll erneut gelesen, wenn die erste Anfrage keine Antwort bekam, statt bis zu einem Neuladen leer zu bleiben.
+- **Fehler beim Einrichten:** Scheitert die Einrichtung an einem beliebigen Schritt, schließt sie ihre SNMP-Verbindung, und der Trap-Port wird freigegeben, wenn seine Engine nicht angelegt werden kann.
+- **Optionen:** Eine geleerte Schreib-Community wird entfernt, statt ihren alten Wert zu behalten.
+- **Traps:** Ein Trap wird nur mit der Community des Switches angenommen, von dem er kommt, nicht mit irgendeiner eingetragenen.
+
+### Geändert
+
+- Englisch ist die Standardsprache von README und Änderungsverlauf (Deutsch: `README.de.md`, `CHANGELOG.de.md`), und `strings.json` ist die englische Quelle der Übersetzungen.
+- Die Release-Notes enden mit einem Hinweis, wie man das Projekt unterstützen kann.
+
 ## 0.10.0 – 2026-11-08
 
 ### Neu

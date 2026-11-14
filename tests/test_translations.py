@@ -45,7 +45,7 @@ def test_both_languages_have_the_same_keys() -> None:
         return {k: shape(v) for k, v in value.items()} if isinstance(value, dict) else None
 
     assert shape(_load("translations/de.json")) == shape(_load("translations/en.json"))
-    assert shape(_load("strings.json")) == shape(_load("translations/de.json"))
+    assert shape(_load("strings.json")) == shape(_load("translations/en.json"))
 
 
 def test_every_config_flow_field_is_explained() -> None:

@@ -72,11 +72,11 @@ jobs:
             found { print }
           ' CHANGELOG.md | sed -e '/./,$!d' > notes.md
           if [ ! -s notes.md ]; then
-            echo "::error::CHANGELOG.md hat keinen Abschnitt '## $VERSION'."
+            echo "::error::CHANGELOG.md has no section '## $VERSION'."
             exit 1
           fi
           echo "" >> notes.md
-          echo "Vollständiger Änderungsverlauf: [CHANGELOG.md](https://github.com/$REPOSITORY/blob/main/CHANGELOG.md)" >> notes.md
+          echo "Full changelog: [CHANGELOG.md](https://github.com/$REPOSITORY/blob/main/CHANGELOG.md)" >> notes.md
 
       - name: Determine release title
         id: title

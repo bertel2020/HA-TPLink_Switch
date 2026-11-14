@@ -1,171 +1,171 @@
-# Änderungsverlauf
+# Changelog
 
-Alle nennenswerten Änderungen an dieser Integration werden hier festgehalten.
+All notable changes to this integration are recorded here.
 
 ## 0.10.0 – 2026-11-08
 
-### Neu
+### New
 
-- **Switch-Ansicht im Panel:** Die „Frontplatte“ heißt jetzt „Portübersicht“ und sieht aus wie ein Switch: dunkles Gehäuse, Buchsen in Vierergruppen in zwei Reihen mit LEDs für Link und Verkehr. Darunter stehen Kennzahlen des Switches (aktive Ports, Durchsatz, gelernte MAC-Adressen, Laufzeit, Ports mit Fehlern, Ports mit nur 100 Mbit/s).
-- **Kein Port vorgewählt:** Ein Port wird erst durch Anklicken gewählt und lässt sich durch erneutes Anklicken oder mit dem Kreuz wieder abwählen.
-- **Zeilen anklickbar:** In „Meiste Last“, auf der Seite Ports und bei den Geräten öffnet ein Klick auf die ganze Zeile den Port.
-- **Wackelnder Link erkannt:** Die Integration zählt die Link-Wechsel jedes Ports der letzten 24 Stunden (auch nach einem Neustart von Home Assistant). Ab 3 Wechseln warnt das Panel orange mit der Anzahl („Port 1 (6×)“); ein oder zwei Wechsel, meist ein aus- und wieder eingeschaltetes Gerät, erscheinen nur noch als ruhige Info. Die Portkarte nennt die Anzahl.
-- **Link-Historie in der Portkarte:** Unter dem Diagramm zeigt ein Band, wann der Link oben war (grün 1 Gbit/s, orange langsamer, grau kein Link, schraffiert vor Beginn der Aufzeichnung), dazu Verfügbarkeit, Ausfälle und eine Liste der Wechsel (vier Zeilen sichtbar, der Rest scrollt). Sie folgt dem Zeitraum 24 Std., 7 Tage, 30 Tage. Die Integration merkt sich dafür 30 Tage lang jeden Link-Wechsel mit Zeit und Geschwindigkeit.
-- **Hersteller, Modell und Versionen:** Zusätzlich zur TP-Link-MIB liest die Integration die Standard-ENTITY-MIB; trägt die Beschreibung „JetStream“, wird als Hersteller TP-Link angezeigt, auch wenn sysObjectID anderes sagt.
-- **Diagramme in den Kacheln, 30 Tage:** Ein Zeitraum (24 Stunden, 7 oder 30 Tage) über den Kacheln steuert die Diagramme für aktive Ports, Durchsatz und gelernte MAC-Adressen (mit Minimum, Mittel und Maximum bzw. Spitze) sowie den Verlauf des gewählten Ports. Fährt man über ein Diagramm, zeigen alle dieselbe Uhrzeit. Der Verlauf von Ports und MAC-Adressen beginnt mit dieser Version.
+- **Switch look in the panel:** The "front panel" is now the "Port view" and looks like a switch: dark housing, sockets in groups of four in two rows with link and traffic LEDs. Below it are the switch's own figures (active ports, throughput, learned MAC addresses, uptime, ports with errors, ports at 100 Mbit/s only).
+- **No port preselected:** A port is chosen by clicking it and deselected by clicking it again or with the cross.
+- **Clickable rows:** In "Most traffic", on the Ports page and in the devices list, a click on the whole row opens the port.
+- **Unstable link detected:** The integration counts each port's link changes over the last 24 hours (it survives a restart of Home Assistant). From 3 changes the panel warns in orange with the count ("Port 1 (6×)"); one or two changes, usually a device switched off and on, show only as a calm info line. The port card names the count.
+- **Link history in the port card:** Under the chart a band shows when the link was up (green 1 Gbit/s, orange slower, grey no link, hatched before the recording began), with availability, outages and a list of the changes (four rows show, the rest scrolls). It follows the range 24 h, 7 days, 30 days. The integration keeps every link change with time and speed for 30 days.
+- **Manufacturer, model and versions:** Besides TP-Link's MIB the integration reads the standard ENTITY-MIB; if the description says "JetStream" the manufacturer is shown as TP-Link even when sysObjectID says otherwise.
+- **Charts in the tiles, 30 days:** One period (24 hours, 7 days or 30 days) above the tiles drives the charts of active ports, throughput and learned MAC addresses (with minimum, mean and maximum or peak) and the history of the selected port. The pointer over a chart shows the same time in all charts. The history of ports and MAC addresses starts with this version.
 
-### Behoben
+### Fixed
 
-- **Panel lädt beim ersten Aufruf nicht:** Das Panel blieb nach dem ersten Öffnen leer und erschien erst nach einem Wechsel auf eine andere Seite und zurück. Es wartete beim Laden auf seine Teile, bevor es sich bei Home Assistant anmeldete. Jetzt meldet es sich sofort an und startet, sobald die Teile da sind.
-- **Tabelle „Fehler und Volumen“:** Alle Spalten sind sortierbar, die Spalten sind gruppiert, Werte über null sind farbig, die Datenmenge zeigt Balken, die Port-Spalte bleibt beim Scrollen stehen und ein Klick auf die Zeile öffnet den Port. Auf dem Handy erscheint pro Port eine Karte, sortiert über eine Auswahlliste. Das Panel merkt sich die Sortierung der Tabellen im Browser.
+- **Panel does not load on the first visit:** After the first open the panel stayed empty and appeared only after switching to another page and back. It waited for its parts before it registered with Home Assistant. Now it registers at once and starts as soon as the parts are there.
+- **"Errors and volume" table:** All columns are sortable, the columns are grouped, values above zero are coloured, the data volume shows bars, the port column stays in place when scrolling and a click on a row opens the port. On a phone every port is a card, sorted with a drop-down. The panel remembers the sort order of the tables in the browser.
 
 ## 0.9.0 – 2026-11-05
 
-### Neu
+### New
 
-- **VLAN-Raster:** Die VLAN-Tabelle zeigt pro VLAN ein Raster mit einer Kachel je Port: gefüllt ohne Tag, umrandet mit Tag, grau nicht Mitglied. Der PVID steht im Tooltip des Ports. VLANs ohne Ports erscheinen gedämpft als „ungenutzt“.
+- **VLAN grid:** The VLAN table shows a grid per VLAN with one tile per port: filled when untagged, outlined when tagged, grey when not a member. The PVID is in the port's tooltip. A VLAN without ports shows dimmed as "unused".
 
-- **Burger-Menü auf dem Handy:** Auf schmalen Bildschirmen stehen die Reiter des Panels in einem Burger-Menü statt in einer umbrechenden Leiste. Ein Tipp auf einen Reiter schließt das Menü wieder. Auch die Darstellung (Farbschema, Hell oder Dunkel, Schriftgröße) und der Link zur Integration liegen dort.
+- **Burger menu on a phone:** On narrow screens the tabs of the panel sit in a burger menu instead of a wrapping bar. Tapping a tab closes the menu again. The appearance settings (colour scheme, light or dark, font size) and the link to the integration are in there too.
 
-- **Panel zeigt sofort Menü und Reiter:** Das Panel zeichnet Kopfleiste und Reiter gleich beim Öffnen und meldet „Daten werden geladen …“, bis der Switch antwortet. Schlägt das erste Laden fehl, versucht es nach 3 Sekunden erneut, statt bis zum Neuladen leer zu bleiben.
+- **The panel shows its menu and tabs at once:** The panel draws the top bar and tabs as soon as it opens and says "Loading data …" until the switch answers. If the first load fails, it tries again after 3 seconds instead of staying empty until a reload.
 
-- **Schleifenerkennung:** Pro Port, an dem die Schleifenerkennung des Switches eingeschaltet ist, gibt es einen Binärsensor **Port N Schleife** (Problem; Attribut `blocked`, wenn der Switch den Port gesperrt hat). Das Panel zeigt einen Hinweis und eine Markierung in der Karte des Ports. Die Werte stammen aus der TP-Link-MIB des TL-SG3424 und sind noch nicht an echter Hardware geprüft; fehlt die Tabelle, gibt es die Sensoren einfach nicht. Neue Gruppe „Schleife erkannt“ in den Optionen (wer die Auswahl schon gespeichert hat, wählt sie dort nach).
-- **Port-Einstellung im Panel:** Das Panel liest aus der TP-Link-Tabelle, wie ein Port eingestellt ist (Auto-Aushandlung oder fest auf 10/100/1000 Mbit/s mit Duplex), die Flusssteuerung und den Trunk. Ein Port mit fester Einstellung bekommt in der Karte eine Markierung und einen Hinweis auf der Übersicht, denn die Gegenstelle muss dann genauso eingestellt sein. Ein Trunk wird ebenfalls markiert. Das erklärt oft Ports, die nur mit 100 Mbit/s laufen. Auch das ist noch nicht an echter Hardware geprüft.
-- **MAC-Sicherheit:** Hat ein Port die Port-Security des Switches eingeschaltet und so viele MAC-Adressen gelernt, wie er darf, markiert das Panel ihn und zeigt einen Hinweis auf der Übersicht: Ein weiteres Gerät kommt an diesem Port nicht ins Netz. Noch nicht an echter Hardware geprüft.
-- **Storm-Control und Einstellungen in der Port-Karte:** Die Karte beim Überfahren eines Ports zeigt zusätzlich die Storm-Control-Grenzen (Broadcast, Multicast, Unicast), die Flusssteuerung und die gelernten gegenüber den erlaubten MAC-Adressen, soweit der Switch sie meldet.
-- **Alarme des Switches:** Mit eingeschaltetem Trap-Empfang löst ein Trap für CPU- oder Speicherlast über 80 %, eine Schleife oder ein Storm-Control-Limit das Ereignis `tplink_switch_snmp_alarm` aus (mit Text im Logbuch). Die Abfrage danach läuft wie bisher sofort.
-- **Fehler im Detail:** Der Switch zählt über RMON (`etherStats`) CRC-Fehler, Kollisionen, zu kurze und zu lange Pakete, Fragmente und Jabber je Port. Sie gibt es als Diagnose-Sensoren (standardmäßig aus, nur an Ports, für die der Switch Werte meldet; neue Gruppe „Fehler im Detail“) und in der Port-Karte. Die Diagnose-Tabelle sagt dann genauer, was zu prüfen ist: Kollisionen deuten auf eine Duplex-Abweichung, CRC-Fehler und Fragmente auf das Kabel. Noch nicht an echter Hardware geprüft.
-- **Spanning Tree:** Das Panel markiert Ports mit Link, die der Spanning Tree gerade nicht nutzt (blockiert, hört zu, lernt), und erklärt auf der Übersicht, dass das bei einem Reservekabel gewollt ist. Dazu gibt es den Diagnose-Sensor **STP-Topologieänderungen** (standardmäßig aus, neue Gruppe „STP“) und das Ereignis `tplink_switch_snmp_alarm` mit `stp_topology_change`, wenn der Zähler steigt. Gelesen wird die Standard-MIB `BRIDGE-MIB`, bei jedem Hersteller.
-- **ARP-Schutz:** Hat der Switch die ARP-Erkennung eingeschaltet, gibt es pro Port den Diagnose-Sensor **Unzulässige ARP-Pakete** (standardmäßig aus, nur wo der Switch Werte meldet; neue Gruppe „ARP“). Das Panel zeigt die Zahl in der Port-Karte und warnt auf der Übersicht; steigt sie, löst das Ereignis `tplink_switch_snmp_alarm` mit `arp_illegal`, `port` und `count` aus. Noch nicht an echter Hardware geprüft.
-- **VLANs:** Der Switch meldet über die Standard-MIB `Q-BRIDGE-MIB`, zu welchem VLAN ein Port gehört (PVID) und in welchen VLANs er mit und ohne Tag sendet. Es gibt pro Port den Diagnose-Sensor **PVID** mit den Attributen `untagged` und `tagged` (standardmäßig aus, neue Gruppe „VLAN“); das Panel zeigt die Zeile „VLAN“ in der Port-Karte, der Snapshot enthält die VLAN-Namen. Noch nicht an echter Hardware geprüft.
-- **Aktionen:** Mit erlaubtem Schreiben gibt es bei einem TP-Link-Switch die Buttons **Konfiguration speichern** (schreibt die laufende Konfiguration in den Flash) und **Neustart** (standardmäßig aus, er trennt alle Geräte für etwa eine Minute). Schlägt die Aktion fehl, etwa weil die Community nur lesen darf, meldet Home Assistant den Fehler. Noch nicht an echter Hardware geprüft.
-- **Sicherheitsfunktionen:** Die MIBs von DoS-Schutz, DHCP-Snooping und 802.1X haben keine Zähler, nur Einstellungen. Deshalb gibt es drei Diagnose-Binärsensoren, die zeigen, ob die Funktion am Switch eingeschaltet ist (standardmäßig aus, neue Gruppe „Sicherheit“). Ist DHCP-Snooping an, nennt die Port-Karte im Panel die vertrauenswürdigen Ports. Dazu melden weitere Traps das Ereignis `tplink_switch_snmp_alarm`: `ingress_rate` und `egress_rate` (Bandbreitengrenze überschritten) und `config_changed` (die Konfiguration wurde gespeichert). Noch nicht an echter Hardware geprüft.
-- **Port-Spiegelung und Port-Isolation:** Der Diagnose-Binärsensor **Port-Spiegelung** ist an, wenn eine Spiegel-Gruppe läuft (standardmäßig aus, neue Gruppe „Port-Spiegelung“); das Attribut `groups` nennt Monitor-Port und gespiegelte Ports. Das Panel markiert den Monitor-Port und die gespiegelten Ports in der Karte und warnt auf der Übersicht, denn wer am Monitor-Port mitschneidet, sieht deren Verkehr. Ports, die nicht alle anderen erreichen dürfen, bekommen die Markierung „isoliert“. Die Port-Listen der Tabellen („1-5,9“) liest die Integration tolerant. Noch nicht an echter Hardware geprüft.
-- **IGMP-Snooping:** Der Switch zählt je Port die IGMP-Pakete. Es gibt die Diagnose-Sensoren **IGMP-Queries**, **IGMP-Reports** (v1 bis v3 zusammen), **IGMP-Leaves** und **IGMP-Fehlerpakete** sowie den Binärsensor **IGMP-Snooping** (alle standardmäßig aus, nur wo der Switch Werte meldet; neue Gruppe „IGMP“). Ein Port mit Queries hängt an einem Multicast-Router; Fehlerpakete deuten auf ein Gerät, das IGMP falsch spricht. Die Zahlen stehen auch in der Port-Karte des Panels. Noch nicht an echter Hardware geprüft.
-- **QoS:** Der Switch meldet die Priorität (CoS 0 bis 7), die ein Port seinen Paketen gibt, wie er seine Warteschlangen bedient (strikte Priorität, gewichtet, gemischt, gleichmäßig) und ob die DSCP-Priorisierung an ist. Das gibt es als Diagnose-Sensoren **QoS-Priorität** und **QoS-Scheduler** sowie als Binärsensor **DSCP-Priorisierung** (alle standardmäßig aus; neue Gruppe „QoS“). Das Panel nennt eine vom Standard abweichende Priorität in der Port-Karte. Noch nicht an echter Hardware geprüft.
-- **Konfiguration im Panel:** Der neue Reiter **Konfiguration** zeigt, was der Switch eingestellt hat. Er beginnt mit der Tabelle der **VLANs** (ID, Name, Ports ohne und mit Tag, Ports mit dieser PVID).
-- **Funktionen im Panel:** Der Reiter **Konfiguration** zeigt, welche Funktionen der Switch eingeschaltet hat (IGMP-Snooping, DSCP-Priorisierung, DoS-Schutz, DHCP-Snooping, 802.1X, Port-Spiegelung mit ihren Gruppen).
-- **QoS im Panel:** Der Reiter **Konfiguration** nennt, wie der Switch seine Warteschlangen bedient (strikte Priorität, gewichtet, gemischt, gleichmäßig).
-- **Spanning Tree im Panel:** Der Reiter **Konfiguration** nennt die Zahl der Topologie-Änderungen seit dem Start des Switches und den Port, über den der Weg zur Root-Bridge führt.
-- **Isolation und IGMP in der Port-Karte:** Die Karte beim Überfahren eines Ports nennt bei einem isolierten Port, welche Ports er erreicht, und ob IGMP-Snooping am Port eingeschaltet ist.
-- **Aktionen im Panel:** Mit erlaubtem Schreiben hat der Reiter **Konfiguration** bei einem TP-Link-Switch die Knöpfe **Konfiguration speichern** und **Switch neu starten** (mit Rückfrage), dieselben Aktionen wie die Buttons.
-- **Weitere Werte im Panel:** Die Port-Karte nennt, ob der ARP-Schutz den Port als vertrauenswürdig führt; die Diagnose-Tabelle zeigt neben den empfangenen auch die gesendeten Pakete pro Sekunde.
-- **Geprüft am Switch (TL-SG3424):** Die Tabellen für Schleife, Port-Einstellung, Port-Security, Spiegelung, Isolation, IGMP, QoS, Storm-Control, ARP, DHCP, VLAN, RMON und STP antworten mit den erwarteten Typen. Der Switch schreibt `N/A` für einen Port ohne Trunk; das wird nicht mehr als Trunk angezeigt.
-- **Zu lange Pakete sind keine Fehler:** Der Switch zählt über RMON jedes wohlgeformte Paket über 1518 Byte als „zu lang“ (am TL-SG3424 über eine Milliarde an einem Port). Die Port-Karte zeigt diesen Zähler deshalb nicht mehr als Fehler; der Diagnose-Sensor bleibt.
+- **Loop detection:** for every port where the switch's loop detection is on there is a binary sensor **Port N loop** (problem; attribute `blocked` when the switch has blocked the port). The panel shows a note and a tag on the port's card. The values come from TP-Link's MIB for the TL-SG3424 and are not yet checked against real hardware; if the table is missing, the sensors are simply not created. New group "Loop found" in the options (if you saved the selection before, pick it there).
+- **Port settings in the panel:** the panel reads from TP-Link's table how a port is set (auto negotiation or fixed to 10/100/1000 Mbit/s with duplex), the flow control and the trunk. A port with a fixed setting gets a tag on its card and a note on the overview, because the other end then has to be set the same way. A trunk is tagged too. This often explains ports that run at 100 Mbit/s only. This is not yet checked against real hardware either.
+- **Port security:** if a port has the switch's port security on and has learned as many MAC addresses as it may, the panel tags it and shows a note on the overview: one more device does not get onto the network at that port. Not yet checked against real hardware.
+- **Storm control and settings in the port card:** the card shown when hovering a port also lists the storm control limits (broadcast, multicast, unicast), the flow control and the learned against the allowed MAC addresses, as far as the switch reports them.
+- **Alarms from the switch:** with trap receiving on, a trap for CPU or memory load over 80 %, a loop or a storm control limit fires the event `tplink_switch_snmp_alarm` (with a text in the logbook). The poll that follows still runs at once.
+- **Error details:** the switch counts CRC errors, collisions, undersize and oversize packets, fragments and jabbers per port through RMON (`etherStats`). They are diagnostic sensors (off by default, only at ports the switch reports values for; new group "Error details") and part of the port card. The diagnostics table then says more exactly what to check: collisions point to a duplex mismatch, CRC errors and fragments to the cable. Not yet checked against real hardware.
+- **Spanning tree:** the panel tags ports with a link that the spanning tree does not use at the moment (blocking, listening, learning) and explains on the overview that this is wanted for a spare cable. There is also the diagnostic sensor **STP topology changes** (off by default, new group "STP") and the event `tplink_switch_snmp_alarm` with `stp_topology_change` when the counter rises. It reads the standard `BRIDGE-MIB`, from any maker.
+- **ARP protection:** if the switch has ARP detection on, there is a diagnostic sensor **Illegal ARP packets** per port (off by default, only where the switch reports values; new group "ARP"). The panel shows the number in the port card and warns on the overview; when it rises, the event `tplink_switch_snmp_alarm` fires with `arp_illegal`, `port` and `count`. Not yet checked against real hardware.
+- **VLANs:** The switch reports through the standard `Q-BRIDGE-MIB` which VLAN a port belongs to (PVID) and in which VLANs it sends with and without a tag. There is a diagnostic sensor **PVID** per port with the attributes `untagged` and `tagged` (off by default, new group "VLAN"); the panel shows a "VLAN" line in the port card, and the snapshot carries the VLAN names. Not yet checked on real hardware.
+- **Actions:** With writing allowed, a TP-Link switch gets the buttons **Save configuration** (writes the running configuration to the flash) and **Restart** (off by default, it cuts every device off for about a minute). If the action fails, for example because the community may only read, Home Assistant reports the error. Not yet checked on real hardware.
+- **Security functions:** The MIBs of DoS defence, DHCP snooping and 802.1X have no counters, only settings. So there are three diagnostic binary sensors that show whether the function is on at the switch (off by default, new group "security"). With DHCP snooping on, the port card in the panel names the trusted ports. More traps also fire the event `tplink_switch_snmp_alarm`: `ingress_rate` and `egress_rate` (bandwidth limit exceeded) and `config_changed` (the configuration was saved). Not yet checked on real hardware.
+- **Port mirroring and port isolation:** The diagnostic binary sensor **Port mirroring** is on when a mirror group is running (off by default, new group "port mirroring"); its attribute `groups` names the monitor port and the mirrored ports. The panel marks the monitor port and the mirrored ports in the card and warns on the overview, because whoever captures at the monitor port sees their traffic. Ports that may not reach all the others get the tag "isolated". The integration reads the port lists of the tables ("1-5,9") tolerantly. Not yet checked on real hardware.
+- **IGMP snooping:** The switch counts the IGMP packets per port. There are the diagnostic sensors **IGMP queries**, **IGMP reports** (v1 to v3 together), **IGMP leaves** and **IGMP error packets**, and the binary sensor **IGMP snooping** (all off by default, only where the switch reports values; new group "IGMP"). A port with queries is connected to a multicast router; error packets point to a device that speaks IGMP wrongly. The numbers are also in the port card of the panel. Not yet checked on real hardware.
+- **QoS:** The switch reports the priority (CoS 0 to 7) a port gives its packets, how it serves its queues (strict priority, weighted, mixed, equal) and whether DSCP priority is on. These are the diagnostic sensors **QoS priority** and **QoS scheduler** and the binary sensor **DSCP priority** (all off by default; new group "QoS"). The panel names a priority that differs from the default in the port card. Not yet checked on real hardware.
+- **Configuration in the panel:** the new tab **Configuration** shows what is set at the switch. It starts with the table of the **VLANs** (ID, name, ports untagged and tagged, ports with this PVID).
+- **Functions in the panel:** the tab **Configuration** shows which functions the switch has on (IGMP snooping, DSCP priority, DoS defense, DHCP snooping, 802.1X, port mirroring with its groups).
+- **QoS in the panel:** the tab **Configuration** says how the switch serves its queues (strict priority, weighted, mixed, equal).
+- **Spanning tree in the panel:** the tab **Configuration** gives the number of topology changes since the switch started and the port that leads to the root bridge.
+- **Isolation and IGMP in the port card:** the card shown when hovering a port says which ports an isolated port can reach, and whether IGMP snooping is on at the port.
+- **Actions in the panel:** with writing allowed, the tab **Configuration** has the buttons **Save configuration** and **Restart switch** (with a confirmation) for a TP-Link switch, the same actions as the buttons.
+- **More values in the panel:** the port card says whether the ARP protection treats the port as trusted; the diagnostics table shows the transmitted packets per second next to the received ones.
+- **Checked against the switch (TL-SG3424):** The tables for loop, port settings, port security, mirroring, isolation, IGMP, QoS, storm control, ARP, DHCP, VLAN, RMON and STP answer with the expected types. The switch writes `N/A` for a port in no trunk; that is no longer shown as a trunk.
+- **Oversize packets are no errors:** The switch counts every well-formed packet over 1518 bytes as "oversize" through RMON (over a billion at one port of the TL-SG3424). The port card no longer shows this counter as an error; the diagnostic sensor stays.
 
 ## 0.8.0 – 2026-11-04
 
-### Neu
+### New
 
-- **Panel:** Beim Überfahren eines Ports erscheint eine Karte mit Link und Geschwindigkeit, Empfang und Senden samt Auslastung, Fehlern, letztem Link-Wechsel und den Geräten am Port. Sie erscheint auch bei Tastatur-Fokus und bleibt beim Aktualisieren stehen.
-- **Entitäten wählbar:** In den Optionen legst du fest, welche Gruppen von Entitäten angelegt werden (Link, Datenraten, Geschwindigkeit, Datenmenge, Fehler, Pakete, Auslastung, Link-Wechsel, MAC-Adressen, Laufzeit, Port von Geräten) und für welche Ports. Abgewählte Entitäten werden aus der Registry entfernt. Ohne Auswahl bleibt alles wie bisher.
+- **Panel:** Hovering a port shows a card with link and speed, receive and transmit with utilization, errors, last link change and the devices at the port. It also shows on keyboard focus and stays put when the data refreshes.
+- **Choose the entities:** In the options you decide which groups of entities are created (link, rates, speed, data totals, errors, packets, utilization, link changes, MAC addresses, uptime, port of devices) and for which ports. Deselected entities are removed from the registry. Without a choice everything stays as before.
 
 ## 0.7.0 – 2026-11-04
 
-### Neu
+### New
 
-- **Reparaturmeldung:** Antwortet der Switch zehn Minuten lang nicht, meldet Home Assistant das unter *Einstellungen → Reparaturen*; die Meldung verschwindet, sobald er wieder antwortet.
-- **Panel:** Ein Port lässt sich in der Port-Ansicht ein- und ausschalten (nur wenn das Schreiben in den Optionen erlaubt ist), mit Rückfrage vor dem Ausschalten. Geschützte Ports sind gesperrt und sagen warum. Neuer Websocket-Befehl `tplink_switch_snmp/set_port_enabled`, nur für Administratoren; der Snapshot enthält `protected` pro Port.
+- **Repair issue:** if the switch does not answer for ten minutes, Home Assistant says so under *Settings → Repairs*; the notice goes away as soon as it answers again.
+- **Panel:** a port can be turned off and on in the port detail (only if writing is allowed in the options), with a question before turning it off. Protected ports are locked and say why. New websocket command `tplink_switch_snmp/set_port_enabled`, for admins only; the snapshot has `protected` per port.
 
-### Behoben
+### Fixed
 
-- Hinweise im Panel sagen „1 Port“ statt „1 Ports“, auf Deutsch und Englisch.
-- Auf dem Handy bricht die Statistik in der Kopfkarte nicht mehr mit übrig gebliebenen Trennlinien um, sondern steht in zwei Spalten. Alle vier Reiter laufen bei allen drei Schriftgrößen ohne seitliches Überlaufen.
-- Der Sensor **Port von …** eines Geräts, das in Home Assistant gelöscht wurde, wird entfernt, auch wenn das beim ausgeschalteten Switch geschah.
+- Hints in the panel say "1 port", not "1 ports", in German and English.
+- On a phone the statistics in the header card no longer wrap with stray dividers but sit in two columns. All four tabs run at all three font sizes without sideways overflow.
+- The **Port of …** sensor of a device that was deleted in Home Assistant is removed, also if that happened while the integration was off.
 
-### Geändert
+### Changed
 
-- Schemas nutzen `probatio` wie Home Assistant seit 2026.10 (vorher `voluptuous`; beide sind dort derselbe Code).
-- Typprüfung mit `mypy` (streng) in der CI, Testabdeckung 100 % (die CI verlangt mindestens 98 %), `quality_scale.yaml` entsprechend aktualisiert. Typfehler, die das fand, sind behoben.
+- Schemas use `probatio` as Home Assistant has since 2026.10 (before: `voluptuous`; the two are the same code there).
+- Type checking with `mypy` (strict) in the CI, test coverage 100 % (the CI demands at least 98 %), `quality_scale.yaml` updated to match. Type errors it found are fixed.
 
 ## 0.6.0 – 2026-11-04
 
-### Neu
+### New
 
-- **Dashboard-Karte** `custom:tplink-switch-card`: die Frontplatte des Switches nach Link-Geschwindigkeit eingefärbt und pro aktivem Port die Geräte, die Home Assistant kennt, mit Datenrate. Klicks öffnen die Entität. Die Karte liest die Entitäten der Integration, sie funktioniert also auch für Benutzer ohne Administratorrechte. Die Port-Entitäten haben dafür das Attribut `port`.
-- **Schreiben am Switch** (Option, standardmäßig aus): ein Schalter **Port N aktiv** pro Port (`ifAdminStatus`) und die Möglichkeit, Port-Namen am Switch zu speichern (`ifAlias`). v1 und v2c brauchen eine Community mit Schreibrecht. Uplinks (mindestens 10 gelernte MAC-Adressen) und gewählte **geschützte Ports** werden nie ausgeschaltet. Nicht an echter Hardware getestet: Die Community des Test-Switches darf nur lesen.
-- **Namen vom Switch:** Die Port-Namen, die am Switch stehen (`ifAlias`), sind die Vorgabe im Panel, in Ereignissen und Logbuch; ein Name aus dem Panel hat Vorrang. Das Panel zeigt „abgeschaltet“ für Ports, die am Switch ausgeschaltet sind.
-- **Geräteinformationen vom Switch:** Modell, Hardware- und Firmware-Version sowie Standort und Ansprechpartner werden aus dem Switch gelesen (bei TP-Link aus der eigenen MIB) und am Gerät und in den Details des Panels gezeigt.
-- **Mehr Zähler** (standardmäßig aus): Pakete pro Sekunde (Empfang, Senden) sowie Broadcast und Multicast im Empfang. Das Panel zeigt sie in der Diagnose und meldet viel Broadcast (ab 500 Pakete pro Sekunde) als Hinweis auf eine Schleife.
-- **Hersteller aus der MAC-Adresse** in der Geräteliste, wenn kein bekanntes Gerät ihn nennt (Herstellerliste von Home Assistant, ohne Internet; zufällige Adressen haben keinen).
-- **Panel:** sortierbare Spalten in der Port- und der Geräteliste, **CSV-Export** der angezeigten Auswahl (Semikolon, mit Markierung für Excel, Dezimalkomma auf Deutsch) und ein **Verlauf über 7 Tage** in Stundenwerten neben den 24 Stunden.
-- Icons für alle Entitäten, eine `quality_scale.yaml` zur Einordnung, Erklärungen zu jedem Feld der Einrichtung und im README Abschnitte zu Fehlersuche, Anwendungsfällen und Entfernen.
+- **Dashboard card** `custom:tplink-switch-card`: the front panel of the switch coloured by link speed and, for every active port, the devices that Home Assistant knows, with the data rate. Clicks open the entity. The card reads the integration's entities, so it also works for users without administrator rights. The port entities have the attribute `port` for that.
+- **Writing to the switch** (option, off by default): a switch **Port N enabled** per port (`ifAdminStatus`) and the option to save port names at the switch (`ifAlias`). v1 and v2c need a community with write access. Uplinks (at least 10 learned MAC addresses) and the chosen **protected ports** are never switched off. Not tested on real hardware: the test switch's community may only read.
+- **Names from the switch:** the port names that stand at the switch (`ifAlias`) are the default in the panel, in events and in the logbook; a name from the panel takes precedence. The panel shows "switched off" for ports that are off at the switch.
+- **Device information from the switch:** model, hardware and firmware version, location and contact are read from the switch (from TP-Link's own MIB for TP-Link) and shown on the device and in the panel's details.
+- **More counters** (off by default): packets per second (receive, transmit) and broadcast and multicast received. The panel shows them in the diagnostics and reports a lot of broadcast (from 500 packets per second) as a hint of a loop.
+- **Manufacturer from the MAC address** in the device list when no known device names it (Home Assistant's manufacturer list, no internet; random addresses have none).
+- **Panel:** sortable columns in the port and device lists, **CSV export** of what is shown (semicolon, with the mark for Excel, a decimal comma in German) and a **7-day history** in hourly values next to the 24 hours.
+- Icons for all entities, a `quality_scale.yaml` for orientation, explanations for every field of the set-up and, in the README, sections on troubleshooting, use cases and removal.
 
-### Behoben
+### Fixed
 
-- Die statischen Dateien des Panels und die Karte werden nur einmal registriert. Wurde der letzte Switch entfernt und wieder eingerichtet, hätte die zweite Registrierung scheitern können.
+- The panel's static files and the card are registered only once. If the last switch was removed and set up again, the second registration could have failed.
 
-### Bekannte Grenzen
+### Known limits
 
-- Das Schreiben am Switch ist nur gegen einen gefälschten Switch geprüft. CPU, Speicher und Temperatur gibt es beim Test-Switch (Firmware 1.11.10) nicht, weder über Standard-MIBs noch in der TP-Link-MIB; die Integration zeigt sie deshalb nicht.
+- Writing to the switch is only tested against a fake switch. CPU, memory and temperature do not exist at the test switch (firmware 1.11.10), neither in standard MIBs nor in TP-Link's MIB; the integration therefore does not show them.
 
 ## 0.5.0 – 2026-11-04
 
-### Neu
+### New
 
-- Seitenpanel, **Darstellung** (Palette in der Kopfzeile): drei Farbschemen wie im EnOcean-Panel, **Ozean** (wie bisher), **Wald** und **Graphit**, jeweils hell und dunkel (hell oder dunkel folgt auf Wunsch Home Assistant, Standard), dazu drei Schriftgrößen (Klein 12,6 px, Normal 14 px, Groß 16 px; die kleinsten Schriften bleiben bei mindestens 10,5 px). Die Wahl gilt pro Home-Assistant-Benutzer und wird zusätzlich im Browser gemerkt.
-- Seitenpanel, **Verlauf ohne Recorder**: Die Integration führt einen eigenen Puffer der Datenraten (24 Stunden in 5-Minuten-Mittelwerten pro Port) und sichert ihn im `.storage`, auch beim Herunterfahren; ein Neustart lässt keine Lücke. Der Verlauf braucht weder den Recorder noch die Sensoren „Empfang“ und „Senden“, beginnt mit dem Start der Integration und wird mit dem Switch gelöscht. Neuer Websocket-Befehl `tplink_switch_snmp/history`.
+- Sidebar panel, **Appearance** (palette in the header): three colour schemes as in the EnOcean panel, **Ocean** (as before), **Forest** and **Graphite**, each light and dark (light or dark follows Home Assistant if you want, the default), plus three font sizes (Small 12.6 px, Normal 14 px, Large 16 px; the smallest texts stay at 10.5 px or more). The choice is kept per Home Assistant user and also remembered in the browser.
+- Sidebar panel, **history without the recorder**: the integration keeps a buffer of the data rates of its own (24 hours in five-minute averages per port) and saves it in `.storage`, also at shutdown; a restart leaves no gap. The history needs neither the recorder nor the "Receive" and "Transmit" sensors, starts when the integration starts and is deleted with the switch. New websocket command `tplink_switch_snmp/history`.
 
-### Geändert
+### Changed
 
-- Das Panel fragt nicht mehr alle 15 Sekunden nach: Die Integration schickt nach jeder Abfrage des Switches einen Stand an das offene Panel (neuer Websocket-Befehl `tplink_switch_snmp/subscribe`). Nur wenn das Abonnement ausfällt, fragt das Panel selten nach. Ein längeres Abfrageintervall bedeutet dadurch auch weniger Verkehr im Panel.
-- `recorder` ist keine Abhängigkeit mehr, und der Snapshot enthält keine Entitäts-IDs der Datenraten mehr (`entities`).
+- The panel no longer asks every 15 seconds: after each poll of the switch the integration sends the state to the open panel (new websocket command `tplink_switch_snmp/subscribe`). Only if the subscription is lost does the panel ask now and then. A longer polling interval therefore also means less traffic in the panel.
+- `recorder` is no longer a dependency, and the snapshot no longer contains the entity IDs of the data rates (`entities`).
 
 ## 0.4.0 – 2026-11-04
 
-### Neu
+### New
 
-- **SNMP v1, v2c und v3:** Die Version ist im Einrichtungsdialog wählbar. Bei v3 gibt es Benutzer, Authentifizierung (MD5, SHA, SHA-224/256/384/512) und Verschlüsselung (DES, AES-128/192/256). Beim Neu konfigurieren lässt sich die Version wechseln. Bestehende Einträge bleiben bei v2c. Bei v1 liest die Integration die 32-Bit-Zähler (v1 kennt keine 64-Bit-Zähler) und fragt mit GETNEXT ab.
-- **Abfrageintervall** in den Optionen (10 bis 3600 Sekunden, Standard 30), ohne Neuladen übernommen.
-- **Verworfene Pakete** (Empfang/Senden) und **Auslastung in Prozent** (Empfang/Senden) als Sensoren, beide standardmäßig ausgeschaltet. Das Panel zeigt die Auslastung in der Portliste und im Port-Detail, die Diagnose die verworfenen Pakete.
-- **Link-Wechsel:** Ereignis `tplink_switch_snmp_link_changed` mit Logbuch-Eintrag („Port 12 (AP): link up at 1 Gbit/s“, „link down“, „link was lost and came back“), Sensor **Link geändert** (Zeitstempel, standardmäßig aus) und im Panel die Zeit des letzten Wechsels sowie ein Hinweis auf Ports mit Wechseln in den letzten 24 Stunden. Nach einem Neustart des Switches entstehen keine Ereignisse.
-- **Geräte-Zuordnung:** Für jedes Gerät, das Home Assistant über seine MAC-Adresse kennt und das am Switch gelernt wurde, gibt es den Sensor **Port von …** (Port-Nummer, Port-Name im Attribut). Wechselt ein solches Gerät den Port, löst das Ereignis `tplink_switch_snmp_device_moved` aus, mit Logbuch-Eintrag.
-- **SNMP-Traps** (v1 und v2c) auf einem Port der Optionen: Ein Trap des Switches löst sofort eine Abfrage aus. Ein Trap zählt nur mit der richtigen Community und von der Adresse des Switches.
-- **Diagnosedaten** zum Herunterladen, ohne Adresse, Zugangsdaten, MAC-Adressen und Port-Namen.
-- **Englisches README**; das deutsche README erklärt Einrichtung, Optionen, Ereignisse und Traps.
+- **SNMP v1, v2c and v3:** the version can be chosen in the set-up dialog. With v3 there are a user, authentication (MD5, SHA, SHA-224/256/384/512) and encryption (DES, AES-128/192/256). Reconfigure can change the version. Existing entries stay on v2c. With v1 the integration reads the 32-bit counters (v1 has no 64-bit counters) and walks with GETNEXT.
+- **Polling interval** in the options (10 to 3600 seconds, default 30), applied without a reload.
+- **Discarded packets** (receive/transmit) and **utilization in percent** (receive/transmit) as sensors, both off by default. The panel shows the utilization in the port list and the port detail, and the diagnostics the discarded packets.
+- **Link changes:** event `tplink_switch_snmp_link_changed` with a logbook entry ("Port 12 (AP): link up at 1 Gbit/s", "link down", "link was lost and came back"), a **Link changed** sensor (timestamp, off by default) and, in the panel, the time of the last change and a note on ports with changes in the last 24 hours. After a reboot of the switch there are no events.
+- **Device assignment:** every device that Home Assistant knows by its MAC address and that was learned at the switch gets a sensor **Port of …** (port number, port name as an attribute). If such a device changes port, the event `tplink_switch_snmp_device_moved` fires, with a logbook entry.
+- **SNMP traps** (v1 and v2c) on a port from the options: a trap from the switch triggers a poll at once. A trap counts only with the right community and from the switch's address.
+- **Diagnostics** to download, without address, credentials, MAC addresses and port names.
+- **English README**; the German README explains set-up, options, events and traps.
 
-### Geändert
+### Changed
 
-- Der Installationsabschnitt der READMEs mit den Buttons für HACS und die Einrichtung.
+- The installation section of the READMEs with the buttons for HACS and the set-up.
 
-### Bekannte Grenzen
+### Known limits
 
-- Config-Flow, Optionen, Ereignisse, Traps und Diagnose sind mit einem gefälschten Switch und dem Test-Plugin von Home Assistant geprüft, nicht in einer laufenden Instanz. Gegen den echten Switch geprüft sind Abfragen mit v1 und v2c, die Port-Erkennung und der Trap-Empfang mit `snmptrap`; bei v3 antwortet der Switch, ein eingerichteter Benutzer wurde nicht getestet.
+- Config flow, options, events, traps and diagnostics are checked with a fake switch and Home Assistant's test plugin, not in a running instance. Checked against the real switch are queries with v1 and v2c, the port detection and receiving traps with `snmptrap`; with v3 the switch answers, a user that is set up was not tested.
 
 ## 0.3.0 – 2026-11-04
 
-### Neu
+### New
 
-- **Neu konfigurieren:** Adresse, Community und Port eines eingerichteten Switches lassen sich ändern, ohne ihn zu löschen. Antwortet unter der neuen Adresse ein anderer Switch, bricht der Dialog ab.
+- **Reconfigure:** address, community and port of a switch that is set up can be changed without deleting it. If a different switch answers at the new address, the dialog stops.
 
-### Geändert
+### Changed
 
-- Hersteller und Modell des Geräts kommen aus dem Switch (Enterprise-Nummer und Gerätebeschreibung) und sind nicht mehr fest auf „TL-SG3424“ gesetzt. Das Panel zeigt sie in den Details.
-- Als Ports gelten die Ports der Bridge-Tabelle des Switches, nicht mehr die Schnittstellen, deren Name mit „port“ beginnt. Damit werden auch Modelle mit anderer Benennung erkannt, und die VLAN-Schnittstelle zählt nie als Port. Beim TL-SG3424 bleiben Port-Nummern und Entitäts-IDs gleich.
+- Manufacturer and model of the device come from the switch (enterprise number and device description) and are no longer fixed to "TL-SG3424". The panel shows them in the details.
+- Ports are the ports of the switch's bridge table, no longer the interfaces whose name starts with "port". This also finds models with another naming, and the VLAN interface is never taken for a port. On the TL-SG3424 port numbers and entity IDs stay the same.
 
-### Behoben
+### Fixed
 
-- Die Laufzeit läuft weiter, wenn der Zähler des Switches nach 497 Tagen überläuft, und beginnt nur nach einem echten Neustart von vorn.
-- Die Namen von Geräten im Panel nutzen die aktuelle Abfrage der Geräte-Registry von Home Assistant, die ältere ist seit 2026.10 veraltet.
-- Das README nannte SNMP v1/v2c; unterstützt wird nur v2c.
+- The uptime carries on when the switch's counter wraps after 497 days and starts over only after a real reboot.
+- Device names in the panel use the current device registry lookup; the older one is deprecated since 2026.10.
+- The README said SNMP v1/v2c; only v2c is supported.
 
 ## 0.2.0 – 2026-11-04
 
-### Neu
+### New
 
-- Seitenleisten-Panel **Switch** (nur für Administratoren) im Look der EnOcean-Eltako-Integration, hell und dunkel nach Home Assistant, Deutsch und Englisch. **Übersicht** mit Frontplatte (Ports nach Link-Geschwindigkeit eingefärbt, Punkt bei Fehlern), Port-Detail mit Verlauf der letzten 24 Stunden, den Ports mit der meisten Last und Hinweisen zu Fehlern und Ports mit nur 100 Mbit/s. **Ports** als Tabelle mit Filtern und Suche, **Geräte** mit den gelernten MAC-Adressen pro Port, **Diagnose** mit Fehlerzählern und Datenvolumen.
-- Ports lassen sich im Panel umbenennen; der Name wird an der Integration gespeichert.
-- Namen und Hersteller der Geräte kommen von Geräten, die Home Assistant über ihre MAC-Adresse kennt, zum Beispiel aus „FRITZ!Box Netzwerk“.
-- Neue Websocket-Befehle `tplink_switch_snmp/snapshot` und `tplink_switch_snmp/set_port_name`, beide nur für Administratoren.
-- Vorschau des Panels ohne Home Assistant unter `scripts/panel-preview/`.
+- Sidebar panel **Switch** (admins only) in the look of the EnOcean Eltako integration, light and dark following Home Assistant, German and English. **Overview** with a front panel (ports coloured by link speed, a dot for errors), a port detail with the last 24 hours, the ports with the most traffic and notes on errors and ports that run at 100 Mbit/s only. **Ports** as a table with filters and search, **Devices** with the learned MAC addresses per port, **Diagnostics** with error counters and data volume.
+- Ports can be renamed in the panel; the name is stored with the integration.
+- Names and manufacturers of devices come from devices Home Assistant knows by their MAC address, for example from "FRITZ!Box Network".
+- New websocket commands `tplink_switch_snmp/snapshot` and `tplink_switch_snmp/set_port_name`, both for admins only.
+- A preview of the panel without Home Assistant in `scripts/panel-preview/`.
 
-### Bekannte Grenzen
+### Known limits
 
-- Das Panel wurde bisher nur in der Vorschau mit Beispieldaten geprüft, nicht in einer laufenden Home-Assistant-Instanz.
+- So far the panel has only been checked in the preview with sample data, not in a running Home Assistant instance.
 
 ## 0.1.0 – 2026-11-04
 
-### Neu
+### New
 
-- Erste Fassung: liest einen TP-Link JetStream-Switch (getestet mit TL-SG3424) lokal per SNMP v2c aus. Pro Port **Link**, **Geschwindigkeit**, **Empfang** und **Senden** in Mbit/s, **Anzahl der MAC-Adressen** (die Liste steht im Attribut `mac_addresses`); standardmäßig ausgeschaltet sind Gesamtvolumen und Fehlerzähler. Am Gerät die **Laufzeit**.
-- Einrichtung im Dialog mit Host, Community und Port; der Switch wird an seiner MAC-Adresse erkannt.
+- First version: reads a TP-Link JetStream switch (tested with the TL-SG3424) locally over SNMP v2c. Per port **link**, **speed**, **receive** and **transmit** in Mbit/s and the **number of MAC addresses** (the list is in the attribute `mac_addresses`); total volume and error counters are off by default. **Uptime** on the device.
+- Set-up in a dialog with host, community and port; the switch is recognised by its MAC address.

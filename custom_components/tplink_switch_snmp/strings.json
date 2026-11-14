@@ -3,220 +3,220 @@
     "step": {
       "user": {
         "title": "TP-Link Switch (SNMP)",
-        "description": "Adresse und SNMP-Version des Switches. SNMP muss am Switch eingeschaltet sein.",
+        "description": "Address and SNMP version of the switch. SNMP must be switched on at the switch.",
         "data": {
           "host": "Host",
           "port": "Port",
-          "version": "SNMP-Version"
+          "version": "SNMP version"
         },
         "data_description": {
-          "host": "IP-Adresse oder Name des Switches.",
-          "port": "UDP-Port des SNMP-Dienstes, normalerweise 161.",
-          "version": "v2c passt für die meisten Switches; v3 ist verschlüsselt, v1 ist nur für sehr alte Geräte."
+          "host": "IP address or name of the switch.",
+          "port": "UDP port of the SNMP service, normally 161.",
+          "version": "v2c fits most switches; v3 is encrypted, v1 is only for very old devices."
         }
       },
       "reconfigure": {
-        "title": "Switch neu konfigurieren",
-        "description": "Neue Adresse, Version oder Zugangsdaten für {title}. Es muss derselbe Switch antworten.",
+        "title": "Reconfigure switch",
+        "description": "New address, version or credentials for {title}. The same switch must answer.",
         "data": {
           "host": "Host",
           "port": "Port",
-          "version": "SNMP-Version"
+          "version": "SNMP version"
         },
         "data_description": {
-          "host": "IP-Adresse oder Name des Switches.",
-          "port": "UDP-Port des SNMP-Dienstes, normalerweise 161.",
-          "version": "Die SNMP-Version; beim Wechsel fragt der nächste Schritt die passenden Zugangsdaten ab."
+          "host": "IP address or name of the switch.",
+          "port": "UDP port of the SNMP service, normally 161.",
+          "version": "The SNMP version; when you change it, the next step asks for the matching credentials."
         }
       },
       "community": {
-        "title": "SNMP-Community",
-        "description": "Eine Community mit Lesezugriff. Bei v1 und v2c geht sie im Klartext übers Netz.",
+        "title": "SNMP community",
+        "description": "A community with read access. With v1 and v2c it travels in clear text.",
         "data": {
           "community": "Community"
         },
         "data_description": {
-          "community": "Die Community mit Lesezugriff aus dem Switch (SNMP → Community)."
+          "community": "The community with read access from the switch (SNMP → Community)."
         }
       },
       "auth": {
-        "title": "SNMPv3-Benutzer",
-        "description": "Der Benutzer muss am Switch angelegt sein. Schlüssel haben mindestens 8 Zeichen.",
+        "title": "SNMPv3 user",
+        "description": "The user must exist at the switch. Keys have at least 8 characters.",
         "data": {
-          "username": "Benutzername",
-          "auth_protocol": "Authentifizierung",
-          "auth_key": "Schlüssel für die Authentifizierung",
-          "priv_protocol": "Verschlüsselung",
-          "priv_key": "Schlüssel für die Verschlüsselung"
+          "username": "User name",
+          "auth_protocol": "Authentication",
+          "auth_key": "Authentication key",
+          "priv_protocol": "Encryption",
+          "priv_key": "Encryption key"
         },
         "data_description": {
-          "username": "Der SNMPv3-Benutzer aus dem Switch.",
-          "auth_protocol": "Das Verfahren, mit dem der Benutzer sich anmeldet. „Keine“ schaltet auch die Verschlüsselung ab.",
-          "auth_key": "Das Passwort für die Authentifizierung, mindestens 8 Zeichen.",
-          "priv_protocol": "Das Verfahren, mit dem der Verkehr verschlüsselt wird. Es braucht eine Authentifizierung.",
-          "priv_key": "Das Passwort für die Verschlüsselung, mindestens 8 Zeichen."
+          "username": "The SNMPv3 user from the switch.",
+          "auth_protocol": "How the user logs in. \"None\" also switches encryption off.",
+          "auth_key": "The password for authentication, at least 8 characters.",
+          "priv_protocol": "How the traffic is encrypted. It needs authentication.",
+          "priv_key": "The password for encryption, at least 8 characters."
         }
       }
     },
     "error": {
-      "cannot_connect": "Der Switch antwortet nicht. Prüfe Adresse, Zugangsdaten und ob SNMP am Switch eingeschaltet und gespeichert ist.",
-      "key_too_short": "Ein Schlüssel hat mindestens 8 Zeichen.",
-      "privacy_needs_authentication": "Verschlüsselung geht nur zusammen mit einer Authentifizierung."
+      "cannot_connect": "The switch does not answer. Check the address, the credentials and that SNMP is switched on and saved at the switch.",
+      "key_too_short": "A key has at least 8 characters.",
+      "privacy_needs_authentication": "Encryption only works together with authentication."
     },
     "abort": {
-      "already_configured": "Dieser Switch ist bereits eingerichtet.",
-      "reconfigure_successful": "Die Änderungen wurden übernommen.",
-      "wrong_device": "Unter dieser Adresse antwortet ein anderer Switch."
+      "already_configured": "This switch is already set up.",
+      "reconfigure_successful": "The changes were applied.",
+      "wrong_device": "A different switch answers at this address."
     }
   },
   "entity": {
     "binary_sensor": {
       "link": {
-        "name": "Port {port} Link"
+        "name": "Port {port} link"
       },
       "loop": {
-        "name": "Port {port} Schleife"
+        "name": "Port {port} loop"
       },
       "feature_dos": {
-        "name": "DoS-Schutz"
+        "name": "DoS defence"
       },
       "feature_dhcp": {
-        "name": "DHCP-Snooping"
+        "name": "DHCP snooping"
       },
       "feature_dot1x": {
         "name": "802.1X"
       },
       "feature_mirror": {
-        "name": "Port-Spiegelung"
+        "name": "Port mirroring"
       },
       "feature_igmp": {
-        "name": "IGMP-Snooping"
+        "name": "IGMP snooping"
       },
       "feature_dscp": {
-        "name": "DSCP-Priorisierung"
+        "name": "DSCP priority"
       }
     },
     "sensor": {
       "uptime": {
-        "name": "Laufzeit"
+        "name": "Uptime"
       },
       "rx_rate": {
-        "name": "Port {port} Empfang"
+        "name": "Port {port} receive"
       },
       "tx_rate": {
-        "name": "Port {port} Senden"
+        "name": "Port {port} transmit"
       },
       "speed": {
-        "name": "Port {port} Geschwindigkeit"
+        "name": "Port {port} speed"
       },
       "rx_total": {
-        "name": "Port {port} Empfangen gesamt"
+        "name": "Port {port} received total"
       },
       "tx_total": {
-        "name": "Port {port} Gesendet gesamt"
+        "name": "Port {port} sent total"
       },
       "rx_errors": {
-        "name": "Port {port} Empfangsfehler"
+        "name": "Port {port} receive errors"
       },
       "tx_errors": {
-        "name": "Port {port} Sendefehler"
+        "name": "Port {port} transmit errors"
       },
       "macs": {
-        "name": "Port {port} MAC-Adressen"
+        "name": "Port {port} MAC addresses"
       },
       "rx_discards": {
-        "name": "Port {port} Empfang verworfen"
+        "name": "Port {port} receive discarded"
       },
       "tx_discards": {
-        "name": "Port {port} Senden verworfen"
+        "name": "Port {port} transmit discarded"
       },
       "rx_utilization": {
-        "name": "Port {port} Auslastung Empfang"
+        "name": "Port {port} receive utilization"
       },
       "tx_utilization": {
-        "name": "Port {port} Auslastung Senden"
+        "name": "Port {port} transmit utilization"
       },
       "link_changed": {
-        "name": "Port {port} Link geändert"
+        "name": "Port {port} link changed"
       },
       "device_port": {
-        "name": "Port von {device}"
+        "name": "Port of {device}"
       },
       "rx_packets": {
-        "name": "Port {port} Pakete Empfang"
+        "name": "Port {port} packets received"
       },
       "tx_packets": {
-        "name": "Port {port} Pakete Senden"
+        "name": "Port {port} packets sent"
       },
       "rx_broadcast": {
-        "name": "Port {port} Broadcast Empfang"
+        "name": "Port {port} broadcast received"
       },
       "rx_multicast": {
-        "name": "Port {port} Multicast Empfang"
+        "name": "Port {port} multicast received"
       },
       "crc_errors": {
-        "name": "Port {port} CRC-Fehler"
+        "name": "Port {port} CRC errors"
       },
       "undersize_packets": {
-        "name": "Port {port} Zu kurze Pakete"
+        "name": "Port {port} Undersize packets"
       },
       "oversize_packets": {
-        "name": "Port {port} Zu lange Pakete"
+        "name": "Port {port} Oversize packets"
       },
       "fragments": {
-        "name": "Port {port} Fragmente"
+        "name": "Port {port} Fragments"
       },
       "jabbers": {
-        "name": "Port {port} Jabber"
+        "name": "Port {port} Jabbers"
       },
       "collisions": {
-        "name": "Port {port} Kollisionen"
+        "name": "Port {port} Collisions"
       },
       "stp_changes": {
-        "name": "STP-Topologieänderungen"
+        "name": "STP topology changes"
       },
       "arp_illegal": {
-        "name": "Port {port} Unzulässige ARP-Pakete"
+        "name": "Port {port} Illegal ARP packets"
       },
       "pvid": {
         "name": "Port {port} PVID"
       },
       "igmp_queries": {
-        "name": "Port {port} IGMP-Queries"
+        "name": "Port {port} IGMP queries"
       },
       "igmp_reports": {
-        "name": "Port {port} IGMP-Reports"
+        "name": "Port {port} IGMP reports"
       },
       "igmp_leaves": {
-        "name": "Port {port} IGMP-Leaves"
+        "name": "Port {port} IGMP leaves"
       },
       "igmp_errors": {
-        "name": "Port {port} IGMP-Fehlerpakete"
+        "name": "Port {port} IGMP error packets"
       },
       "qos_priority": {
-        "name": "Port {port} QoS-Priorität"
+        "name": "Port {port} QoS priority"
       },
       "qos_mode": {
-        "name": "QoS-Scheduler",
+        "name": "QoS scheduler",
         "state": {
-          "sp": "Strikte Priorität",
-          "wrr": "Gewichtet (WRR)",
+          "sp": "Strict priority",
+          "wrr": "Weighted (WRR)",
           "sp_wrr": "SP + WRR",
-          "equal": "Gleichmäßig"
+          "equal": "Equal"
         }
       }
     },
     "switch": {
       "port_enabled": {
-        "name": "Port {port} aktiv"
+        "name": "Port {port} enabled"
       }
     },
     "button": {
       "save_config": {
-        "name": "Konfiguration speichern"
+        "name": "Save configuration"
       },
       "reboot": {
-        "name": "Neustart"
+        "name": "Restart"
       }
     }
   },
@@ -230,7 +230,7 @@
     },
     "auth_protocol": {
       "options": {
-        "none": "Keine",
+        "none": "None",
         "md5": "MD5",
         "sha": "SHA",
         "sha224": "SHA-224",
@@ -241,7 +241,7 @@
     },
     "priv_protocol": {
       "options": {
-        "none": "Keine",
+        "none": "None",
         "des": "DES",
         "aes128": "AES-128",
         "aes192": "AES-192",
@@ -250,75 +250,75 @@
     },
     "entity_groups": {
       "options": {
-        "link": "Link je Port (verbunden oder nicht)",
-        "rates": "Datenraten Empfang und Senden",
-        "speed": "Verhandelte Geschwindigkeit",
-        "totals": "Übertragene Datenmenge gesamt",
-        "errors": "Fehler und verworfene Pakete",
-        "packets": "Pakete pro Sekunde, Broadcast und Multicast",
-        "utilization": "Auslastung der Leitung in Prozent",
-        "link_changed": "Zeitpunkt des letzten Link-Wechsels",
-        "macs": "Anzahl der MAC-Adressen je Port",
-        "uptime": "Laufzeit des Switches",
-        "devices": "Port von bekannten Geräten",
-        "loop": "Schleife erkannt (Schleifenerkennung des Switches)",
-        "error_details": "Fehler im Detail (CRC, Kollisionen, zu kurze und zu lange Pakete)",
-        "stp": "Spanning Tree: Zahl der Topologieänderungen",
-        "arp": "Unzulässige ARP-Pakete (ARP-Schutz des Switches)",
-        "vlan": "VLAN: PVID und Mitgliedschaft je Port",
-        "security": "Sicherheit: DoS-Schutz, DHCP-Snooping, 802.1X (an oder aus)",
-        "mirror": "Port-Spiegelung (an oder aus) und Port-Isolation im Panel",
-        "igmp": "IGMP-Snooping: Pakete je Port und Status",
-        "qos": "QoS: Priorität je Port, Scheduler und DSCP"
+        "link": "Link per port (connected or not)",
+        "rates": "Receive and transmit rates",
+        "speed": "Negotiated speed",
+        "totals": "Total data transferred",
+        "errors": "Errors and discarded packets",
+        "packets": "Packets per second, broadcast and multicast",
+        "utilization": "Line utilization in percent",
+        "link_changed": "Time of the last link change",
+        "macs": "Number of MAC addresses per port",
+        "uptime": "Uptime of the switch",
+        "devices": "Port of known devices",
+        "loop": "Loop found (the switch's loop detection)",
+        "error_details": "Error details (CRC, collisions, undersize and oversize packets)",
+        "stp": "Spanning tree: number of topology changes",
+        "arp": "Illegal ARP packets (the switch's ARP protection)",
+        "vlan": "VLAN: PVID and membership per port",
+        "security": "Security: DoS defence, DHCP snooping, 802.1X (on or off)",
+        "mirror": "Port mirroring (on or off) and port isolation in the panel",
+        "igmp": "IGMP snooping: packets per port and state",
+        "qos": "QoS: priority per port, scheduler and DSCP"
       }
     }
   },
   "options": {
     "step": {
       "init": {
-        "title": "Einstellungen",
-        "description": "Wie oft Home Assistant den Switch abfragt. Kürzere Abstände geben genauere Datenraten, belasten aber den Switch stärker.",
+        "title": "Settings",
+        "description": "How often Home Assistant asks the switch. Shorter intervals give more precise rates but put more load on the switch.",
         "data": {
-          "scan_interval": "Abfrageintervall (Sekunden)",
-          "trap_port": "Trap-Port (0 = aus)",
-          "allow_write": "Schreiben am Switch erlauben",
-          "write_community": "Community mit Schreibrecht",
-          "protected_ports": "Geschützte Ports",
-          "entity_groups": "Entitäten (Gruppen)",
-          "entity_ports": "Entitäten nur für Ports"
+          "scan_interval": "Polling interval (seconds)",
+          "trap_port": "Trap port (0 = off)",
+          "allow_write": "Allow writing to the switch",
+          "write_community": "Community with write access",
+          "protected_ports": "Protected ports",
+          "entity_groups": "Entities (groups)",
+          "entity_ports": "Entities only for ports"
         },
         "data_description": {
-          "trap_port": "UDP-Port, auf dem Home Assistant SNMP-Traps des Switches empfängt (nur v1 und v2c). Am Switch unter SNMP → Notification diesen Rechner mit dem Port und derselben Community als Ziel eintragen, dann zeigt Home Assistant einen Link-Wechsel sofort. Ports unter 1024 brauchen Rechte; in Docker muss der UDP-Port freigegeben sein.",
-          "allow_write": "Schaltet Schalter zum Ein- und Ausschalten der Ports ein und erlaubt, Port-Namen am Switch zu speichern. Aus, solange du es nicht brauchst. Änderungen am Switch gelten bis zu seinem Neustart, wenn du die Konfiguration dort nicht speicherst (System Tools → Save Config).",
-          "write_community": "Nur für SNMP v1 und v2c: eine Community, die am Switch schreiben darf (SNMP → Community, Zugriff „read-write“). Bei v3 schreibt derselbe Benutzer, wenn er Schreibrecht hat.",
-          "protected_ports": "Diese Ports schaltet Home Assistant nie aus. Ports, an denen mindestens 10 MAC-Adressen gelernt wurden (meist Uplinks), sind immer geschützt.",
-          "entity_groups": "Nicht gewählte Gruppen werden nicht angelegt, bereits vorhandene Entitäten daraus werden entfernt. Viele davon sind standardmäßig deaktiviert und lassen sich später einzeln einschalten.",
-          "entity_ports": "Nur für diese Ports werden Entitäten angelegt. Leer heißt: für alle Ports. Bereits vorhandene Entitäten anderer Ports werden entfernt."
+          "trap_port": "UDP port on which Home Assistant receives SNMP traps from the switch (v1 and v2c only). At the switch under SNMP → Notification, add this machine with the port and the same community as a target, and Home Assistant shows a link change at once. Ports below 1024 need privileges; in Docker the UDP port must be published.",
+          "allow_write": "Adds switches that turn ports on and off and lets port names be saved at the switch. Leave it off until you need it. Changes at the switch last until it restarts unless you save its configuration there (System Tools → Save Config).",
+          "write_community": "For SNMP v1 and v2c only: a community that may write at the switch (SNMP → Community, access “read-write”). With v3 the same user writes, if it has write access.",
+          "protected_ports": "Home Assistant never turns these ports off. Ports that have learned at least 10 MAC addresses (mostly uplinks) are always protected.",
+          "entity_groups": "Groups that are not selected are not created, and existing entities of them are removed. Many of them are disabled by default and can be enabled one by one later.",
+          "entity_ports": "Entities are created for these ports only. Empty means all ports. Existing entities of other ports are removed."
         }
       }
     }
   },
   "exceptions": {
     "write_off": {
-      "message": "Schreiben am Switch ist in den Optionen nicht erlaubt."
+      "message": "Writing to the switch is not allowed in the options."
     },
     "unknown_port": {
-      "message": "Der Switch hat keinen Port {port}."
+      "message": "The switch has no port {port}."
     },
     "port_protected": {
-      "message": "Port {port} ist geschützt und wird nicht ausgeschaltet: Er ist in den Optionen gewählt oder ein Uplink mit vielen Geräten."
+      "message": "Port {port} is protected and is not turned off: it is chosen in the options or an uplink with many devices."
     },
     "write_failed": {
-      "message": "Port {port} ließ sich am Switch nicht ändern: {error}"
+      "message": "Port {port} could not be changed at the switch: {error}"
     },
     "action_failed": {
-      "message": "Der Switch konnte die Aktion „{action}“ nicht ausführen: {error}"
+      "message": "The switch could not do “{action}”: {error}"
     }
   },
   "issues": {
     "unreachable": {
-      "title": "{name} antwortet nicht",
-      "description": "Der Switch {name} ({host}) hat seit über 10 Minuten nicht auf SNMP geantwortet. Prüfe, ob er eingeschaltet und erreichbar ist und ob SNMP und die Community am Switch unverändert sind. Die Meldung verschwindet, sobald er wieder antwortet."
+      "title": "{name} does not answer",
+      "description": "The switch {name} ({host}) has not answered SNMP for over 10 minutes. Check that it is switched on and reachable, and that SNMP and the community are unchanged at the switch. This notice goes away as soon as it answers again."
     }
   }
 }

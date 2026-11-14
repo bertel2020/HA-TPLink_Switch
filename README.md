@@ -5,7 +5,7 @@
 <h1 align="center">TP-Link Switch (SNMP)</h1>
 
 <p align="center">
-  Dein TP-Link-JetStream-Switch in Home Assistant, lokal per SNMP: Ports, Datenrate, Fehler und gelernte Geräte, mit Seitenleisten-Panel und Dashboard-Karte.
+  Your TP-Link JetStream switch in Home Assistant, local over SNMP: ports, traffic, errors and learned devices, with a sidebar panel and a dashboard card.
 </p>
 
 <p align="center">
@@ -15,7 +15,7 @@
   <a href="https://github.com/bertel2020/HA-TPLink_Switch/actions/workflows/tests.yml"><img src="https://github.com/bertel2020/HA-TPLink_Switch/actions/workflows/tests.yml/badge.svg" alt="Tests"></a>
   <a href="https://github.com/bertel2020/HA-TPLink_Switch/actions/workflows/hassfest.yml"><img src="https://github.com/bertel2020/HA-TPLink_Switch/actions/workflows/hassfest.yml/badge.svg" alt="Hassfest"></a>
   <a href="https://github.com/bertel2020/HA-TPLink_Switch/actions/workflows/hacs.yml"><img src="https://github.com/bertel2020/HA-TPLink_Switch/actions/workflows/hacs.yml/badge.svg" alt="HACS"></a>
-  <a href="LICENSE"><img src="https://img.shields.io/github/license/bertel2020/HA-TPLink_Switch" alt="Lizenz"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/github/license/bertel2020/HA-TPLink_Switch" alt="License"></a>
 </p>
 
 <p align="center">
@@ -24,136 +24,135 @@
   <a href="https://paypal.me/RobertoMartins"><img src="https://img.shields.io/badge/PayPal-donate-00457C?logo=paypal&logoColor=white" alt="PayPal"></a>
 </p>
 
-<p align="center"><em><a href="README.en.md">English version</a></em></p>
+<p align="center"><em><a href="https://github.com/bertel2020/HA-TPLink_Switch/blob/main/README.de.md">Deutsche Version</a></em></p>
 
-Liest einen TP-Link JetStream-Switch (getestet mit **TL-SG3424**) lokal per SNMP aus: Link-Status, Geschwindigkeit, Datenrate, Auslastung, Fehler, verworfene Pakete und die gelernten MAC-Adressen pro Port. Dazu kommen ein Seitenleisten-Panel, Ereignisse für Link- und Port-Wechsel und auf Wunsch SNMP-Traps für sofortige Meldungen.
+Reads a TP-Link JetStream switch (tested with the **TL-SG3424**) locally over SNMP: link state, speed, data rate, utilization, errors, discarded packets and the learned MAC addresses per port. It also brings a sidebar panel, events for link and port changes and, if you want, SNMP traps for instant notifications.
 
-## Voraussetzung am Switch
+## What the switch needs
 
-SNMP einschalten (*SNMP → Global Config*) und die Konfiguration speichern (*System Tools → Save Config*). Je nach SNMP-Version:
+Switch SNMP on (*SNMP → Global Config*) and save the configuration (*System Tools → Save Config*). Depending on the SNMP version:
 
-- **v1 / v2c:** unter *SNMP → Community* eine Community mit Lesezugriff anlegen.
-- **v3:** einen Benutzer mit Gruppe, Authentifizierung und, wenn gewünscht, Verschlüsselung anlegen.
+- **v1 / v2c:** create a community with read access under *SNMP → Community*.
+- **v3:** create a user with a group, authentication and, if you want it, encryption.
 
 ## Installation
 
-### Über HACS (empfohlen)
+### Via HACS (recommended)
 
-[![HACS-Repository in My Home Assistant öffnen](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=bertel2020&repository=HA-TPLink_Switch&category=integration)
-[![TP-Link Switch (SNMP) zu My Home Assistant hinzufügen](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=tplink_switch_snmp)
+[![Open the HACS repository in My Home Assistant](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=bertel2020&repository=HA-TPLink_Switch&category=integration)
+[![Add TP-Link Switch (SNMP) to My Home Assistant](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=tplink_switch_snmp)
 
-1. Über den ersten Button das TP-Link-Switch-Repository in HACS öffnen.
-2. **TP-Link Switch (SNMP)** herunterladen und Home Assistant neu starten.
-3. Über den zweiten Button die Integration hinzufügen. Alternativ in Home
-   Assistant **Einstellungen → Geräte & Dienste → Integration hinzufügen →
-   TP-Link Switch (SNMP)** öffnen.
+1. Use the first button to open the TP-Link Switch repository in HACS.
+2. Download **TP-Link Switch (SNMP)** and restart Home Assistant.
+3. Use the second button to add the integration. Alternatively, open
+   **Settings → Devices & services → Add integration → TP-Link Switch (SNMP)**
+   in Home Assistant.
 
-Falls der erste Button nicht funktioniert, in HACS unter **Integrationen →
-Benutzerdefinierte Repositories** `https://github.com/bertel2020/HA-TPLink_Switch`
-als Kategorie **Integration** eintragen.
+If the first button does not work, add `https://github.com/bertel2020/HA-TPLink_Switch`
+in HACS under **Integrations → Custom repositories** with the category
+**Integration**.
 
-### Manuell
+### Manual
 
-Das Verzeichnis `custom_components/tplink_switch_snmp` nach
-`/config/custom_components/tplink_switch_snmp` kopieren und Home Assistant neu
-starten.
+Copy the directory `custom_components/tplink_switch_snmp` to
+`/config/custom_components/tplink_switch_snmp` and restart Home Assistant.
 
-## Einrichtung
+## Set-up
 
-Im Dialog zuerst **Host**, **Port** (Standard 161) und die **SNMP-Version** wählen, dann je nach Version die **Community** (v1, v2c) oder den **Benutzer** mit Authentifizierung und Verschlüsselung (v3, Schlüssel mit mindestens 8 Zeichen). Der Switch wird an seiner MAC-Adresse erkannt; derselbe Switch lässt sich nicht zweimal einrichten.
+In the dialog first choose **host**, **port** (default 161) and the **SNMP version**, then, depending on the version, the **community** (v1, v2c) or the **user** with authentication and encryption (v3, keys of at least 8 characters). The switch is recognised by its MAC address; the same switch cannot be set up twice.
 
-Später ändern: **Geräte & Dienste → TP-Link Switch (SNMP) → ⋮ → Neu konfigurieren** für Adresse, Version und Zugangsdaten (es muss derselbe Switch antworten), **Konfigurieren** für die Optionen:
+To change it later: **Devices & services → TP-Link Switch (SNMP) → ⋮ → Reconfigure** for address, version and credentials (the same switch must answer), **Configure** for the options:
 
-- **Abfrageintervall** (10 bis 3600 Sekunden, Standard 30). Kürzere Abstände geben genauere Datenraten, belasten aber den Switch stärker.
-- **Trap-Port** (0 = aus), siehe unten.
+- **Polling interval** (10 to 3600 seconds, default 30). Shorter intervals give more precise rates but put more load on the switch.
+- **Trap port** (0 = off), see below.
 
-## Fehlersuche
+## Troubleshooting
 
-- **„Der Switch antwortet nicht“ bei der Einrichtung:** Adresse, Version und Community prüfen, und ob SNMP am Switch eingeschaltet **und gespeichert** ist. Mit `snmpget -v2c -c <Community> <Adresse> 1.3.6.1.2.1.1.1.0` auf dem Rechner mit Home Assistant lässt sich das prüfen. Bei einer falschen Community meldet SNMP nichts zurück, es sieht aus wie ein ausgeschalteter Switch.
-- **Entitäten „nicht verfügbar“:** Der Switch hat in zwei Abfragen nacheinander nicht geantwortet. Home Assistant meldet das einmal im Log und fragt weiter.
-- **Datenraten fehlen nach dem Start:** Die erste Abfrage hat nichts zum Vergleichen, die Rate erscheint nach der zweiten.
-- **Fehler melden:** Diagnosedaten herunterladen (siehe unten) und das Log mit `tplink_switch_snmp` anhängen.
+- **"The switch does not answer" during set-up:** check the address, the version and the community, and that SNMP is switched on **and saved** at the switch. `snmpget -v2c -c <community> <address> 1.3.6.1.2.1.1.1.0` on the machine that runs Home Assistant checks this. With a wrong community SNMP says nothing back; it looks like a switch that is off.
+- **Entities "unavailable":** the switch did not answer two polls in a row. Home Assistant says so once in the log and keeps asking.
+- **Data rates missing after the start:** the first poll has nothing to compare with; the rate appears after the second.
+- **Reporting a bug:** download the diagnostics (see below) and add the log lines with `tplink_switch_snmp`.
 
-## Anwendungsfälle
+## Use cases
 
-- Eine Meldung aufs Handy, wenn die Wallbox oder die Kamera den Link verliert (Ereignis `tplink_switch_snmp_link_changed`).
-- Sehen, an welchem Port ein Gerät hängt, und eine Meldung, wenn es den Port wechselt (z. B. ein Access Point, der umgesteckt wurde).
-- Ein langsam gewordener Link: Ports mit nur 100 Mbit/s und Fehlerzähler zeigen ein schlechtes Kabel.
-- Auslastung eines Uplinks über die Zeit, ohne den Switch selbst zu öffnen.
+- A message on your phone when the wallbox or the camera loses its link (event `tplink_switch_snmp_link_changed`).
+- See which port a device is plugged into, and get a message when it changes port (for example an access point that was moved).
+- A link that got slow: ports at 100 Mbit/s only and error counters point to a bad cable.
+- The utilization of an uplink over time, without opening the switch itself.
 
-## Entfernen
+## Removal
 
-*Geräte & Dienste → TP-Link Switch (SNMP) → ⋮ → Löschen.* Der gespeicherte Verlauf wird mit gelöscht. Am Switch ändert sich nichts; SNMP und die Community bleiben dort eingerichtet. Die Dateien der Integration lassen sich danach in HACS entfernen.
+*Devices & services → TP-Link Switch (SNMP) → ⋮ → Delete.* The stored history is deleted with it. Nothing changes at the switch; SNMP and the community stay set up there. Afterwards the integration's files can be removed in HACS.
 
-## Seitenleisten-Panel
+## Sidebar panel
 
-Die Integration legt in der Seitenleiste (nur für Administratoren) den Eintrag **Switch** an:
+The integration adds the entry **Switch** to the sidebar (admins only):
 
-- **Übersicht:** Frontplatte mit allen Ports nach Link-Geschwindigkeit eingefärbt (beim Überfahren eines Ports eine Karte mit Geschwindigkeit, Datenrate, Fehlern und Geräten), dazu Port-Detail mit Verlauf der letzten 24 Stunden, Zeit des letzten Link-Wechsels und Auslastung, die Ports mit der meisten Last und Hinweise zu Fehlern, Ports mit nur 100 Mbit/s, fest eingestellten Ports, Ports an der Grenze der MAC-Sicherheit, Schleifen und Link-Wechseln in den letzten 24 Stunden.
-- **Ports:** Tabelle mit Filtern, Suche und Auslastung in Prozent.
-- **Geräte:** die gelernten MAC-Adressen pro Port; Namen kommen von Geräten, die Home Assistant über ihre MAC-Adresse kennt (z. B. aus „FRITZ!Box Netzwerk“); der Hersteller von dort oder sonst aus der MAC-Adresse (Herstellerliste von Home Assistant, ohne Internet; zufällige Adressen von Handys haben keinen).
-- **Diagnose:** Fehler, verworfene Pakete und Datenvolumen pro Port.
-- **Konfiguration:** was am Switch eingestellt ist: welche Funktionen laufen, die VLANs mit ihren Ports und, mit erlaubtem Schreiben, die Knöpfe zum Speichern der Konfiguration und zum Neustart.
+- **Overview:** a front panel with every port coloured by link speed (hovering a port shows a card with speed, rates, errors and devices), a port detail with the last 24 hours, the time of the last link change and the utilization, the ports with the most traffic and notes on errors, ports that run at 100 Mbit/s only, ports at their port security limit, ports with a fixed mode, loops and link changes in the last 24 hours.
+- **Ports:** a table with filters, search and utilization in percent.
+- **Devices:** the learned MAC addresses per port; names come from devices Home Assistant knows by their MAC address (for example from "FRITZ!Box Network"); the manufacturer from there or else from the MAC address (Home Assistant's manufacturer list, no internet; the random addresses of phones have none).
+- **Diagnostics:** errors, discarded packets and data volume per port.
+- **Configuration:** what is set at the switch: which functions run, the VLANs with their ports and, with writing allowed, the buttons to save the configuration and to restart.
 
-Die **Darstellung** (Palette in der Kopfzeile) bietet drei Farbschemen (Ozean, Wald, Graphit), hell, dunkel oder wie Home Assistant, und drei Schriftgrößen; die Wahl gilt pro Benutzer. Das Panel bekommt nach jeder Abfrage des Switches einen neuen Stand geschickt und fragt nicht selbst nach.
+The **Appearance** menu (palette in the header) offers three colour schemes (Ocean, Forest, Graphite), light, dark or like Home Assistant, and three font sizes; the choice is kept per user. The panel gets a new state pushed after every poll of the switch and does not ask by itself.
 
-Ports lassen sich im Panel umbenennen (Stift neben dem Port-Namen); der Name wird an der Integration gespeichert. Der Verlauf kommt aus einem eigenen Puffer der Integration (24 Stunden in 5-Minuten-Werten, 7 Tage in Stundenwerten und 30 Tage in Zwei-Stunden-Werten, im `.storage` gesichert), er braucht also weder den Recorder noch die Sensoren; er beginnt mit dem Start der Integration und wird mit dem Switch gelöscht.
+Ports can be renamed in the panel (the pencil next to the port name); the name is stored with the integration. The history comes from a buffer of the integration's own (24 hours in five-minute values, 7 days in hourly values and 30 days in two-hour values, saved in `.storage`), so it needs neither the recorder nor the sensors; it starts when the integration starts and is deleted with the switch.
 
-Ohne Home Assistant lässt sich das Panel mit Beispieldaten ansehen: `python3 -m http.server 8765` im Repo-Ordner starten und `/scripts/panel-preview/index.html` öffnen (`?dark=1`, `?lang=en`, `?narrow=1`).
+Without Home Assistant, the panel can be viewed with sample data: start `python3 -m http.server 8765` in the repository folder and open `/scripts/panel-preview/index.html` (`?dark=1`, `?lang=en`, `?narrow=1`).
 
-## Dashboard-Karte
+## Dashboard card
 
-Die Integration bringt die Karte **TP-Link Switch** mit: die Frontplatte des Switches, nach Link-Geschwindigkeit eingefärbt, und darunter pro aktivem Port die Geräte, die Home Assistant kennt, samt Datenrate. Ein Klick auf einen Port oder ein Gerät öffnet die zugehörige Entität. Anders als das Panel sieht sie jeder Benutzer.
+The integration brings the card **TP-Link Switch**: the front panel of the switch, coloured by link speed, and below it, for every active port, the devices that Home Assistant knows, with the data rate. A click on a port or a device opens its entity. Unlike the panel, every user sees it.
 
 ```yaml
 type: custom:tplink-switch-card
-title: Switch Keller      # optional
-device_id: abc123         # optional, nur bei mehreren Switches
-show_devices: true        # Geräte pro Port (Standard: an)
-show_rates: true          # Datenrate pro Port (Standard: an)
+title: Basement switch    # optional
+device_id: abc123         # optional, only with more than one switch
+show_devices: true        # devices per port (default: on)
+show_rates: true          # data rate per port (default: on)
 ```
 
-Die Karte liest die Entitäten der Integration; die Geräte pro Port sind die Sensoren **Port von …**. Eine Vorschau ohne Home Assistant: `/scripts/panel-preview/card.html`.
+The card reads the integration's entities; the devices per port are the **Port of …** sensors. A preview without Home Assistant: `/scripts/panel-preview/card.html`.
 
-## Entitäten
+## Entities
 
-Pro Port:
+Per port:
 
-| Entität | Standard | Hinweis |
+| Entity | Default | Note |
 | --- | --- | --- |
-| **Link** (binary_sensor) | an | |
-| **Schleife** (binary_sensor) | an | nur an Ports mit eingeschalteter Schleifenerkennung des Switches |
-| **Empfang**, **Senden** (Mbit/s) | an | aus den Zählern des Switches berechnet |
-| **Geschwindigkeit** | an | |
-| **MAC-Adressen** | an | Anzahl; die Liste steht im Attribut `mac_addresses` |
-| **Auslastung Empfang/Senden** (%) | aus | Datenrate im Verhältnis zur Link-Geschwindigkeit |
-| **Empfangen/Gesendet gesamt** | aus | Datenvolumen |
-| **Empfangsfehler/Sendefehler** | aus | |
-| **CRC-Fehler, Kollisionen, zu kurze/lange Pakete, Fragmente, Jabber** | aus | nur an Ports, für die der Switch RMON-Werte meldet |
-| **Unzulässige ARP-Pakete** | aus | nur an Ports, für die der Switch Werte der ARP-Erkennung meldet |
-| **PVID** | aus | nur an Ports, für die der Switch VLAN-Werte meldet; Attribute `untagged` und `tagged` |
-| **DoS-Schutz, DHCP-Snooping, 802.1X** (Binärsensoren) | aus | zeigen, ob die Funktion am Switch eingeschaltet ist; nur was der Switch meldet |
-| **Port-Spiegelung** (Binärsensor) | aus | an, wenn eine Spiegel-Gruppe läuft; Attribut `groups` mit Monitor-Port und Quellen |
-| **IGMP-Queries, -Reports, -Leaves, -Fehlerpakete**, **IGMP-Snooping** (Binärsensor) | aus | Pakete des IGMP-Snoopings je Port, nur wo der Switch Werte meldet |
-| **QoS-Priorität**, **QoS-Scheduler**, **DSCP-Priorisierung** (Binärsensor) | aus | Priorität (CoS) je Port, wie der Switch seine Warteschlangen bedient, ob DSCP gilt; nur was der Switch meldet |
-| **Empfang/Senden verworfen** | aus | verworfene Pakete |
-| **Link geändert** (Zeitstempel) | aus | Zeitpunkt des letzten Link-Wechsels |
-| **Pakete/s Empfang/Senden**, **Broadcast/Multicast Empfang** | aus | aus den Paketzählern |
-| **Port N aktiv** (switch) | nur mit Schreiben | schaltet den Port ein oder aus |
+| **Link** (binary_sensor) | on | |
+| **Loop** (binary_sensor) | on | only at ports where the switch's loop detection is on |
+| **Receive**, **Transmit** (Mbit/s) | on | calculated from the switch's counters |
+| **Speed** | on | |
+| **MAC addresses** | on | the count; the list is in the attribute `mac_addresses` |
+| **Receive / transmit utilization** (%) | off | data rate in relation to the link speed |
+| **Received / sent total** | off | data volume |
+| **Receive / transmit errors** | off | |
+| **CRC errors, collisions, undersize/oversize packets, fragments, jabbers** | off | only at ports the switch reports RMON values for |
+| **Illegal ARP packets** | off | only at ports the switch reports ARP detection values for |
+| **PVID** | off | only at ports the switch reports VLAN values for; attributes `untagged` and `tagged` |
+| **DoS defence, DHCP snooping, 802.1X** (binary sensors) | off | show whether the function is on at the switch; only what the switch reports |
+| **Port mirroring** (binary sensor) | off | on if a mirror group is running; attribute `groups` with the monitor port and the sources |
+| **IGMP queries, reports, leaves, error packets**, **IGMP snooping** (binary sensor) | off | packets of IGMP snooping per port, only where the switch reports values |
+| **QoS priority**, **QoS scheduler**, **DSCP priority** (binary sensor) | off | priority (CoS) per port, how the switch serves its queues, whether DSCP applies; only what the switch reports |
+| **Receive / transmit discarded** | off | discarded packets |
+| **Link changed** (timestamp) | off | time of the last link change |
+| **Packets/s receive/transmit**, **broadcast/multicast receive** | off | from the packet counters |
+| **Port N enabled** (switch) | only with writing | turns the port on or off |
 
-Am Gerät: **Laufzeit** und, wenn der Switch Spanning Tree meldet, **STP-Topologieänderungen** (standardmäßig aus). Für jedes Gerät, das Home Assistant über seine MAC-Adresse kennt und das am Switch gelernt wurde, kommt ein Sensor **Port von …** dazu: Er zeigt die Port-Nummer, im Attribut `port_name` den Namen des Ports. Der Sensor gehört zum Switch, nicht zum Gerät der anderen Integration, denn ein Gerät gehört in Home Assistant genau einer Integration.
+On the device: **Uptime** and, if the switch reports spanning tree, **STP topology changes** (off by default). For every device that Home Assistant knows by its MAC address and that was learned at the switch, a sensor **Port of …** is added. It shows the port number and, in the attribute `port_name`, the name of the port. The sensor belongs to the switch, not to the other integration's device, because in Home Assistant a device belongs to exactly one integration.
 
-### Welche Entitäten angelegt werden
+### Which entities are created
 
-Unter **Konfigurieren** wählst du, welche Gruppen von Entitäten es gibt (Link, Datenraten, Geschwindigkeit, Datenmenge, Fehler, Pakete, Auslastung, Link-Wechsel, MAC-Adressen, Schleife, Fehler im Detail, ARP, STP, VLAN, Sicherheit, Port-Spiegelung, IGMP, QoS, Laufzeit, Port von Geräten) und für welche Ports (leer = alle). Was du abwählst, wird nicht angelegt und aus der Entitäten-Liste entfernt; dabei werden auch deren Verlaufsdaten in Home Assistant nicht mehr fortgeschrieben. Das Panel ist nicht betroffen, es liest direkt vom Switch.
+Under **Configure** you choose which groups of entities exist (link, rates, speed, data totals, errors, packets, utilization, link changes, MAC addresses, loop, error details, ARP, STP, VLAN, security, port mirroring, IGMP, QoS, uptime, port of devices) and for which ports (empty = all). What you deselect is not created and is removed from the entity list; its history in Home Assistant is no longer updated. The panel is not affected, it reads from the switch directly.
 
-## Ereignisse und Logbuch
+## Events and logbook
 
-Beide Ereignisse erscheinen im Logbuch und lassen sich in Automationen als Auslöser verwenden:
+Both events appear in the logbook and can be used as triggers in automations:
 
-- `tplink_switch_snmp_link_changed`: Ein Link hat gewechselt. Daten: `port`, `port_name`, `up`, `speed`, `flap` (der Link fiel zwischen zwei Abfragen aus und kam wieder), `switch`, `entry_id`, `entity_id`. Nach einem Neustart des Switches gibt es keine Ereignisse.
-- `tplink_switch_snmp_device_moved`: Ein Gerät, das Home Assistant kennt, taucht an einem anderen Port auf. Daten: `mac`, `name`, `device_id`, `from_port`, `from_port_name`, `to_port`, `to_port_name`, `switch`, `entry_id`.
-- `tplink_switch_snmp_alarm`: Der Switch meldet per Trap einen Alarm (nur mit eingeschaltetem Trap-Empfang). Daten: `alarm` (`cpu_load` und `memory_load` über 80 %, `loop`, `broadcast_storm`, `multicast_storm`, `ingress_rate`, `egress_rate`, `config_changed`; außerdem `arp_illegal` (mit `port` und `count`) und `stp_topology_change`, wenn sich die Spanning-Tree-Topologie ändert, auch ohne Traps), `switch`, `entry_id`.
+- `tplink_switch_snmp_link_changed`: a link changed. Data: `port`, `port_name`, `up`, `speed`, `flap` (the link dropped and came back between two polls), `switch`, `entry_id`, `entity_id`. After a reboot of the switch there are no events.
+- `tplink_switch_snmp_device_moved`: a device that Home Assistant knows shows up on another port. Data: `mac`, `name`, `device_id`, `from_port`, `from_port_name`, `to_port`, `to_port_name`, `switch`, `entry_id`.
+- `tplink_switch_snmp_alarm`: the switch reports an alarm by trap (only with trap receiving on). Data: `alarm` (`cpu_load` and `memory_load` over 80 %, `loop`, `broadcast_storm`, `multicast_storm`, `ingress_rate`, `egress_rate`, `config_changed`; also `arp_illegal` (with `port` and `count`) and `stp_topology_change` when the spanning tree topology changes, even without traps), `switch`, `entry_id`.
 
 ```yaml
 triggers:
@@ -164,46 +163,46 @@ triggers:
       up: false
 ```
 
-## Schreiben am Switch (optional)
+## Writing to the switch (optional)
 
-Standardmäßig liest die Integration nur. In den Optionen lässt sich **Schreiben am Switch erlauben** einschalten; dann gibt es:
+By default the integration only reads. In the options you can switch on **Allow writing to the switch**; then there are:
 
-- einen Schalter **Port N aktiv** pro Port (`ifAdminStatus`): Aus bedeutet kein Link, egal was angesteckt ist.
-- bei einem TP-Link-Switch die Buttons **Konfiguration speichern** (schreibt die laufende Konfiguration in den Flash, sonst geht sie beim Neustart verloren) und **Neustart** (standardmäßig aus, denn er trennt alle Geräte für etwa eine Minute).
-- im Panel in der Port-Ansicht der Knopf **Port ausschalten / einschalten** (mit Rückfrage; bei geschützten Ports gesperrt).
-- im Panel beim Umbenennen eines Ports das Kästchen **Auch am Switch speichern** (`ifAlias`). Die Namen, die am Switch schon an den Ports stehen, zeigt die Integration ohnehin als Vorgabe; ein Name aus dem Panel hat Vorrang.
+- a switch **Port N enabled** per port (`ifAdminStatus`): off means no link, whatever is plugged in.
+- for a TP-Link switch the buttons **Save configuration** (writes the running configuration to the flash, otherwise it is lost on a restart) and **Restart** (off by default, because it cuts every device off for about a minute).
+- in the panel, in the port detail, the button **Turn port off / on** (with a question; locked for protected ports).
+- in the panel, when renaming a port, the box **Also save at the switch** (`ifAlias`). The names that already stand at the ports on the switch are shown as the default anyway; a name from the panel takes precedence.
 
-Voraussetzungen und Schutz:
+Requirements and protection:
 
-- **v1 und v2c** brauchen eine **eigene Community mit Schreibrecht** (am Switch unter *SNMP → Community*, Zugriff *read-write*), die in den Optionen eingetragen wird. **v3** schreibt mit demselben Benutzer, wenn er Schreibrecht hat. Ein Switch antwortet auf einen Schreibversuch einer nur lesenden Community gar nicht; die Integration meldet das als Fehler.
-- **Geschützte Ports** schaltet Home Assistant nie aus: die in den Optionen gewählten und immer die, an denen mindestens 10 MAC-Adressen gelernt wurden (meist Uplinks). Wer den Port ausschaltet, über den Home Assistant am Switch hängt, sperrt sich aus. Einschalten geht immer.
-- Änderungen gelten am Switch **bis zu seinem Neustart**, wenn du die Konfiguration dort nicht speicherst (*System Tools → Save Config*). Die Integration speichert sie nicht.
-- Mit dem Switch aus dem Test (TL-SG3424, Firmware 1.11.10) ist das Schreiben **nicht** ausprobiert: Die dort vorhandene Community darf nur lesen. Getestet ist es gegen einen gefälschten Switch.
+- **v1 and v2c** need a **community of their own with write access** (at the switch under *SNMP → Community*, access *read-write*), entered in the options. **v3** writes with the same user if it has write access. A switch does not answer a write from a read-only community at all; the integration reports that as an error.
+- **Protected ports** are never switched off by Home Assistant: those chosen in the options and always those at which at least 10 MAC addresses were learned (mostly uplinks). Whoever switches off the port that Home Assistant reaches the switch through locks themselves out. Switching on is always allowed.
+- Changes at the switch last **until it restarts** unless you save the configuration there (*System Tools → Save Config*). The integration does not save it.
+- Writing has **not** been tried with the test switch (TL-SG3424, firmware 1.11.10): the community there may only read. It is tested against a fake switch.
 
-## SNMP-Traps für sofortige Meldungen
+## SNMP traps for instant notifications
 
-Standardmäßig fragt Home Assistant den Switch im eingestellten Intervall ab, ein Link-Wechsel zeigt sich also erst bei der nächsten Abfrage. Mit **Trap-Port** in den Optionen empfängt Home Assistant zusätzlich SNMP-Traps (nur v1 und v2c): Sobald ein Trap des Switches eintrifft, folgt sofort eine Abfrage. Der Inhalt des Traps wird nicht ausgewertet.
+By default Home Assistant asks the switch at the set interval, so a link change only shows at the next poll. With **Trap port** in the options, Home Assistant also receives SNMP traps (v1 and v2c only): as soon as a trap from the switch arrives, a poll follows at once. The content of the trap is not evaluated.
 
-1. Einen freien UDP-Port wählen, z. B. `1162` (Ports unter 1024 brauchen Rechte), und ihn in den Optionen eintragen. In Docker muss der UDP-Port freigegeben sein.
-2. Am Switch unter *SNMP → Notification* die Adresse von Home Assistant mit diesem Port und **derselben Community** als Ziel eintragen.
+1. Choose a free UDP port, for example `1162` (ports below 1024 need privileges), and enter it in the options. In Docker the UDP port must be published.
+2. At the switch under *SNMP → Notification*, add the address of Home Assistant with that port and **the same community** as a target.
 
-Ein Trap gilt nur, wenn er von der Adresse des Switches kommt, die beim Start der Integration aufgelöst wurde, und die Community stimmt. Lässt sich der Port nicht öffnen, steht eine Warnung im Log; die Abfrage läuft trotzdem weiter.
+A trap counts only if it comes from the switch's address, resolved when the integration starts, and the community matches. If the port cannot be opened, a warning appears in the log; polling carries on.
 
-## Diagnosedaten
+## Diagnostics
 
-*Geräte & Dienste → TP-Link Switch (SNMP) → ⋮ → Diagnose herunterladen.* Die Datei enthält Version, Zähler, Intervall und den Zustand der Ports, aber keine Adresse, keine Zugangsdaten, keine MAC-Adressen und keine Port-Namen.
+*Devices & services → TP-Link Switch (SNMP) → ⋮ → Download diagnostics.* The file holds the version, counters, interval and the state of the ports, but no address, no credentials, no MAC addresses and no port names.
 
-## Entwicklung
+## Development
 
-Mit Python 3.14: `pip install -r requirements-dev.txt`, dann `ruff check .`, `mypy`, `pytest --cov=custom_components/tplink_switch_snmp` (die Abdeckung liegt bei 100 %, die CI verlangt mindestens 98 %) und `node --test tests/js/*.test.mjs`. Die Tests laufen gegen einen gefälschten Switch (`tests/conftest.py`) und das Test-Plugin von Home Assistant.
+With Python 3.14: `pip install -r requirements-dev.txt`, then `ruff check .`, `mypy`, `pytest --cov=custom_components/tplink_switch_snmp` (coverage is 100 %, the CI demands at least 98 %) and `node --test tests/js/*.test.mjs`. The tests run against a fake switch (`tests/conftest.py`) and Home Assistant's test plugin.
 
-## Grenzen
+## Limits
 
-- Ohne die Option „Schreiben erlauben“ wird nur gelesen, nichts am Switch geändert.
-- **SNMP v1** kennt keine 64-Bit-Zähler: Die Datenraten kommen dann aus 32-Bit-Zählern, die bei 1 Gbit/s alle 34 Sekunden überlaufen, und das Datenvolumen (standardmäßig ausgeschaltet) ist ungenau. Bei einem Intervall über 34 Sekunden geht bei voller Auslastung ein Überlauf verloren, und die Rate fällt zu niedrig aus. Für genaue Werte v2c oder v3 nehmen.
-- **SNMP v1 und v2c** schicken die Community im Klartext. v3 ist am echten Switch nur bis zur Anmeldung geprüft (er antwortet), nicht mit einem eingerichteten Benutzer.
-- Als Ports gelten die Ports der Bridge-Tabelle des Switches (die Nummer ist die Bridge-Port-Nummer), unabhängig von ihrer Benennung. VLAN-, Loopback- und Management-Schnittstellen sind keine Ports. Getestet ist das nur mit einem TL-SG3424; andere JetStream-Modelle sind nicht geprüft.
-- Hersteller und Modell stehen nicht eindeutig im Switch: Der Hersteller kommt aus der Enterprise-Nummer, als Modell dient die Gerätebeschreibung des Switches.
-- Die Laufzeit läuft über die 497 Tage hinaus, nach denen der Zähler des Switches überläuft. Startet Home Assistant danach neu, beginnt sie mit dem Wert des Zählers.
-- Ein Gerät am Uplink-Port erscheint an dem Port, an dem der Switch seine MAC-Adresse gelernt hat. Wechselt ein Gerät zwischen dem Uplink und einem anderen Port, gilt das als Port-Wechsel.
-- LLDP-Nachbarn stellt dieser Switch per SNMP nicht bereit.
+- Without the option "Allow writing" it only reads; nothing is changed at the switch.
+- **SNMP v1** has no 64-bit counters: the data rates then come from 32-bit counters that wrap every 34 seconds at 1 Gbit/s, and the data volume (off by default) is imprecise. With an interval above 34 seconds, a wrap is lost at full load and the rate comes out too low. Use v2c or v3 for precise values.
+- **SNMP v1 and v2c** send the community in clear text. v3 has been checked at the real switch only up to the login (it answers), not with a user that is set up.
+- Ports are the ports of the switch's bridge table (the number is the bridge port number), whatever they are called. VLAN, loopback and management interfaces are not ports. This has only been tested with a TL-SG3424; other JetStream models are untested.
+- Manufacturer and model are not stated clearly by the switch: the manufacturer comes from the enterprise number, the model is the device description of the switch.
+- The uptime carries on past the 497 days after which the switch's counter wraps. If Home Assistant restarts after that, it starts from the counter's value.
+- A device behind the uplink port shows up on the port where the switch learned its MAC address. If a device moves between the uplink and another port, that counts as a port change.
+- This switch does not provide LLDP neighbours over SNMP.
